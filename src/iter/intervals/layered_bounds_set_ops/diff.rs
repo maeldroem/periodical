@@ -5,7 +5,7 @@
 //! like the second operand. In other words, the first layer are the _removed_
 //! while the second layer are the _removers_.
 //!
-//! [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+//! [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 //!
 //! # Examples
 //!
@@ -13,47 +13,47 @@
 //! # use std::error::Error;
 //! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
-//! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
-//! # use periodical::iter::intervals::layered_bounds_set_ops::LayeredAbsoluteBoundsDifferenceIteratorDispatcher;
+//! # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
+//! # use periodical::iter::intervals::layered_bounds_set_ops::LayeredAbsBoundsDifferenceIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds::{
-//! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+//! #     LayeredAbsBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsBound,
 //! # };
 //! let first_layer_intervals = [
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 07:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound(),
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 18:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         ).to_end_bound(),
 //!     ),
@@ -67,20 +67,20 @@
 //!         .abs_difference_layered()
 //!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 11:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
 //!             ).to_start_bound(),
-//!             AbsoluteFiniteBound::new(
+//!             AbsFiniteBoundPos::new(
 //!                 "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!             ).to_end_bound(),
 //!         ),
-//!         AbsoluteBoundPair::new(
-//!             AbsoluteFiniteBound::new(
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new(
 //!                 "2025-01-01 13:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!             ).to_start_bound(),
-//!             AbsoluteFiniteBound::new_with_inclusivity(
+//!             AbsFiniteBoundPos::new_with_incl(
 //!                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
 //!             ).to_end_bound(),
@@ -92,63 +92,63 @@
 
 use std::iter::FusedIterator;
 
-use crate::intervals::absolute::AbsoluteBoundPair;
-use crate::intervals::relative::RelativeBoundPair;
+use crate::intervals::absolute::AbsBoundPair;
+use crate::intervals::relative::RelBoundPair;
 use crate::iter::intervals::layered_bounds::{
     LayeredBoundsState,
-    LayeredBoundsStateChangeAtAbsoluteBound,
-    LayeredBoundsStateChangeAtRelativeBound,
+    LayeredBoundsStateChangeAtAbsBound,
+    LayeredBoundsStateChangeAtRelBound,
 };
 
 /// Difference iterator
-/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+/// for [`LayeredAbsBounds`](crate::iter::intervals::layered_bounds::LayeredAbsBounds)
 ///
 /// The first layer acts like the first operand in a classical set difference,
 /// while the second layer acts like the second operand. In other words, the
 /// first layer are the _removed_ while the second layer are the _removers_.
 #[derive(Debug, Clone, Hash)]
-pub struct LayeredAbsoluteBoundsDifference<I> {
+pub struct LayeredAbsBoundsDifference<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredAbsoluteBoundsDifference<I>
+impl<I> LayeredAbsBoundsDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsBound>,
 {
-    /// Creates a new [`LayeredAbsoluteBoundsDifference`]
+    /// Creates a new [`LayeredAbsBoundsDifference`]
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
     /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
+    /// as its [old state](LayeredBoundsStateChangeAtAbsBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state),
+    /// as its [new state](LayeredBoundsStateChangeAtAbsBound::new_state),
     /// and all state changes must follow each other, i.e. if one change
     /// transitions from state A to state B, the next change's old state must be
     /// the previous change's new state: state B.
     ///
     /// All requirements are automatically guaranteed if the state changes are
     /// obtained from
-    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
-    pub fn new(iter: I) -> LayeredAbsoluteBoundsDifference<I> {
-        LayeredAbsoluteBoundsDifference {
+    /// [`LayeredAbsBounds`](crate::iter::intervals::layered_bounds::LayeredAbsBounds).
+    pub fn new(iter: I) -> LayeredAbsBoundsDifference<I> {
+        LayeredAbsBoundsDifference {
             iter,
             exhausted: false,
         }
     }
 }
 
-impl<I> Iterator for LayeredAbsoluteBoundsDifference<I>
+impl<I> Iterator for LayeredAbsBoundsDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsBound>,
 {
-    type Item = AbsoluteBoundPair;
+    type Item = AbsBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -184,7 +184,7 @@ where
                 );
             };
 
-            return Some(AbsoluteBoundPair::new(start, end));
+            return Some(AbsBoundPair::new(start, end));
         }
     }
 
@@ -193,80 +193,77 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredAbsoluteBoundsDifference<I> where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
-{
-}
+impl<I> FusedIterator for LayeredAbsBoundsDifference<I> where I: Iterator<Item = LayeredBoundsStateChangeAtAbsBound> {}
 
-/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsDifference`]
-pub trait LayeredAbsoluteBoundsDifferenceIteratorDispatcher
+/// Iterator dispatcher trait for [`LayeredAbsBoundsDifference`]
+pub trait LayeredAbsBoundsDifferenceIteratorDispatcher
 where
-    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsBound> + Sized,
 {
     /// Operates a [set difference]
     ///
     /// See [module documentation](self) for more information.
     ///
-    /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
-    fn abs_difference_layered(self) -> LayeredAbsoluteBoundsDifference<Self::IntoIter> {
-        LayeredAbsoluteBoundsDifference::new(self.into_iter())
+    /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
+    fn abs_difference_layered(self) -> LayeredAbsBoundsDifference<Self::IntoIter> {
+        LayeredAbsBoundsDifference::new(self.into_iter())
     }
 }
 
-impl<I> LayeredAbsoluteBoundsDifferenceIteratorDispatcher for I where
-    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+impl<I> LayeredAbsBoundsDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsBound> + Sized
 {
 }
 
 /// Difference iterator
-/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+/// for [`LayeredRelBounds`](crate::iter::intervals::layered_bounds::LayeredRelBounds)
 ///
 /// The first layer acts like the first operand in a classical set difference,
 /// while the second layer acts like the second operand. In other words, the
 /// first layer are the _removed_ while the second layer are the _removers_.
 #[derive(Debug, Clone, Hash)]
-pub struct LayeredRelativeBoundsDifference<I> {
+pub struct LayeredRelBoundsDifference<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredRelativeBoundsDifference<I>
+impl<I> LayeredRelBoundsDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelBound>,
 {
-    /// Creates a new [`LayeredRelativeBoundsDifference`]
+    /// Creates a new [`LayeredRelBoundsDifference`]
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelBound)**
     /// 2. The state changes **must be in chronological order**
     ///
     /// For more precision about requirement 1, _continuous state changes_ means
     /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
+    /// as its [old state](LayeredBoundsStateChangeAtRelBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state),
+    /// as its [new state](LayeredBoundsStateChangeAtRelBound::new_state),
     /// and all state changes must follow each other, i.e. if one change
     /// transitions from state A to state B, the next change's old state must be
     /// the previous change's new state: state B.
     ///
     /// All requirements are automatically guaranteed if the state changes are
     /// obtained from
-    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
-    pub fn new(iter: I) -> LayeredRelativeBoundsDifference<I> {
-        LayeredRelativeBoundsDifference {
+    /// [`LayeredRelBounds`](crate::iter::intervals::layered_bounds::LayeredRelBounds).
+    pub fn new(iter: I) -> LayeredRelBoundsDifference<I> {
+        LayeredRelBoundsDifference {
             iter,
             exhausted: false,
         }
     }
 }
 
-impl<I> Iterator for LayeredRelativeBoundsDifference<I>
+impl<I> Iterator for LayeredRelBoundsDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelBound>,
 {
-    type Item = RelativeBoundPair;
+    type Item = RelBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -302,7 +299,7 @@ where
                 );
             };
 
-            return Some(RelativeBoundPair::new(start, end));
+            return Some(RelBoundPair::new(start, end));
         }
     }
 
@@ -311,27 +308,24 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredRelativeBoundsDifference<I> where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
-{
-}
+impl<I> FusedIterator for LayeredRelBoundsDifference<I> where I: Iterator<Item = LayeredBoundsStateChangeAtRelBound> {}
 
-/// Iterator dispatcher trait for [`LayeredRelativeBoundsDifference`]
-pub trait LayeredRelativeBoundsDifferenceIteratorDispatcher
+/// Iterator dispatcher trait for [`LayeredRelBoundsDifference`]
+pub trait LayeredRelBoundsDifferenceIteratorDispatcher
 where
-    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelBound> + Sized,
 {
     /// Operates a [set difference]
     ///
     /// See [module documentation](self) for more information.
     ///
-    /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
-    fn rel_difference_layered(self) -> LayeredRelativeBoundsDifference<Self::IntoIter> {
-        LayeredRelativeBoundsDifference::new(self.into_iter())
+    /// [set difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
+    fn rel_difference_layered(self) -> LayeredRelBoundsDifference<Self::IntoIter> {
+        LayeredRelBoundsDifference::new(self.into_iter())
     }
 }
 
-impl<I> LayeredRelativeBoundsDifferenceIteratorDispatcher for I where
-    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
+impl<I> LayeredRelBoundsDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelBound> + Sized
 {
 }

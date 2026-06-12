@@ -11,7 +11,7 @@
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
-use std::ops::RangeInclusive;
+use std::ops::{Neg, RangeInclusive};
 
 use jiff::civil::{Date, ISOWeekDate, Weekday};
 use jiff::tz::TimeZone;
@@ -272,9 +272,6 @@ impl OffsetIsoWeek {
     /// Returns [`OutOfRangeOffset`](OffsetIsoWeekCreationError::OutOfRangeOffset) if the given offset
     /// is less than `-6` or greater than `6`.
     ///
-    /// Returns [`Computation`](OffsetIsoWeekCreationError::Computation) if getting the date's offset to
-    /// the first day or last day of the ISO week failed.
-    ///
     /// Returns [`OutOfRangeYear`](OffsetIsoWeekCreationError::OutOfRangeYear)
     /// if the resulting year is out of the range that [`Date`] can support.
     ///
@@ -313,74 +310,48 @@ impl OffsetIsoWeek {
         // If the resulting week is 0, -1 to the result's year.
         // If the resulting week is greater than the original date's amount of ISO weeks, +1
 
-        let (resulting_week, resulting_year) = match week_start_offset.signum() {
-            0 => (iso_week, iso_week_year),
+        let (resulting_year, resulting_week) = match week_start_offset.signum() {
+            0 => (iso_week_year, iso_week),
             1 => {
-                let offset_from_start = i8::try_from(
-                    iso_week_date
-                        .date()
-                        .since(
-                            iso_week_date
-                                .first_of_week()
-                                .or(Err(OffsetIsoWeekCreationError::Computation))?
-                                .date(),
-                        )
-                        .or(Err(OffsetIsoWeekCreationError::Computation))?
-                        .get_days(),
-                )
-                .or(Err(OffsetIsoWeekCreationError::Computation))?;
+                let offset_since_monday = iso_week_date.date().weekday().since(Weekday::Monday);
 
-                let mut resulting_week = iso_week;
-                let mut resulting_year = iso_week_year;
-
-                if week_start_offset > offset_from_start {
-                    resulting_week = resulting_week.saturating_sub(1);
-
-                    if resulting_week == 0 {
-                        resulting_year = resulting_year
+                if week_start_offset > offset_since_monday {
+                    if iso_week == 1 {
+                        let resulting_year = iso_week_year
                             .checked_sub(1)
                             .ok_or(OffsetIsoWeekCreationError::OutOfRangeYear)?;
 
-                        resulting_week =
+                        let resulting_week =
                             iso_weeks_in_year(resulting_year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
-                    }
-                }
 
-                (resulting_week, resulting_year)
+                        (resulting_year, resulting_week)
+                    } else {
+                        (iso_week_year, iso_week.saturating_sub(1))
+                    }
+                } else {
+                    (iso_week_year, iso_week)
+                }
             },
             -1 => {
-                let offset_from_end = i8::try_from(
-                    iso_week_date
-                        .date()
-                        .since(
-                            iso_week_date
-                                .last_of_week()
-                                .or(Err(OffsetIsoWeekCreationError::Computation))?
-                                .date(),
-                        )
-                        .or(Err(OffsetIsoWeekCreationError::Computation))?
-                        .get_days(),
-                )
-                .or(Err(OffsetIsoWeekCreationError::Computation))?;
+                let offset_until_monday = iso_week_date.date().weekday().until(Weekday::Monday).neg();
 
-                let mut resulting_week = iso_week;
-                let mut resulting_year = iso_week_year;
-
-                if week_start_offset < offset_from_end {
+                if week_start_offset < offset_until_monday {
                     let iso_weeks_in_year =
-                        iso_weeks_in_year(resulting_year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
-                    resulting_week = resulting_week.saturating_add(1);
+                        iso_weeks_in_year(iso_week_year).or(Err(OffsetIsoWeekCreationError::OutOfRangeYear))?;
 
-                    if resulting_week == iso_weeks_in_year {
-                        resulting_year = resulting_year
-                            .checked_add(1)
-                            .ok_or(OffsetIsoWeekCreationError::OutOfRangeYear)?;
-
-                        resulting_week = 1;
+                    if iso_week == iso_weeks_in_year {
+                        (
+                            iso_week_year
+                                .checked_add(1)
+                                .ok_or(OffsetIsoWeekCreationError::OutOfRangeYear)?,
+                            1,
+                        )
+                    } else {
+                        (iso_week_year, iso_week + 1)
                     }
+                } else {
+                    (iso_week_year, iso_week)
                 }
-
-                (resulting_week, resulting_year)
             },
             _ => unreachable!("core::num::signum is guaranteed to return only in the range -1..=1"),
         };

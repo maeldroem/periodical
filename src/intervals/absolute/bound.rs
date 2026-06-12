@@ -1,48 +1,47 @@
 //! Absolute bound representation
 //!
-//! Represents an absolute bound regardless of its source (start/end).
+//! Represents an absolute bound regardless of its extremality (start/end).
 //! This is particularly useful for representing absolute bounds of an interval
-//! as a single type, while still conserving its source.
-
-use std::cmp::Ordering;
-use std::hash::{Hash, Hasher};
+//! as a single type, while still conserving their extremalities.
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsEndBound, AbsFiniteBound, AbsFiniteEndBound, AbsFiniteStartBound, AbsStartBound};
+use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
 
-/// Enum for absolute start and end bounds
+/// Absolute start/end bound
 ///
-/// Represents an absolute bound regardless of its source (start/end).
+/// Represents an absolute bound regardless of its extremality (start/end).
 /// This is particularly useful for representing absolute bounds of an interval
-/// as a single type, while still conserving its source.
-#[derive(Debug, Clone, Copy)]
+/// as a single type, while still conserving their extremalities.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub enum AbsoluteBound {
-    Start(AbsoluteStartBound),
-    End(AbsoluteEndBound),
+pub enum AbsBound {
+    Start(AbsStartBound),
+    End(AbsEndBound),
 }
 
-impl AbsoluteBound {
-    /// Returns whether it is of the [`Start`](AbsoluteBound::Start) variant
+impl AbsBound {
+    /// Returns whether it is of the [`Start`](AbsBound::Start) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBound, AbsFiniteBoundPos};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsFiniteBoundPos::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsFiniteBoundPos::new(end_time).to_end_bound().to_bound();
     ///
     /// assert!(start.is_start());
     /// assert!(!end.is_start());
@@ -53,21 +52,21 @@ impl AbsoluteBound {
         matches!(self, Self::Start(_))
     }
 
-    /// Returns whether it is of the [`End`](AbsoluteBound::End) variant
+    /// Returns whether it is of the [`End`](AbsBound::End) variant
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
-    /// # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBound, AbsFiniteBoundPos};
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsFiniteBoundPos::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsFiniteBoundPos::new(end_time).to_end_bound().to_bound();
     ///
     /// assert!(end.is_end());
     /// assert!(!start.is_end());
@@ -78,10 +77,10 @@ impl AbsoluteBound {
         matches!(self, Self::End(_))
     }
 
-    /// Returns the content of the [`Start`](AbsoluteBound::Start) variant
+    /// Returns the content of the [`Start`](AbsBound::Start) variant
     ///
     /// Consumes `self` and puts the content of the
-    /// [`Start`](AbsoluteBound::Start) variant in an [`Option`]. If instead
+    /// [`Start`](AbsBound::Start) variant in an [`Option`]. If instead
     /// `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
@@ -90,34 +89,34 @@ impl AbsoluteBound {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsBound, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
     /// # };
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsFiniteBoundPos::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsFiniteBoundPos::new(end_time).to_end_bound().to_bound();
     ///
     /// assert_eq!(
     ///     start.start(),
-    ///     Some(AbsoluteFiniteBound::new(start_time).to_start_bound()),
+    ///     Some(AbsFiniteBoundPos::new(start_time).to_start_bound()),
     /// );
-    /// assert_eq!(end.start(), None,);
+    /// assert_eq!(end.start(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn start(self) -> Option<AbsoluteStartBound> {
+    pub fn start(self) -> Option<AbsStartBound> {
         match self {
             Self::Start(start) => Some(start),
             Self::End(_) => None,
         }
     }
 
-    /// Returns the content of the [`End`](AbsoluteBound::End) variant
+    /// Returns the content of the [`End`](AbsBound::End) variant
     ///
-    /// Consumes `self` and puts the content of the [`End`](AbsoluteBound::End)
+    /// Consumes `self` and puts the content of the [`End`](AbsBound::End)
     /// variant in an [`Option`]. If instead `self` is another variant, the
     /// method returns [`None`].
     ///
@@ -127,47 +126,47 @@ impl AbsoluteBound {
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsBound, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
     /// # };
     /// let start_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
     /// let end_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
     ///
-    /// let start = AbsoluteFiniteBound::new(start_time)
+    /// let start = AbsFiniteBoundPos::new(start_time)
     ///     .to_start_bound()
     ///     .to_bound();
-    /// let end = AbsoluteFiniteBound::new(end_time).to_end_bound().to_bound();
+    /// let end = AbsFiniteBoundPos::new(end_time).to_end_bound().to_bound();
     ///
     /// assert_eq!(
     ///     end.end(),
-    ///     Some(AbsoluteFiniteBound::new(end_time).to_end_bound()),
+    ///     Some(AbsFiniteBoundPos::new(end_time).to_end_bound()),
     /// );
-    /// assert_eq!(start.end(), None,);
+    /// assert_eq!(start.end(), None);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn end(self) -> Option<AbsoluteEndBound> {
+    pub fn end(self) -> Option<AbsEndBound> {
         match self {
             Self::Start(_) => None,
             Self::End(end) => Some(end),
         }
     }
 
-    /// Returns the opposite bound type with the opposite inclusivity
+    /// Returns the opposite bound type with opposite inclusivity
     ///
-    /// Simply use [`AbsoluteStartBound::opposite`] for start bounds,
-    /// and [`AbsoluteEndBound::opposite`] for end bounds, and then wraps the
-    /// result in [`AbsoluteBound`].
+    /// Simply uses [`AbsStartBound::opposite`] for start bounds,
+    /// and [`AbsEndBound::opposite`] for end bounds, and then wraps the
+    /// result in [`AbsBound`].
     ///
-    /// If the bound is infinite, the method returns [`None`].
+    /// Returns [`None`] if the bound is infinite.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::absolute::AbsoluteBound;
-    /// # let bounds: [AbsoluteBound; 0] = [];
+    /// # use periodical::intervals::absolute::AbsBound;
+    /// # let bounds: [AbsBound; 0] = [];
     /// struct BoundChange {
-    ///     new_bound: AbsoluteBound,
-    ///     before_new_bound: Option<AbsoluteBound>,
+    ///     new_bound: AbsBound,
+    ///     before_new_bound: Option<AbsBound>,
     /// }
     ///
     /// bounds.into_iter().map(|bound| BoundChange {
@@ -177,9 +176,9 @@ impl AbsoluteBound {
     /// ```
     ///
     /// A similar process is used in
-    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
+    /// [`LayeredAbsBounds`](crate::iter::intervals::layered_bounds::LayeredAbsBounds).
     #[must_use]
-    pub fn opposite(&self) -> Option<Self> {
+    pub fn opposite(self) -> Option<Self> {
         match self {
             Self::Start(start) => start.opposite().map(Self::End),
             Self::End(end) => end.opposite().map(Self::Start),
@@ -187,68 +186,156 @@ impl AbsoluteBound {
     }
 }
 
-impl PartialEq for AbsoluteBound {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.eq(other_start),
-            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.eq(other_end),
-            (AbsoluteBound::Start(start), AbsoluteBound::End(end))
-            | (AbsoluteBound::End(end), AbsoluteBound::Start(start)) => start.eq(end),
-        }
-    }
-}
-
-impl Eq for AbsoluteBound {}
-
-impl PartialOrd for AbsoluteBound {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for AbsoluteBound {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            (AbsoluteBound::Start(og_start), AbsoluteBound::Start(other_start)) => og_start.cmp(other_start),
-            (AbsoluteBound::End(og_end), AbsoluteBound::End(other_end)) => og_end.cmp(other_end),
-            (AbsoluteBound::Start(og_start), AbsoluteBound::End(other_end)) => {
-                // Partial ordering between two different bounds should not fail, but we provide
-                // a default just in case
-                og_start.partial_cmp(other_end).unwrap_or(Ordering::Equal)
-            },
-            (AbsoluteBound::End(og_end), AbsoluteBound::Start(other_start)) => {
-                // Partial ordering between two different bounds should not fail, but we provide
-                // a default just in case
-                og_end.partial_cmp(other_start).unwrap_or(Ordering::Equal)
-            },
-        }
-    }
-}
-
-impl Hash for AbsoluteBound {
-    fn hash<H: Hasher>(&self, state: &mut H) {
+impl HasBoundExtremality for AbsBound {
+    fn bound_extremality(&self) -> BoundExtremality {
         match self {
-            Self::Start(AbsoluteStartBound::InfinitePast) => {
-                AbsoluteStartBound::InfinitePast.hash(state);
-            },
-            Self::Start(AbsoluteStartBound::Finite(finite)) | Self::End(AbsoluteEndBound::Finite(finite)) => {
-                finite.hash(state);
-            },
-            Self::End(AbsoluteEndBound::InfiniteFuture) => {
-                AbsoluteEndBound::InfiniteFuture.hash(state);
-            },
+            Self::Start(_) => BoundExtremality::Start,
+            Self::End(_) => BoundExtremality::End,
         }
     }
 }
 
-impl From<AbsoluteStartBound> for AbsoluteBound {
-    fn from(value: AbsoluteStartBound) -> Self {
-        AbsoluteBound::Start(value)
+impl BoundEq for AbsBound {
+    fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
     }
 }
 
-impl From<AbsoluteEndBound> for AbsoluteBound {
-    fn from(value: AbsoluteEndBound) -> Self {
-        AbsoluteBound::End(value)
+impl BoundEq<AbsFiniteStartBound> for AbsBound {
+    fn bound_eq(&self, other: &AbsFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
+    }
+}
+
+impl BoundEq<AbsFiniteEndBound> for AbsBound {
+    fn bound_eq(&self, other: &AbsFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
+    }
+}
+
+impl BoundEq<AbsFiniteBound> for AbsBound {
+    fn bound_eq(&self, other: &AbsFiniteBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
+    }
+}
+
+impl BoundEq<AbsStartBound> for AbsBound {
+    fn bound_eq(&self, other: &AbsStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
+    }
+}
+
+impl BoundEq<AbsEndBound> for AbsBound {
+    fn bound_eq(&self, other: &AbsEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
+    }
+}
+
+impl BoundOrd for AbsBound {
+    fn bound_cmp(&self, other: &Self) -> BoundOrdering {
+        match (self, other) {
+            (Self::Start(lhs_start), Self::Start(rhs_start)) => lhs_start.bound_cmp(rhs_start),
+            (Self::Start(start), Self::End(end)) => start.bound_cmp(end),
+            (Self::End(end), Self::Start(start)) => end.bound_cmp(start),
+            (Self::End(lhs_end), Self::End(rhs_end)) => lhs_end.bound_cmp(rhs_end),
+        }
+    }
+}
+
+impl BoundOrdExtremaOps for AbsBound {}
+
+impl BoundOrd<AbsFiniteStartBound> for AbsBound {
+    fn bound_cmp(&self, other: &AbsFiniteStartBound) -> BoundOrdering {
+        match self {
+            Self::Start(start) => start.bound_cmp(other),
+            Self::End(end) => end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<AbsFiniteEndBound> for AbsBound {
+    fn bound_cmp(&self, other: &AbsFiniteEndBound) -> BoundOrdering {
+        match self {
+            Self::Start(start) => start.bound_cmp(other),
+            Self::End(end) => end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<AbsFiniteBound> for AbsBound {
+    fn bound_cmp(&self, other: &AbsFiniteBound) -> BoundOrdering {
+        match self {
+            Self::Start(start) => start.bound_cmp(other),
+            Self::End(end) => end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<AbsStartBound> for AbsBound {
+    fn bound_cmp(&self, other: &AbsStartBound) -> BoundOrdering {
+        match self {
+            Self::Start(start) => start.bound_cmp(other),
+            Self::End(end) => end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<AbsEndBound> for AbsBound {
+    fn bound_cmp(&self, other: &AbsEndBound) -> BoundOrdering {
+        match self {
+            Self::Start(start) => start.bound_cmp(other),
+            Self::End(end) => end.bound_cmp(other),
+        }
+    }
+}
+
+impl From<AbsFiniteStartBound> for AbsBound {
+    fn from(value: AbsFiniteStartBound) -> Self {
+        Self::Start(AbsStartBound::from(value))
+    }
+}
+
+impl From<AbsFiniteEndBound> for AbsBound {
+    fn from(value: AbsFiniteEndBound) -> Self {
+        Self::End(AbsEndBound::from(value))
+    }
+}
+
+impl From<AbsStartBound> for AbsBound {
+    fn from(value: AbsStartBound) -> Self {
+        AbsBound::Start(value)
+    }
+}
+
+impl From<AbsEndBound> for AbsBound {
+    fn from(value: AbsEndBound) -> Self {
+        AbsBound::End(value)
+    }
+}
+
+impl From<AbsFiniteBound> for AbsBound {
+    fn from(value: AbsFiniteBound) -> Self {
+        match value {
+            AbsFiniteBound::Start(finite_start) => Self::Start(AbsStartBound::from(finite_start)),
+            AbsFiniteBound::End(finite_end) => Self::End(AbsEndBound::from(finite_end)),
+        }
     }
 }

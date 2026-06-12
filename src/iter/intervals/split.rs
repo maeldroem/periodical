@@ -5,18 +5,22 @@
 use jiff::tz::TimeZone;
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair, AbsoluteFiniteBound, AbsoluteStartBound, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsFiniteBoundPos,
+    AbsStartBound,
+    BoundedAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
 };
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::cut::{CutResult, CutType, Cuttable};
-use crate::intervals::relative::BoundedRelativeInterval;
+use crate::intervals::relative::BoundedRelInterval;
 use crate::time::CalendarAnchorOffset;
 
 /// Split by [`NaiveDuration`] iterator
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NaiveDurationSplit {
-    remaining_interval: AbsoluteBoundPair,
+    remaining_interval: AbsBoundPair,
     calendar_anchor_offset: CalendarAnchorOffset,
     tz: TimeZone,
     exhausted: bool,
@@ -26,7 +30,7 @@ impl NaiveDurationSplit {
     #[must_use]
     pub fn new<I>(interval: &I, calendar_anchor_offset: CalendarAnchorOffset, tz: TimeZone) -> Self
     where
-        I: HasAbsoluteBoundPair,
+        I: HasAbsBoundPair,
     {
         NaiveDurationSplit {
             remaining_interval: interval.abs_bound_pair(),
@@ -38,7 +42,7 @@ impl NaiveDurationSplit {
 }
 
 impl Iterator for NaiveDurationSplit {
-    type Item = AbsoluteBoundPair;
+    type Item = AbsBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -80,7 +84,7 @@ impl Iterator for NaiveDurationSplit {
 
 // #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 // pub struct NaiveDurationRSplit<Tz> {
-//     remaining_interval: AbsoluteBoundPair,
+//     remaining_interval: AbsBoundPair,
 //     calendar_anchor_offset: NaiveDuration,
 //     splitting_strategy: SplittingStrategy,
 //     tz: Tz,
@@ -92,9 +96,9 @@ impl Iterator for NaiveDurationSplit {
 //     Tz: TimeZone,
 // {
 //     #[must_use]
-//     pub fn new<I>(interval: I, calendar_anchor_offset: NaiveDuration, splitting_strategy: SplittingStrategy, tz: Tz) -> Self
-//     where
-//         I: HasAbsoluteBoundPair,
+//     pub fn new<I>(interval: I, calendar_anchor_offset: NaiveDuration, splitting_strategy: SplittingStrategy, tz: Tz)
+// -> Self     where
+//         I: HasAbsBoundPair,
 //     {
 //         NaiveDurationRSplit {
 //             remaining_interval: interval.abs_bound_pair(),
@@ -109,15 +113,15 @@ impl Iterator for NaiveDurationSplit {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IntervalSplit<I> {
     remaining_interval: I,
-    splitter: BoundedRelativeInterval,
+    splitter: BoundedRelInterval,
 }
 
 impl<I> IntervalSplit<I>
 where
-    I: HasAbsoluteBoundPair,
+    I: HasAbsBoundPair,
 {
     #[must_use]
-    pub fn new(interval: I, splitter: BoundedRelativeInterval) -> Self {
+    pub fn new(interval: I, splitter: BoundedRelInterval) -> Self {
         IntervalSplit {
             remaining_interval: interval,
             splitter,
@@ -128,16 +132,16 @@ where
 // #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 // pub struct IntervalRSplit<I> {
 //     remaining_interval: I,
-//     splitter: BoundedRelativeInterval,
+//     splitter: BoundedRelInterval,
 //     splitting_strategy: SplittingStrategy,
 // }
 
 // impl<I> IntervalRSplit<I>
 // where
-//     I: HasAbsoluteBoundPair,
+//     I: HasAbsBoundPair,
 // {
 //     #[must_use]
-//     pub fn new(interval: I, splitter: BoundedRelativeInterval, splitting_strategy: SplittingStrategy) -> Self {
+//     pub fn new(interval: I, splitter: BoundedRelInterval, splitting_strategy: SplittingStrategy) -> Self {
 //         IntervalRSplit {
 //             remaining_interval: interval,
 //             splitter,

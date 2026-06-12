@@ -12,16 +12,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 //! # use periodical::intervals::ops::grow::GrowableStartBound;
-//! let interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//! let interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 10:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 14:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -30,7 +30,7 @@
 //! );
 //!
 //! let grown_interval = interval.grow_start(
-//!     AbsoluteFiniteBound::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -40,14 +40,14 @@
 //!
 //! assert_eq!(
 //!     grown_interval,
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 14:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -59,35 +59,35 @@
 //! ```
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 /// Capacity to grow an interval's start bound up to a given new start bound
 ///
 /// The generic type parameter `P` corresponds to the position type,
-/// usually an [`AbsoluteStartBound`] or [`RelativeStartBound`].
+/// usually an [`AbsStartBound`] or [`RelStartBound`].
 pub trait GrowableStartBound<P> {
     /// Output type
     type Output;
@@ -104,16 +104,16 @@ pub trait GrowableStartBound<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::grow::GrowableStartBound;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -122,7 +122,7 @@ pub trait GrowableStartBound<P> {
     /// );
     ///
     /// let grown_interval = interval.grow_start(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -132,14 +132,14 @@ pub trait GrowableStartBound<P> {
     ///
     /// assert_eq!(
     ///     grown_interval,
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -155,7 +155,7 @@ pub trait GrowableStartBound<P> {
 /// Capacity to grow an interval's end bound up to a given new end bound
 ///
 /// The generic type parameter `P` corresponds to the position type,
-/// usually an [`AbsoluteEndBound`] or [`RelativeEndBound`].
+/// usually an [`AbsEndBound`] or [`RelEndBound`].
 pub trait GrowableEndBound<P> {
     /// Output type
     type Output;
@@ -172,16 +172,16 @@ pub trait GrowableEndBound<P> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::grow::GrowableEndBound;
-    /// let interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -190,7 +190,7 @@ pub trait GrowableEndBound<P> {
     /// );
     ///
     /// let grown_interval = interval.grow_end(
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -200,14 +200,14 @@ pub trait GrowableEndBound<P> {
     ///
     /// assert_eq!(
     ///     grown_interval,
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 10:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -220,58 +220,58 @@ pub trait GrowableEndBound<P> {
     fn grow_end(&self, position: P) -> Self::Output;
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for AbsoluteBoundPair {
+impl GrowableStartBound<AbsStartBound> for AbsBoundPair {
     type Output = Self;
 
-    fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, position: AbsStartBound) -> Self::Output {
         grow_start_abs_bound_pair(self, position)
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for AbsoluteBoundPair {
+impl GrowableEndBound<AbsEndBound> for AbsBoundPair {
     type Output = Self;
 
-    fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, position: AbsEndBound) -> Self::Output {
         grow_end_abs_bound_pair(self, position)
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for EmptiableAbsoluteBoundPair {
+impl GrowableStartBound<AbsStartBound> for EmptiableAbsBoundPair {
     type Output = Self;
 
-    fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, position: AbsStartBound) -> Self::Output {
         grow_start_emptiable_abs_bound_pair(self, position)
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for EmptiableAbsoluteBoundPair {
+impl GrowableEndBound<AbsEndBound> for EmptiableAbsBoundPair {
     type Output = Self;
 
-    fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, position: AbsEndBound) -> Self::Output {
         grow_end_emptiable_abs_bound_pair(self, position)
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for AbsoluteInterval {
+impl GrowableStartBound<AbsStartBound> for AbsInterval {
     type Output = Self;
 
-    fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, position: AbsStartBound) -> Self::Output {
         Self::Output::from(grow_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for AbsoluteInterval {
+impl GrowableEndBound<AbsEndBound> for AbsInterval {
     type Output = Self;
 
-    fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, position: AbsEndBound) -> Self::Output {
         Self::Output::from(grow_end_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for EmptiableAbsoluteInterval {
+impl GrowableStartBound<AbsStartBound> for EmptiableAbsInterval {
     type Output = Self;
 
-    fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, position: AbsStartBound) -> Self::Output {
         Self::Output::from(grow_start_emptiable_abs_bound_pair(
             &self.emptiable_abs_bound_pair(),
             position,
@@ -279,10 +279,10 @@ impl GrowableStartBound<AbsoluteStartBound> for EmptiableAbsoluteInterval {
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for EmptiableAbsoluteInterval {
+impl GrowableEndBound<AbsEndBound> for EmptiableAbsInterval {
     type Output = Self;
 
-    fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, position: AbsEndBound) -> Self::Output {
         Self::Output::from(grow_end_emptiable_abs_bound_pair(
             &self.emptiable_abs_bound_pair(),
             position,
@@ -290,90 +290,90 @@ impl GrowableEndBound<AbsoluteEndBound> for EmptiableAbsoluteInterval {
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for BoundedAbsoluteInterval {
-    type Output = AbsoluteInterval;
+impl GrowableStartBound<AbsStartBound> for BoundedAbsInterval {
+    type Output = AbsInterval;
 
-    fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, position: AbsStartBound) -> Self::Output {
         Self::Output::from(grow_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for BoundedAbsoluteInterval {
-    type Output = AbsoluteInterval;
+impl GrowableEndBound<AbsEndBound> for BoundedAbsInterval {
+    type Output = AbsInterval;
 
-    fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, position: AbsEndBound) -> Self::Output {
         Self::Output::from(grow_end_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for HalfBoundedAbsoluteInterval {
-    type Output = AbsoluteInterval;
+impl GrowableStartBound<AbsStartBound> for HalfBoundedAbsInterval {
+    type Output = AbsInterval;
 
-    fn grow_start(&self, position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, position: AbsStartBound) -> Self::Output {
         Self::Output::from(grow_start_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for HalfBoundedAbsoluteInterval {
-    type Output = AbsoluteInterval;
+impl GrowableEndBound<AbsEndBound> for HalfBoundedAbsInterval {
+    type Output = AbsInterval;
 
-    fn grow_end(&self, position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, position: AbsEndBound) -> Self::Output {
         Self::Output::from(grow_end_abs_bound_pair(&self.abs_bound_pair(), position))
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for RelativeBoundPair {
+impl GrowableStartBound<RelStartBound> for RelBoundPair {
     type Output = Self;
 
-    fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, position: RelStartBound) -> Self::Output {
         grow_start_rel_bound_pair(self, position)
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for RelativeBoundPair {
+impl GrowableEndBound<RelEndBound> for RelBoundPair {
     type Output = Self;
 
-    fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, position: RelEndBound) -> Self::Output {
         grow_end_rel_bound_pair(self, position)
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for EmptiableRelativeBoundPair {
+impl GrowableStartBound<RelStartBound> for EmptiableRelBoundPair {
     type Output = Self;
 
-    fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, position: RelStartBound) -> Self::Output {
         grow_start_emptiable_rel_bound_pair(self, position)
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for EmptiableRelativeBoundPair {
+impl GrowableEndBound<RelEndBound> for EmptiableRelBoundPair {
     type Output = Self;
 
-    fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, position: RelEndBound) -> Self::Output {
         grow_end_emptiable_rel_bound_pair(self, position)
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for RelativeInterval {
+impl GrowableStartBound<RelStartBound> for RelInterval {
     type Output = Self;
 
-    fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, position: RelStartBound) -> Self::Output {
         Self::Output::from(grow_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for RelativeInterval {
+impl GrowableEndBound<RelEndBound> for RelInterval {
     type Output = Self;
 
-    fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, position: RelEndBound) -> Self::Output {
         Self::Output::from(grow_end_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for EmptiableRelativeInterval {
+impl GrowableStartBound<RelStartBound> for EmptiableRelInterval {
     type Output = Self;
 
-    fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, position: RelStartBound) -> Self::Output {
         Self::Output::from(grow_start_emptiable_rel_bound_pair(
             &self.emptiable_rel_bound_pair(),
             position,
@@ -381,10 +381,10 @@ impl GrowableStartBound<RelativeStartBound> for EmptiableRelativeInterval {
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for EmptiableRelativeInterval {
+impl GrowableEndBound<RelEndBound> for EmptiableRelInterval {
     type Output = Self;
 
-    fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, position: RelEndBound) -> Self::Output {
         Self::Output::from(grow_end_emptiable_rel_bound_pair(
             &self.emptiable_rel_bound_pair(),
             position,
@@ -392,198 +392,198 @@ impl GrowableEndBound<RelativeEndBound> for EmptiableRelativeInterval {
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for BoundedRelativeInterval {
-    type Output = RelativeInterval;
+impl GrowableStartBound<RelStartBound> for BoundedRelInterval {
+    type Output = RelInterval;
 
-    fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, position: RelStartBound) -> Self::Output {
         Self::Output::from(grow_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for BoundedRelativeInterval {
-    type Output = RelativeInterval;
+impl GrowableEndBound<RelEndBound> for BoundedRelInterval {
+    type Output = RelInterval;
 
-    fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, position: RelEndBound) -> Self::Output {
         Self::Output::from(grow_end_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for HalfBoundedRelativeInterval {
-    type Output = RelativeInterval;
+impl GrowableStartBound<RelStartBound> for HalfBoundedRelInterval {
+    type Output = RelInterval;
 
-    fn grow_start(&self, position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, position: RelStartBound) -> Self::Output {
         Self::Output::from(grow_start_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for HalfBoundedRelativeInterval {
-    type Output = RelativeInterval;
+impl GrowableEndBound<RelEndBound> for HalfBoundedRelInterval {
+    type Output = RelInterval;
 
-    fn grow_end(&self, position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, position: RelEndBound) -> Self::Output {
         Self::Output::from(grow_end_rel_bound_pair(&self.rel_bound_pair(), position))
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for UnboundedInterval {
+impl GrowableStartBound<AbsStartBound> for UnboundedInterval {
     type Output = UnboundedInterval;
 
-    fn grow_start(&self, _position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, _position: AbsStartBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for UnboundedInterval {
+impl GrowableEndBound<AbsEndBound> for UnboundedInterval {
     type Output = UnboundedInterval;
 
-    fn grow_end(&self, _position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, _position: AbsEndBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for UnboundedInterval {
+impl GrowableStartBound<RelStartBound> for UnboundedInterval {
     type Output = UnboundedInterval;
 
-    fn grow_start(&self, _position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, _position: RelStartBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for UnboundedInterval {
+impl GrowableEndBound<RelEndBound> for UnboundedInterval {
     type Output = UnboundedInterval;
 
-    fn grow_end(&self, _position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, _position: RelEndBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableStartBound<AbsoluteStartBound> for EmptyInterval {
+impl GrowableStartBound<AbsStartBound> for EmptyInterval {
     type Output = EmptyInterval;
 
-    fn grow_start(&self, _position: AbsoluteStartBound) -> Self::Output {
+    fn grow_start(&self, _position: AbsStartBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableEndBound<AbsoluteEndBound> for EmptyInterval {
+impl GrowableEndBound<AbsEndBound> for EmptyInterval {
     type Output = EmptyInterval;
 
-    fn grow_end(&self, _position: AbsoluteEndBound) -> Self::Output {
+    fn grow_end(&self, _position: AbsEndBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableStartBound<RelativeStartBound> for EmptyInterval {
+impl GrowableStartBound<RelStartBound> for EmptyInterval {
     type Output = EmptyInterval;
 
-    fn grow_start(&self, _position: RelativeStartBound) -> Self::Output {
+    fn grow_start(&self, _position: RelStartBound) -> Self::Output {
         *self
     }
 }
 
-impl GrowableEndBound<RelativeEndBound> for EmptyInterval {
+impl GrowableEndBound<RelEndBound> for EmptyInterval {
     type Output = EmptyInterval;
 
-    fn grow_end(&self, _position: RelativeEndBound) -> Self::Output {
+    fn grow_end(&self, _position: RelEndBound) -> Self::Output {
         *self
     }
 }
 
-/// Grows the start bound of an [`AbsoluteBoundPair`]
+/// Grows the start bound of an [`AbsBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
-pub fn grow_start_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteStartBound) -> AbsoluteBoundPair {
+pub fn grow_start_abs_bound_pair(bounds: &AbsBoundPair, at: AbsStartBound) -> AbsBoundPair {
     let mut new_bounds = bounds.clone();
     new_bounds.set_start(new_bounds.abs_start().min(at));
     new_bounds
 }
 
-/// Grows the start bound of an [`EmptiableAbsoluteBoundPair`]
+/// Grows the start bound of an [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_start_emptiable_abs_bound_pair(
-    emptiable_bounds: &EmptiableAbsoluteBoundPair,
-    at: AbsoluteStartBound,
-) -> EmptiableAbsoluteBoundPair {
-    let EmptiableAbsoluteBoundPair::Bound(bounds) = emptiable_bounds else {
+    emptiable_bounds: &EmptiableAbsBoundPair,
+    at: AbsStartBound,
+) -> EmptiableAbsBoundPair {
+    let EmptiableAbsBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableAbsoluteBoundPair::from(grow_start_abs_bound_pair(bounds, at))
+    EmptiableAbsBoundPair::from(grow_start_abs_bound_pair(bounds, at))
 }
 
-/// Grows the end bound of an [`AbsoluteBoundPair`]
+/// Grows the end bound of an [`AbsBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
-pub fn grow_end_abs_bound_pair(bounds: &AbsoluteBoundPair, at: AbsoluteEndBound) -> AbsoluteBoundPair {
+pub fn grow_end_abs_bound_pair(bounds: &AbsBoundPair, at: AbsEndBound) -> AbsBoundPair {
     let mut new_bounds = bounds.clone();
     new_bounds.set_end(new_bounds.abs_end().max(at));
     new_bounds
 }
 
-/// Grows the end bound of an [`EmptiableAbsoluteBoundPair`]
+/// Grows the end bound of an [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_end_emptiable_abs_bound_pair(
-    emptiable_bounds: &EmptiableAbsoluteBoundPair,
-    at: AbsoluteEndBound,
-) -> EmptiableAbsoluteBoundPair {
-    let EmptiableAbsoluteBoundPair::Bound(bounds) = emptiable_bounds else {
+    emptiable_bounds: &EmptiableAbsBoundPair,
+    at: AbsEndBound,
+) -> EmptiableAbsBoundPair {
+    let EmptiableAbsBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableAbsoluteBoundPair::from(grow_end_abs_bound_pair(bounds, at))
+    EmptiableAbsBoundPair::from(grow_end_abs_bound_pair(bounds, at))
 }
 
-/// Grows the start bound of a [`RelativeBoundPair`]
+/// Grows the start bound of a [`RelBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
-pub fn grow_start_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeStartBound) -> RelativeBoundPair {
+pub fn grow_start_rel_bound_pair(bounds: &RelBoundPair, at: RelStartBound) -> RelBoundPair {
     let mut new_bounds = bounds.clone();
     new_bounds.set_start(new_bounds.rel_start().min(at));
     new_bounds
 }
 
-/// Grows the start bound of an [`EmptiableRelativeBoundPair`]
+/// Grows the start bound of an [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_start_emptiable_rel_bound_pair(
-    emptiable_bounds: &EmptiableRelativeBoundPair,
-    at: RelativeStartBound,
-) -> EmptiableRelativeBoundPair {
-    let EmptiableRelativeBoundPair::Bound(bounds) = emptiable_bounds else {
+    emptiable_bounds: &EmptiableRelBoundPair,
+    at: RelStartBound,
+) -> EmptiableRelBoundPair {
+    let EmptiableRelBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableRelativeBoundPair::from(grow_start_rel_bound_pair(bounds, at))
+    EmptiableRelBoundPair::from(grow_start_rel_bound_pair(bounds, at))
 }
 
-/// Grows the end bound of a [`RelativeBoundPair`]
+/// Grows the end bound of a [`RelBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
-pub fn grow_end_rel_bound_pair(bounds: &RelativeBoundPair, at: RelativeEndBound) -> RelativeBoundPair {
+pub fn grow_end_rel_bound_pair(bounds: &RelBoundPair, at: RelEndBound) -> RelBoundPair {
     let mut new_bounds = bounds.clone();
     new_bounds.set_end(new_bounds.rel_end().max(at));
     new_bounds
 }
 
-/// Grows the end bound of an [`EmptiableRelativeBoundPair`]
+/// Grows the end bound of an [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](crate::intervals::ops::grow) for more info.
 #[must_use]
 pub fn grow_end_emptiable_rel_bound_pair(
-    emptiable_bounds: &EmptiableRelativeBoundPair,
-    at: RelativeEndBound,
-) -> EmptiableRelativeBoundPair {
-    let EmptiableRelativeBoundPair::Bound(bounds) = emptiable_bounds else {
+    emptiable_bounds: &EmptiableRelBoundPair,
+    at: RelEndBound,
+) -> EmptiableRelBoundPair {
+    let EmptiableRelBoundPair::Bound(bounds) = emptiable_bounds else {
         return emptiable_bounds.clone();
     };
 
-    EmptiableRelativeBoundPair::from(grow_end_rel_bound_pair(bounds, at))
+    EmptiableRelBoundPair::from(grow_end_rel_bound_pair(bounds, at))
 }

@@ -346,3 +346,41 @@ which can be subject to matching unwanted tests (as the `cargo test` argument is
 
 Overall it also improves readability (no repeated information) and programmers can fold relevant modules that
 they are not touching instead of having to filter all test units.
+
+### Strictest binary operation output
+
+A binary operation should always result in the strictest type possible.
+For example, `u8 + u16` should result in `u16`, even if `u64` could contain the result, it is looser than needed.
+
+This rule ensures that types remain strict and that no options for further processing are dismissed because
+of a binary operation.
+
+Sometimes two types can seem of same strictness, for example with `u8 + i8`.
+In this case, you should document how you should choose between the two in codebase-specific documentation.
+
+### No binary operation generic impl
+
+A binary operation should in general avoid implementing itself on foreign types, as it can create confusion.
+
+This can also happen with unary operations, but since it involves a single type, the solution is much easier
+to implement than for an operation that involves a combination of types and their relation to each other.
+
+### No binary operation over-compatibility impl
+
+A binary operation should avoid accepting operands of wildly different types.
+For example, `u8` and `i8` are too different to implement a single interpretation of a given binary operation.
+
+This rule ensures that the user converts one of the operands into a type that makes the binary operation
+less ambiguous.
+
+## Additional rules specific to `periodical`
+
+### Disambiguation for the _Strictest binary operation output_ rule
+
+Between a bound pair and an interval, an interval is considered stricter.
+
+### Extra information on the _No binary operation over-compatibility impl_ rule
+
+Bound pairs should only be associated to other bound pairs.
+Intervals should only be associated to other intervals.
+Dedicated interval types should only be associated to other dedicated interval types.

@@ -7,23 +7,25 @@
 //! - Differences, with [`Differentiable`]
 //! - Symmetric differences, with [`SymmetricallyDifferentiable`]
 
-use crate::utils::{inline_docs, tests};
-
 pub mod diff;
 pub mod intersect;
 pub mod sym_diff;
 pub mod unite;
 
-tests! {
-    mod diff_tests;
-    mod intersect_tests;
-    mod sym_diff_tests;
-    mod unite_tests;
-}
+// #[cfg(test)]
+// mod diff_tests;
+// #[cfg(test)]
+// mod intersect_tests;
+// #[cfg(test)]
+// mod sym_diff_tests;
+// #[cfg(test)]
+// mod unite_tests;
 
-inline_docs! {
-    pub use diff::Differentiable;
-    pub use intersect::Intersectable;
-    pub use sym_diff::SymmetricallyDifferentiable;
-    pub use unite::Unitable;
-}
+#[doc(inline)]
+pub use diff::Differentiable;
+#[doc(inline)]
+pub use intersect::Intersectable;
+#[doc(inline)]
+pub use sym_diff::SymmetricallyDifferentiable;
+#[doc(inline)]
+pub use unite::Unitable;

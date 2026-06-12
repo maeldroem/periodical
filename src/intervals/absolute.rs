@@ -1,21 +1,22 @@
 //! Absolute intervals
 //!
-//! Absolute intervals are pinned to time, that is to say they have a start
-//! datetime and an end datetime.
+//! Absolute intervals are set in absolute time, that is to say that are bound to [`Timestamp`](jiff::Timestamp)(s)
+//! when applicable.
 //!
 //! The most common absolute interval objects you will encounter are
 //!
-//! - [`AbsoluteBoundPair`]
-//! - [`EmptiableAbsoluteBoundPair`]
-//! - [`BoundedAbsoluteInterval`]
-//! - [`HalfBoundedAbsoluteInterval`]
+//! - [`AbsBoundPair`]
+//! - [`EmptiableAbsBoundPair`]
+//! - [`BoundedAbsInterval`]
+//! - [`HalfBoundedAbsInterval`]
+//!
+//! Refer to [the `intervals` module](crate::intervals) for more information about how intervals are structured.
 
-use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
 
-use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::utils::{inline_docs, tests};
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::ops::{BoundOrd, BoundOrdering, BoundOverlapAmbiguity};
 
 pub mod bound;
 pub mod bound_pair;
@@ -24,34 +25,95 @@ pub mod emptiable_bound_pair;
 pub mod emptiable_interval;
 pub mod end_bound;
 pub mod finite_bound;
+pub mod finite_bound_position;
+pub mod finite_end_bound;
+pub mod finite_start_bound;
 pub mod half_bounded_interval;
+pub mod half_bounded_to_future_interval;
+pub mod half_bounded_to_past_interval;
 pub mod interval;
 pub mod start_bound;
 
-tests! {
-    mod bounded_interval_tests;
-    mod bound_tests;
-    mod bound_pair_tests;
-    mod emptiable_bound_pair_tests;
-    mod emptiable_interval_tests;
-    mod end_bound_tests;
-    mod finite_bound_tests;
-    mod half_bounded_interval_tests;
-    mod interval_tests;
-    mod start_bound_tests;
-}
+#[cfg(test)]
+mod bound_pair_tests;
+#[cfg(test)]
+mod bound_tests;
+#[cfg(test)]
+mod bounded_interval_tests;
+#[cfg(test)]
+mod emptiable_bound_pair_tests;
+#[cfg(test)]
+mod emptiable_interval_tests;
+#[cfg(test)]
+mod end_bound_tests;
+#[cfg(test)]
+mod finite_bound_position_tests;
+#[cfg(test)]
+mod half_bounded_interval_tests;
+#[cfg(test)]
+mod interval_tests;
+#[cfg(test)]
+mod start_bound_tests;
 
-inline_docs! {
-    pub use bounded_interval::*;
-    pub use bound::*;
-    pub use bound_pair::*;
-    pub use end_bound::*;
-    pub use emptiable_bound_pair::*;
-    pub use emptiable_interval::*;
-    pub use finite_bound::*;
-    pub use half_bounded_interval::*;
-    pub use interval::*;
-    pub use start_bound::*;
+#[doc(inline)]
+pub use bound::*;
+#[doc(inline)]
+pub use bound_pair::*;
+#[doc(inline)]
+pub use bounded_interval::*;
+#[doc(inline)]
+pub use emptiable_bound_pair::*;
+#[doc(inline)]
+pub use emptiable_interval::*;
+#[doc(inline)]
+pub use end_bound::*;
+#[doc(inline)]
+pub use finite_bound::*;
+#[doc(inline)]
+pub use finite_bound_position::*;
+#[doc(inline)]
+pub use finite_end_bound::*;
+#[doc(inline)]
+pub use finite_start_bound::*;
+#[doc(inline)]
+pub use half_bounded_interval::*;
+#[doc(inline)]
+pub use half_bounded_to_future_interval::*;
+#[doc(inline)]
+pub use half_bounded_to_past_interval::*;
+#[doc(inline)]
+pub use interval::*;
+#[doc(inline)]
+pub use start_bound::*;
+
+/// Swaps an absolute finite start bound with an absolute finite end bound
+///
+/// # Examples
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     swap_abs_finite_start_end_bounds,
+/// # };
+/// let first_time = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+/// let second_time = "2026-05-01 00:00:00Z".parse::<Timestamp>()?;
+///
+/// let mut start = AbsFiniteBoundPos::new(first_time).to_finite_start_bound();
+/// let mut end = AbsFiniteBoundPos::new(second_time).to_finite_end_bound();
+///
+/// swap_abs_finite_start_end_bounds(&mut start, &mut end);
+///
+/// assert_eq!(start.pos().time(), second_time);
+/// assert_eq!(end.pos().time(), first_time);
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+pub fn swap_abs_finite_start_end_bounds(finite_start: &mut AbsFiniteStartBound, finite_end: &mut AbsFiniteEndBound) {
+    let AbsFiniteStartBound(finite_start_pos) = finite_start;
+    let AbsFiniteEndBound(finite_end_pos) = finite_end;
+
+    std::mem::swap(finite_start_pos, finite_end_pos);
 }
 
 /// Swaps an absolute start bound with an absolute end bound
@@ -64,20 +126,20 @@ inline_docs! {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, swap_absolute_bound_pair};
+/// # use periodical::intervals::absolute::{AbsFiniteBoundPos, swap_abs_start_end_bounds};
 /// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
 /// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
 ///
-/// let mut start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-/// let mut end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+/// let mut start = AbsFiniteBoundPos::new(start_time).to_start_bound();
+/// let mut end = AbsFiniteBoundPos::new(end_time).to_end_bound();
 ///
-/// swap_absolute_bound_pair(&mut start, &mut end);
+/// swap_abs_start_end_bounds(&mut start, &mut end);
 ///
-/// assert_eq!(start, AbsoluteFiniteBound::new(end_time).to_start_bound());
-/// assert_eq!(end, AbsoluteFiniteBound::new(start_time).to_end_bound());
+/// assert_eq!(start, AbsFiniteBoundPos::new(end_time).to_start_bound());
+/// assert_eq!(end, AbsFiniteBoundPos::new(start_time).to_end_bound());
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut AbsoluteEndBound) {
+pub fn swap_abs_start_end_bounds(start: &mut AbsStartBound, end: &mut AbsEndBound) {
     // We temporarily reborrow start and end for the match arms so that when a
     // pattern matches, they move out of their temporary scope and we can use
     // the original mutable references without guard patterns shenanigans.
@@ -85,17 +147,17 @@ pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut Absolu
     // where it is used within the body, So we always finish our business with
     // the reborrowed values first before accessing the original ones.
     match (&mut *start, &mut *end) {
-        (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture) => {},
-        (AbsoluteStartBound::InfinitePast, AbsoluteEndBound::Finite(finite_end)) => {
-            *start = finite_end.to_start_bound();
-            *end = AbsoluteEndBound::InfiniteFuture;
+        (AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture) => {},
+        (AbsStartBound::InfinitePast, AbsEndBound::Finite(finite_end)) => {
+            *start = finite_end.pos().to_start_bound();
+            *end = AbsEndBound::InfiniteFuture;
         },
-        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::InfiniteFuture) => {
-            *end = finite_start.to_end_bound();
-            *start = AbsoluteStartBound::InfinitePast;
+        (AbsStartBound::Finite(finite_start), AbsEndBound::InfiniteFuture) => {
+            *end = finite_start.pos().to_end_bound();
+            *start = AbsStartBound::InfinitePast;
         },
-        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
-            std::mem::swap(finite_start, finite_end);
+        (AbsStartBound::Finite(finite_start), AbsEndBound::Finite(finite_end)) => {
+            swap_abs_finite_start_end_bounds(finite_start, finite_end);
         },
     }
 }
@@ -103,15 +165,14 @@ pub fn swap_absolute_bound_pair(start: &mut AbsoluteStartBound, end: &mut Absolu
 /// Possible problems that can prevent creating an interval from the given start
 /// and end bounds
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AbsoluteBoundPairCheckForIntervalCreationError {
+pub enum AbsStartEndBoundsCheckForIntervalCreationError {
     /// Start bound is past the end bound
     StartPastEnd,
-    /// Both bounds are on the same time but don't have only inclusive bound
-    /// inclusivities
+    /// Both bounds are on the same time but don't have only inclusive bound inclusivities
     SameTimeButNotDoublyInclusive,
 }
 
-impl Display for AbsoluteBoundPairCheckForIntervalCreationError {
+impl Display for AbsStartEndBoundsCheckForIntervalCreationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::StartPastEnd => write!(f, "Start bound is past the end bound"),
@@ -123,121 +184,297 @@ impl Display for AbsoluteBoundPairCheckForIntervalCreationError {
     }
 }
 
-impl Error for AbsoluteBoundPairCheckForIntervalCreationError {}
+impl Error for AbsStartEndBoundsCheckForIntervalCreationError {}
 
-/// Checks if the given start and end bound are ready for creating an interval
-///
-/// This method is used as part of
-/// [`prepare_absolute_bound_pair_for_interval_creation`], which is used by
-/// [`AbsoluteBoundPair::new`], but also in other places where we want to make
-/// sure that a start and end bound are ready to be used as part of the interval
-/// without using methods like [`AbsoluteBoundPair::new`] that already go
-/// through this process.
+/// Checks whether the given finite start and finite end bounds are fit for creating an interval
 ///
 /// # Errors
 ///
-/// If the start bound is past the end bound,
-/// it returns
-/// [`StartPastEnd`](AbsoluteBoundPairCheckForIntervalCreationError::StartPastEnd).
+/// Returns [`StartPastEnd`](AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// if the start bound is positioned after the end bound.
 ///
-///
-/// If both bounds have the same time, but at least one of them has an exclusive
-/// bound inclusivity, it returns
-/// [`SameTimeButNotDoublyInclusive`](AbsoluteBoundPairCheckForIntervalCreationError::SameTimeButNotDoublyInclusive).
+/// Returns [`SameTimeButNotDoublyInclusive`](AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+/// if the bounds are positioned on the same time but are not doubly inclusive.
 ///
 /// # Examples
 ///
+/// ## Start past end
+///
 /// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
 /// # use periodical::intervals::absolute::{
-/// #     AbsoluteBoundPairCheckForIntervalCreationError, AbsoluteEndBound, AbsoluteStartBound,
-/// #     check_absolute_bound_pair_for_interval_creation,
+/// #     AbsFiniteBoundPos,
+/// #     AbsStartEndBoundsCheckForIntervalCreationError,
+/// #     check_abs_finite_start_end_bounds_for_interval_creation,
 /// # };
-/// fn validate_bounds_from_user(
-///     start: &AbsoluteStartBound,
-///     end: &AbsoluteEndBound,
-/// ) -> Result<(), String> {
-///     type IntervalCreaErr = AbsoluteBoundPairCheckForIntervalCreationError;
-///     match check_absolute_bound_pair_for_interval_creation(start, end) {
-///         Ok(()) => Ok(()),
-///         Err(IntervalCreaErr::StartPastEnd) => Err(
-///             "Start and end must be in chronological order!".to_string()
-///         ),
-///         Err(IntervalCreaErr::SameTimeButNotDoublyInclusive) => Err(
-///             "To represent a single point in time, both inclusivities must be inclusive!".to_string()
-///         ),
-///     }
-/// }
+/// let start = AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?)
+///     .to_finite_start_bound();
+/// let end =
+///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+///
+/// assert_eq!(
+///     check_abs_finite_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn check_absolute_bound_pair_for_interval_creation(
-    start: &AbsoluteStartBound,
-    end: &AbsoluteEndBound,
-) -> Result<(), AbsoluteBoundPairCheckForIntervalCreationError> {
-    match (start, end) {
-        (AbsoluteStartBound::InfinitePast, _) | (_, AbsoluteEndBound::InfiniteFuture) => Ok(()),
-        (AbsoluteStartBound::Finite(finite_start), AbsoluteEndBound::Finite(finite_end)) => {
-            match finite_start.time().cmp(&finite_end.time()) {
-                Ordering::Less => Ok(()),
-                Ordering::Equal => {
-                    if finite_start.inclusivity() == BoundInclusivity::Inclusive
-                        && finite_end.inclusivity() == BoundInclusivity::Inclusive
-                    {
-                        Ok(())
-                    } else {
-                        Err(AbsoluteBoundPairCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
-                    }
-                },
-                Ordering::Greater => Err(AbsoluteBoundPairCheckForIntervalCreationError::StartPastEnd),
+///
+/// ## Same time but not doubly inclusive
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     AbsStartEndBoundsCheckForIntervalCreationError,
+/// #     check_abs_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let start =
+///     AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive).to_finite_start_bound();
+/// let end = AbsFiniteBoundPos::new(time).to_finite_end_bound();
+///
+/// assert_eq!(
+///     check_abs_finite_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+///
+/// ## OK
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     check_abs_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// let start = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?)
+///     .to_finite_start_bound();
+/// let end =
+///     AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+///
+/// assert_eq!(
+///     check_abs_finite_start_end_bounds_for_interval_creation(&start, &end),
+///     Ok(())
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+pub fn check_abs_finite_start_end_bounds_for_interval_creation(
+    start: &AbsFiniteStartBound,
+    end: &AbsFiniteEndBound,
+) -> Result<(), AbsStartEndBoundsCheckForIntervalCreationError> {
+    match start.bound_cmp(end) {
+        BoundOrdering::Less => Ok(()),
+        BoundOrdering::Equal(Some(BoundOverlapAmbiguity::StartEnd(start_incl, end_incl))) => {
+            if start_incl == BoundInclusivity::Inclusive && end_incl == BoundInclusivity::Inclusive {
+                Ok(())
+            } else {
+                Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
             }
+        },
+        BoundOrdering::Equal(_) => unreachable!(),
+        BoundOrdering::Greater => Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd),
+    }
+}
+
+/// Checks whether the given start and end bounds are fit for creating an interval
+///
+/// # Errors
+///
+/// Returns [`StartPastEnd`](AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// if the start bound is positioned after the end bound.
+///
+/// Returns [`SameTimeButNotDoublyInclusive`](AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+/// if the bounds are positioned on the same time but are not doubly inclusive.
+///
+/// # Examples
+///
+/// ## Start past end
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     AbsStartEndBoundsCheckForIntervalCreationError,
+/// #     check_abs_start_end_bounds_for_interval_creation,
+/// # };
+/// let start =
+///     AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_start_bound();
+/// let end = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_end_bound();
+///
+/// assert_eq!(
+///     check_abs_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd)
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+///
+/// ## Same time but not doubly inclusive
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     AbsStartEndBoundsCheckForIntervalCreationError,
+/// #     check_abs_start_end_bounds_for_interval_creation,
+/// # };
+/// # use periodical::intervals::meta::BoundInclusivity;
+/// let time = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// let start =
+///     AbsFiniteBoundPos::new_with_incl(time, BoundInclusivity::Exclusive).to_start_bound();
+/// let end = AbsFiniteBoundPos::new(time).to_end_bound();
+///
+/// assert_eq!(
+///     check_abs_start_end_bounds_for_interval_creation(&start, &end),
+///     Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive)
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+///
+/// ## OK
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     check_abs_start_end_bounds_for_interval_creation,
+/// # };
+/// let start =
+///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound();
+/// let end = AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_end_bound();
+///
+/// assert_eq!(
+///     check_abs_start_end_bounds_for_interval_creation(&start, &end),
+///     Ok(())
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+pub fn check_abs_start_end_bounds_for_interval_creation(
+    start: &AbsStartBound,
+    end: &AbsEndBound,
+) -> Result<(), AbsStartEndBoundsCheckForIntervalCreationError> {
+    match (start, end) {
+        (AbsStartBound::InfinitePast, _) | (_, AbsEndBound::InfiniteFuture) => Ok(()),
+        (AbsStartBound::Finite(finite_start), AbsEndBound::Finite(finite_end)) => {
+            check_abs_finite_start_end_bounds_for_interval_creation(finite_start, finite_end)
         },
     }
 }
 
-/// Prepares a start and end bound for being used as part of an interval
+/// Prepares a finite start and a finite end bound to be used for an interval
 ///
-/// If some problems are present, see
-/// [`check_absolute_bound_pair_for_interval_creation`], it resolves them
-/// automatically by modifying the passed mutable references for the start and
-/// end bound.
+/// Checks whether the bounds are fit for creating an interval and automatically corrects
+/// any problem.
 ///
-/// The returned boolean indicates whether a change was operated in order to fix
-/// the given bounds.
+/// If the start bound is past the end bound, they are swapped.
+/// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
+/// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
 /// # Examples
 ///
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
-/// # use periodical::intervals::absolute::{AbsoluteFiniteBound, prepare_absolute_bound_pair_for_interval_creation};
-/// let start_time = "2025-01-01 16:00:00Z".parse::<Timestamp>()?;
-/// let end_time = "2025-01-01 08:00:00Z".parse::<Timestamp>()?;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     AbsStartEndBoundsCheckForIntervalCreationError,
+/// #     prepare_abs_finite_start_end_bounds_for_interval_creation,
+/// # };
+/// let mut start = AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?)
+///     .to_finite_start_bound();
+/// let mut end =
+///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
 ///
-/// // Warning: not in chronological order!
-/// let mut start = AbsoluteFiniteBound::new(start_time).to_start_bound();
-/// let mut end = AbsoluteFiniteBound::new(end_time).to_end_bound();
+/// prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
 ///
-/// let was_changed = prepare_absolute_bound_pair_for_interval_creation(&mut start, &mut end);
-///
-/// if was_changed {
-///     // Prompt the user for confirmation regarding the fixed bounds
-/// }
+/// assert_eq!(
+///     start.pos().time(),
+///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?
+/// );
+/// assert_eq!(
+///     end.pos().time(),
+///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?
+/// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn prepare_absolute_bound_pair_for_interval_creation(
-    start_mut: &mut AbsoluteStartBound,
-    end_mut: &mut AbsoluteEndBound,
+pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
+    start: &mut AbsFiniteStartBound,
+    end: &mut AbsFiniteEndBound,
 ) -> bool {
-    match check_absolute_bound_pair_for_interval_creation(start_mut, end_mut) {
+    match check_abs_finite_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
-        Err(AbsoluteBoundPairCheckForIntervalCreationError::StartPastEnd) => {
-            swap_absolute_bound_pair(start_mut, end_mut);
+        Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
+            swap_abs_finite_start_end_bounds(start, end);
             true
         },
-        Err(AbsoluteBoundPairCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
-            if let AbsoluteStartBound::Finite(finite_start_mut) = start_mut {
+        Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
+            let AbsFiniteStartBound(finite_start) = start;
+            let AbsFiniteEndBound(finite_end) = end;
+
+            finite_start.set_inclusivity(BoundInclusivity::Inclusive);
+            finite_end.set_inclusivity(BoundInclusivity::Inclusive);
+
+            true
+        },
+    }
+}
+
+/// Prepares a start and an end bound to be used for an interval
+///
+/// Checks whether the bounds are fit for creating an interval and automatically corrects
+/// any problem.
+///
+/// If the start bound is past the end bound, they are swapped.
+/// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
+/// are set to [`Inclusive`](BoundInclusivity::Inclusive).
+///
+/// # Examples
+///
+/// ```
+/// # use std::error::Error;
+/// # use jiff::Timestamp;
+/// # use periodical::intervals::absolute::{
+/// #     AbsFiniteBoundPos,
+/// #     AbsStartEndBoundsCheckForIntervalCreationError,
+/// #     prepare_abs_bound_pair_for_interval_creation,
+/// # };
+/// let mut start =
+///     AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_start_bound();
+/// let mut end =
+///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_end_bound();
+///
+/// prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+///
+/// assert_eq!(
+///     start,
+///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound()
+/// );
+/// assert_eq!(
+///     end,
+///     AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_end_bound()
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+pub fn prepare_abs_bound_pair_for_interval_creation(start: &mut AbsStartBound, end: &mut AbsEndBound) -> bool {
+    match check_abs_start_end_bounds_for_interval_creation(start, end) {
+        Ok(()) => false,
+        Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
+            swap_abs_start_end_bounds(start, end);
+            true
+        },
+        Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive) => {
+            if let AbsStartBound::Finite(AbsFiniteStartBound(finite_start_mut)) = start {
                 finite_start_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }
 
-            if let AbsoluteEndBound::Finite(finite_end_mut) = end_mut {
+            if let AbsEndBound::Finite(AbsFiniteEndBound(finite_end_mut)) = end {
                 finite_end_mut.set_inclusivity(BoundInclusivity::Inclusive);
             }
 

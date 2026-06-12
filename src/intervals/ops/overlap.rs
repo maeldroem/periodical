@@ -27,16 +27,16 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 //! # use periodical::intervals::ops::overlap::CanPositionOverlap;
-//! let first_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//! let first_interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 08:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 14:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -44,14 +44,14 @@
 //!     .to_end_bound(),
 //! );
 //!
-//! let second_interval = AbsoluteBoundPair::new(
-//!     AbsoluteFiniteBound::new(
+//! let second_interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 12:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
 //!     )
 //!     .to_start_bound(),
-//!     AbsoluteFiniteBound::new(
+//!     AbsFiniteBoundPos::new(
 //!         "2025-01-01 16:00:00[Europe/Oslo]"
 //!             .parse::<Zoned>()?
 //!             .timestamp(),
@@ -72,15 +72,16 @@ use arbitrary::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    HalfBoundedAbsoluteInterval,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteEndBound,
+    AbsFiniteStartBound,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    HalfBoundedAbsInterval,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::{HasBoundInclusivity, Interval};
 use crate::intervals::ops::bound_overlap_ambiguity::{
@@ -89,15 +90,16 @@ use crate::intervals::ops::bound_overlap_ambiguity::{
     DisambiguatedBoundOverlap,
 };
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteEndBound,
+    RelFiniteStartBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -537,26 +539,22 @@ pub fn overlap_position_disambiguation(
         Op::Outside => Dop::Outside,
         Op::OutsideBefore => Dop::OutsideBefore,
         Op::OutsideAfter => Dop::OutsideAfter,
-        Op::EndsOnStart(ambiguity) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::CrossesStart,
-                Dbo::Equal => Dop::EndsOnStart,
-                Dbo::After => Dop::OutsideBefore,
-            }
+        Op::EndsOnStart(ambiguity) => match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
+            Dbo::Before => Dop::CrossesStart,
+            Dbo::Equal => Dop::EndsOnStart,
+            Dbo::After => Dop::OutsideBefore,
         },
-        Op::StartsOnEnd(ambiguity) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::OutsideAfter,
-                Dbo::Equal => Dop::StartsOnEnd,
-                Dbo::After => Dop::CrossesEnd,
-            }
+        Op::StartsOnEnd(ambiguity) => match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
+            Dbo::Before => Dop::OutsideAfter,
+            Dbo::Equal => Dop::StartsOnEnd,
+            Dbo::After => Dop::CrossesEnd,
         },
         Op::CrossesStart => Dop::CrossesStart,
         Op::CrossesEnd => Dop::CrossesEnd,
         Op::Inside => Dop::Inside,
         Op::InsideAndSameStart(None) => Dop::InsideAndSameStart,
         Op::InsideAndSameStart(Some(ambiguity)) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
+            match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
                 Dbo::Before => Dop::Inside,
                 Dbo::Equal => Dop::InsideAndSameStart,
                 Dbo::After => Dop::CrossesStart,
@@ -582,16 +580,14 @@ pub fn overlap_position_disambiguation(
             )
         },
         Op::InsideAndSameEnd(None) => Dop::InsideAndSameEnd,
-        Op::InsideAndSameEnd(Some(ambiguity)) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::CrossesEnd,
-                Dbo::Equal => Dop::InsideAndSameEnd,
-                Dbo::After => Dop::Inside,
-            }
+        Op::InsideAndSameEnd(Some(ambiguity)) => match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
+            Dbo::Before => Dop::CrossesEnd,
+            Dbo::Equal => Dop::InsideAndSameEnd,
+            Dbo::After => Dop::Inside,
         },
         Op::ContainsAndSameStart(None) => Dop::ContainsAndSameStart,
         Op::ContainsAndSameStart(Some(ambiguity)) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
+            match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
                 Dbo::Before => Dop::CrossesEnd,
                 Dbo::Equal => Dop::ContainsAndSameStart,
                 Dbo::After => Dop::Contains,
@@ -599,7 +595,7 @@ pub fn overlap_position_disambiguation(
         },
         Op::ContainsAndSameEnd(None) => Dop::ContainsAndSameEnd,
         Op::ContainsAndSameEnd(Some(ambiguity)) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
+            match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
                 Dbo::Before => Dop::Contains,
                 Dbo::Equal => Dop::ContainsAndSameEnd,
                 Dbo::After => Dop::CrossesStart,
@@ -620,19 +616,15 @@ pub fn overlap_position_bound_ambiguity_disambiguation_equal_half_bounded(
     type Dop = DisambiguatedOverlapPosition;
 
     match ambiguity {
-        BoundOverlapAmbiguity::BothStarts(..) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::InsideAndSameEnd,
-                Dbo::Equal => Dop::Equal,
-                Dbo::After => Dop::ContainsAndSameEnd,
-            }
+        BoundOverlapAmbiguity::BothStarts(..) => match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
+            Dbo::Before => Dop::InsideAndSameEnd,
+            Dbo::Equal => Dop::Equal,
+            Dbo::After => Dop::ContainsAndSameEnd,
         },
-        BoundOverlapAmbiguity::BothEnds(..) => {
-            match ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set) {
-                Dbo::Before => Dop::ContainsAndSameStart,
-                Dbo::Equal => Dop::Equal,
-                Dbo::After => Dop::InsideAndSameStart,
-            }
+        BoundOverlapAmbiguity::BothEnds(..) => match ambiguity.disambiguate(bound_overlap_disambiguation_rule_set) {
+            Dbo::Before => Dop::ContainsAndSameStart,
+            Dbo::Equal => Dop::Equal,
+            Dbo::After => Dop::InsideAndSameStart,
         },
         BoundOverlapAmbiguity::StartEnd(..) | BoundOverlapAmbiguity::EndStart(..) => {
             unreachable!(
@@ -655,8 +647,8 @@ pub fn overlap_position_bound_ambiguity_disambiguation_equal_bounded(
     type Dbo = DisambiguatedBoundOverlap;
     type Dop = DisambiguatedOverlapPosition;
 
-    let disambiguated_start_bound = start_ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set);
-    let disambiguated_end_bound = end_ambiguity.disambiguate_using_rule_set(bound_overlap_disambiguation_rule_set);
+    let disambiguated_start_bound = start_ambiguity.disambiguate(bound_overlap_disambiguation_rule_set);
+    let disambiguated_end_bound = end_ambiguity.disambiguate(bound_overlap_disambiguation_rule_set);
 
     match (disambiguated_start_bound, disambiguated_end_bound) {
         (Dbo::Before, Dbo::Before) => Dop::CrossesEnd,
@@ -884,24 +876,24 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
-/// let compared_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+/// let compared_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let reference_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new_with_inclusivity(
+/// let reference_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new_with_incl(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -918,24 +910,24 @@ pub fn deny_future_adjacency_overlap_rule_counts_as_overlap(
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapRule, OverlapRuleSet};
-/// let compared_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+/// let compared_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let reference_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new_with_inclusivity(
+/// let reference_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new_with_incl(
 ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
@@ -971,25 +963,25 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition, OverlapRuleSet};
-    /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let compared_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    /// let reference_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1023,24 +1015,24 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
-    /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let compared_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    /// let reference_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1073,17 +1065,17 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap:: CanPositionOverlap;
-    /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let compared_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 11:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1091,14 +1083,14 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let reference_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1140,24 +1132,24 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapRule, OverlapRuleSet};
-    /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let compared_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    /// let reference_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1186,8 +1178,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
         RI: IntoIterator<Item = &'a OverlapRule>,
     {
         self.disambiguated_overlap_position(rhs, rule_set)
-            .map(|disambiguated_overlap_position| check_overlap_rules(disambiguated_overlap_position, rules))
-            .unwrap_or(false)
+            .is_ok_and(|disambiguated_overlap_position| check_overlap_rules(disambiguated_overlap_position, rules))
     }
 
     /// Returns whether the given other interval overlaps the current interval
@@ -1207,18 +1198,18 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, OverlapPosition};
-    /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let compared_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1227,15 +1218,15 @@ pub trait CanPositionOverlap<Rhs = Self> {
     ///     .to_end_bound(),
     /// );
     ///
-    /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    /// let reference_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     )
     ///     .to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]"
     ///             .parse::<Zoned>()?
     ///             .timestamp(),
@@ -1273,7 +1264,7 @@ pub trait CanPositionOverlap<Rhs = Self> {
     where
         F: FnOnce(OverlapPosition) -> bool,
     {
-        self.overlap_position(rhs).map(f).unwrap_or(false)
+        self.overlap_position(rhs).is_ok_and(f)
     }
 
     /// Returns whether the given interval overlaps the current interval using
@@ -1292,26 +1283,26 @@ pub trait CanPositionOverlap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
     /// # use periodical::intervals::ops::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRuleSet};
-    /// let compared_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let compared_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let reference_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new_with_inclusivity(
+    /// let reference_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new_with_incl(
     ///         "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///         BoundInclusivity::Exclusive,
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -1344,15 +1335,13 @@ pub trait CanPositionOverlap<Rhs = Self> {
     where
         F: FnOnce(DisambiguatedOverlapPosition) -> bool,
     {
-        self.disambiguated_overlap_position(rhs, rule_set)
-            .map(f)
-            .unwrap_or(false)
+        self.disambiguated_overlap_position(rhs, rule_set).is_ok_and(f)
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for AbsoluteBoundPair
+impl<Rhs> CanPositionOverlap<Rhs> for AbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Error = Infallible;
 
@@ -1361,9 +1350,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for EmptiableAbsoluteBoundPair
+impl<Rhs> CanPositionOverlap<Rhs> for EmptiableAbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Error = Infallible;
 
@@ -1372,9 +1361,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for AbsoluteInterval
+impl<Rhs> CanPositionOverlap<Rhs> for AbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Error = Infallible;
 
@@ -1383,9 +1372,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for BoundedAbsoluteInterval
+impl<Rhs> CanPositionOverlap<Rhs> for BoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Error = Infallible;
 
@@ -1394,9 +1383,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for HalfBoundedAbsoluteInterval
+impl<Rhs> CanPositionOverlap<Rhs> for HalfBoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Error = Infallible;
 
@@ -1405,9 +1394,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for RelativeBoundPair
+impl<Rhs> CanPositionOverlap<Rhs> for RelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Error = Infallible;
 
@@ -1416,9 +1405,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for EmptiableRelativeBoundPair
+impl<Rhs> CanPositionOverlap<Rhs> for EmptiableRelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Error = Infallible;
 
@@ -1427,9 +1416,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for RelativeInterval
+impl<Rhs> CanPositionOverlap<Rhs> for RelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Error = Infallible;
 
@@ -1438,9 +1427,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for BoundedRelativeInterval
+impl<Rhs> CanPositionOverlap<Rhs> for BoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Error = Infallible;
 
@@ -1449,9 +1438,9 @@ where
     }
 }
 
-impl<Rhs> CanPositionOverlap<Rhs> for HalfBoundedRelativeInterval
+impl<Rhs> CanPositionOverlap<Rhs> for HalfBoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Error = Infallible;
 
@@ -1460,42 +1449,42 @@ where
     }
 }
 
-impl CanPositionOverlap<AbsoluteBoundPair> for UnboundedInterval {
+impl CanPositionOverlap<AbsBoundPair> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &AbsoluteBoundPair) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &AbsBoundPair) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bound_pair(self, rhs))
     }
 }
 
-impl CanPositionOverlap<EmptiableAbsoluteBoundPair> for UnboundedInterval {
+impl CanPositionOverlap<EmptiableAbsBoundPair> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &EmptiableAbsoluteBoundPair) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &EmptiableAbsBoundPair) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bound_pair(self, rhs))
     }
 }
 
-impl CanPositionOverlap<AbsoluteInterval> for UnboundedInterval {
+impl CanPositionOverlap<AbsInterval> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &AbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &AbsInterval) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bound_pair(self, rhs))
     }
 }
 
-impl CanPositionOverlap<BoundedAbsoluteInterval> for UnboundedInterval {
+impl CanPositionOverlap<BoundedAbsInterval> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &BoundedAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &BoundedAbsInterval) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bound_pair(self, rhs))
     }
 }
 
-impl CanPositionOverlap<HalfBoundedAbsoluteInterval> for UnboundedInterval {
+impl CanPositionOverlap<HalfBoundedAbsInterval> for UnboundedInterval {
     type Error = Infallible;
 
-    fn overlap_position(&self, rhs: &HalfBoundedAbsoluteInterval) -> Result<OverlapPosition, Self::Error> {
+    fn overlap_position(&self, rhs: &HalfBoundedAbsInterval) -> Result<OverlapPosition, Self::Error> {
         Ok(overlap_position_emptiable_abs_bound_pair(self, rhs))
     }
 }
@@ -1527,13 +1516,13 @@ where
     }
 }
 
-/// Positions the overlap between two [`AbsoluteBoundPair`]
+/// Positions the overlap between two [`AbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn overlap_position_abs_bound_pair(og: &AbsoluteBoundPair, other: &AbsoluteBoundPair) -> OverlapPosition {
-    type Sb = AbsoluteStartBound;
-    type Eb = AbsoluteEndBound;
+pub fn overlap_position_abs_bound_pair(og: &AbsBoundPair, other: &AbsBoundPair) -> OverlapPosition {
+    type Sb = AbsStartBound;
+    type Eb = AbsEndBound;
     type Op = OverlapPosition;
 
     match ((og.start(), og.end()), (other.start(), other.end())) {
@@ -1545,12 +1534,12 @@ pub fn overlap_position_abs_bound_pair(og: &AbsoluteBoundPair, other: &AbsoluteB
         ((Sb::Finite(..), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::InfiniteFuture)) => Op::InsideAndSameEnd(None),
         (_, (Sb::InfinitePast, Eb::InfiniteFuture)) => Op::Inside,
         ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(other_end))) => {
-            match og_end.time().cmp(&other_end.time()) {
+            match og_end.pos().cmp(&other_end.pos()) {
                 Ordering::Less => Op::InsideAndSameStart(None),
                 Ordering::Equal => Op::Equal(
                     Some(BoundOverlapAmbiguity::BothEnds(
-                        og_end.inclusivity(),
-                        other_end.inclusivity(),
+                        og_end.pos().inclusivity(),
+                        other_end.pos().inclusivity(),
                     )),
                     None,
                 ),
@@ -1558,12 +1547,12 @@ pub fn overlap_position_abs_bound_pair(og: &AbsoluteBoundPair, other: &AbsoluteB
             }
         },
         ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
-            match og_start.time().cmp(&other_start.time()) {
+            match og_start.pos().cmp(&other_start.pos()) {
                 Ordering::Less => Op::ContainsAndSameEnd(None),
                 Ordering::Equal => Op::Equal(
                     Some(BoundOverlapAmbiguity::BothStarts(
-                        og_start.inclusivity(),
-                        other_start.inclusivity(),
+                        og_start.pos().inclusivity(),
+                        other_start.pos().inclusivity(),
                     )),
                     None,
                 ),
@@ -1571,21 +1560,21 @@ pub fn overlap_position_abs_bound_pair(og: &AbsoluteBoundPair, other: &AbsoluteB
             }
         },
         ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
-            match og_end.time().cmp(&other_start.time()) {
+            match og_end.pos().cmp(&other_start.pos()) {
                 Ordering::Less => Op::OutsideBefore,
                 Ordering::Equal => Op::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-                    og_end.inclusivity(),
-                    other_start.inclusivity(),
+                    og_end.pos().inclusivity(),
+                    other_start.pos().inclusivity(),
                 )),
                 Ordering::Greater => Op::CrossesStart,
             }
         },
         ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::Finite(other_end))) => {
-            match og_start.time().cmp(&other_end.time()) {
+            match og_start.pos().cmp(&other_end.pos()) {
                 Ordering::Less => Op::CrossesStart,
                 Ordering::Equal => Op::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-                    og_start.inclusivity(),
-                    other_end.inclusivity(),
+                    og_start.pos().inclusivity(),
+                    other_end.pos().inclusivity(),
                 )),
                 Ordering::Greater => Op::OutsideAfter,
             }
@@ -1615,23 +1604,23 @@ pub fn overlap_position_abs_bound_pair(og: &AbsoluteBoundPair, other: &AbsoluteB
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_half_bounded_past_bounded(
-    ref_bound: &AbsoluteFiniteBound,
-    other_start: &AbsoluteFiniteBound,
-    other_end: &AbsoluteFiniteBound,
+    ref_bound: &AbsFiniteEndBound,
+    other_start: &AbsFiniteStartBound,
+    other_end: &AbsFiniteEndBound,
 ) -> OverlapPosition {
     match (
-        ref_bound.time().cmp(&other_start.time()),
-        ref_bound.time().cmp(&other_end.time()),
+        ref_bound.pos().cmp(&other_start.pos()),
+        ref_bound.pos().cmp(&other_end.pos()),
     ) {
         (Ordering::Less, _) => OverlapPosition::OutsideBefore,
         (Ordering::Equal, _) => OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-            ref_bound.inclusivity(),
-            other_start.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_start.pos().inclusivity(),
         )),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
         (_, Ordering::Equal) => OverlapPosition::ContainsAndSameEnd(Some(BoundOverlapAmbiguity::BothEnds(
-            ref_bound.inclusivity(),
-            other_end.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_end.pos().inclusivity(),
         ))),
         (_, Ordering::Greater) => OverlapPosition::Contains,
     }
@@ -1643,23 +1632,23 @@ pub fn overlap_position_abs_half_bounded_past_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_half_bounded_future_bounded(
-    ref_bound: &AbsoluteFiniteBound,
-    other_start: &AbsoluteFiniteBound,
-    other_end: &AbsoluteFiniteBound,
+    ref_bound: &AbsFiniteStartBound,
+    other_start: &AbsFiniteStartBound,
+    other_end: &AbsFiniteEndBound,
 ) -> OverlapPosition {
     match (
-        ref_bound.time().cmp(&other_start.time()),
-        ref_bound.time().cmp(&other_end.time()),
+        ref_bound.pos().cmp(&other_start.pos()),
+        ref_bound.pos().cmp(&other_end.pos()),
     ) {
         (Ordering::Less, _) => OverlapPosition::Contains,
         (Ordering::Equal, _) => OverlapPosition::ContainsAndSameStart(Some(BoundOverlapAmbiguity::BothStarts(
-            ref_bound.inclusivity(),
-            other_start.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_start.pos().inclusivity(),
         ))),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
         (_, Ordering::Equal) => OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-            ref_bound.inclusivity(),
-            other_end.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_end.pos().inclusivity(),
         )),
         (_, Ordering::Greater) => OverlapPosition::OutsideAfter,
     }
@@ -1671,23 +1660,20 @@ pub fn overlap_position_abs_half_bounded_future_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_half_bounded_past(
-    og_start: &AbsoluteFiniteBound,
-    og_end: &AbsoluteFiniteBound,
-    ref_bound: &AbsoluteFiniteBound,
+    og_start: &AbsFiniteStartBound,
+    og_end: &AbsFiniteEndBound,
+    ref_bound: &AbsFiniteEndBound,
 ) -> OverlapPosition {
-    match (
-        ref_bound.time().cmp(&og_start.time()),
-        ref_bound.time().cmp(&og_end.time()),
-    ) {
+    match (ref_bound.pos().cmp(&og_start.pos()), ref_bound.pos().cmp(&og_end.pos())) {
         (Ordering::Less, _) => OverlapPosition::OutsideAfter,
         (Ordering::Equal, _) => OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-            og_start.inclusivity(),
-            ref_bound.inclusivity(),
+            og_start.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         )),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
         (_, Ordering::Equal) => OverlapPosition::InsideAndSameEnd(Some(BoundOverlapAmbiguity::BothEnds(
-            og_end.inclusivity(),
-            ref_bound.inclusivity(),
+            og_end.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         ))),
         (_, Ordering::Greater) => OverlapPosition::Inside,
     }
@@ -1699,23 +1685,20 @@ pub fn overlap_position_abs_bounded_half_bounded_past(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_half_bounded_future(
-    og_start: &AbsoluteFiniteBound,
-    og_end: &AbsoluteFiniteBound,
-    ref_bound: &AbsoluteFiniteBound,
+    og_start: &AbsFiniteStartBound,
+    og_end: &AbsFiniteEndBound,
+    ref_bound: &AbsFiniteStartBound,
 ) -> OverlapPosition {
-    match (
-        ref_bound.time().cmp(&og_start.time()),
-        ref_bound.time().cmp(&og_end.time()),
-    ) {
+    match (ref_bound.pos().cmp(&og_start.pos()), ref_bound.pos().cmp(&og_end.pos())) {
         (Ordering::Less, _) => OverlapPosition::Inside,
         (Ordering::Equal, _) => OverlapPosition::InsideAndSameStart(Some(BoundOverlapAmbiguity::BothStarts(
-            og_start.inclusivity(),
-            ref_bound.inclusivity(),
+            og_start.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         ))),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
         (_, Ordering::Equal) => OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-            og_end.inclusivity(),
-            ref_bound.inclusivity(),
+            og_end.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         )),
         (_, Ordering::Greater) => OverlapPosition::OutsideBefore,
     }
@@ -1726,85 +1709,82 @@ pub fn overlap_position_abs_bounded_half_bounded_future(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_abs_bounded_pair(
-    og_start: &AbsoluteFiniteBound,
-    og_end: &AbsoluteFiniteBound,
-    other_start: &AbsoluteFiniteBound,
-    other_end: &AbsoluteFiniteBound,
+    og_start: &AbsFiniteStartBound,
+    og_end: &AbsFiniteEndBound,
+    other_start: &AbsFiniteStartBound,
+    other_end: &AbsFiniteEndBound,
 ) -> OverlapPosition {
     let og_start_cmp = (
-        og_start.time().cmp(&other_start.time()),
-        og_start.time().cmp(&other_end.time()),
+        og_start.pos().cmp(&other_start.pos()),
+        og_start.pos().cmp(&other_end.pos()),
     );
-    let og_end_cmp = (
-        og_end.time().cmp(&other_start.time()),
-        og_end.time().cmp(&other_end.time()),
-    );
+    let og_end_cmp = (og_end.pos().cmp(&other_start.pos()), og_end.pos().cmp(&other_end.pos()));
 
     match (og_start_cmp, og_end_cmp) {
         (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
         ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
         (_, (Ordering::Equal, _)) => OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-            og_end.inclusivity(),
-            other_start.inclusivity(),
+            og_end.pos().inclusivity(),
+            other_start.pos().inclusivity(),
         )),
         ((_, Ordering::Equal), _) => OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-            og_start.inclusivity(),
-            other_end.inclusivity(),
+            og_start.pos().inclusivity(),
+            other_end.pos().inclusivity(),
         )),
         ((Ordering::Less, _), (Ordering::Greater, Ordering::Less)) => OverlapPosition::CrossesStart,
         ((Ordering::Greater, Ordering::Less), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
         ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
         ((Ordering::Equal, _), (_, Ordering::Less)) => OverlapPosition::InsideAndSameStart(Some(
-            BoundOverlapAmbiguity::BothStarts(og_start.inclusivity(), other_start.inclusivity()),
+            BoundOverlapAmbiguity::BothStarts(og_start.pos().inclusivity(), other_start.pos().inclusivity()),
         )),
         ((Ordering::Greater, _), (_, Ordering::Equal)) => OverlapPosition::InsideAndSameEnd(Some(
-            BoundOverlapAmbiguity::BothEnds(og_end.inclusivity(), other_end.inclusivity()),
+            BoundOverlapAmbiguity::BothEnds(og_end.pos().inclusivity(), other_end.pos().inclusivity()),
         )),
         ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal(
             Some(BoundOverlapAmbiguity::BothStarts(
-                og_start.inclusivity(),
-                other_start.inclusivity(),
+                og_start.pos().inclusivity(),
+                other_start.pos().inclusivity(),
             )),
             Some(BoundOverlapAmbiguity::BothEnds(
-                og_end.inclusivity(),
-                other_end.inclusivity(),
+                og_end.pos().inclusivity(),
+                other_end.pos().inclusivity(),
             )),
         ),
         ((Ordering::Equal, _), (_, Ordering::Greater)) => OverlapPosition::ContainsAndSameStart(Some(
-            BoundOverlapAmbiguity::BothStarts(og_start.inclusivity(), other_start.inclusivity()),
+            BoundOverlapAmbiguity::BothStarts(og_start.pos().inclusivity(), other_start.pos().inclusivity()),
         )),
         ((Ordering::Less, _), (_, Ordering::Equal)) => OverlapPosition::ContainsAndSameEnd(Some(
-            BoundOverlapAmbiguity::BothEnds(og_end.inclusivity(), other_end.inclusivity()),
+            BoundOverlapAmbiguity::BothEnds(og_end.pos().inclusivity(), other_end.pos().inclusivity()),
         )),
         ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
     }
 }
 
 /// Positions the overlap between two implementors of
-/// [`HasEmptiableAbsoluteBoundPair`]
+/// [`HasEmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_emptiable_abs_bound_pair<T, U>(og: &T, other: &U) -> OverlapPosition
 where
-    T: HasEmptiableAbsoluteBoundPair,
-    U: HasEmptiableAbsoluteBoundPair,
+    T: HasEmptiableAbsBoundPair,
+    U: HasEmptiableAbsBoundPair,
 {
     match (og.emptiable_abs_bound_pair(), other.emptiable_abs_bound_pair()) {
-        (_, EmptiableAbsoluteBoundPair::Empty) | (EmptiableAbsoluteBoundPair::Empty, _) => OverlapPosition::Outside,
-        (EmptiableAbsoluteBoundPair::Bound(ref og_bounds), EmptiableAbsoluteBoundPair::Bound(ref other_bounds)) => {
+        (_, EmptiableAbsBoundPair::Empty) | (EmptiableAbsBoundPair::Empty, _) => OverlapPosition::Outside,
+        (EmptiableAbsBoundPair::Bound(ref og_bounds), EmptiableAbsBoundPair::Bound(ref other_bounds)) => {
             overlap_position_abs_bound_pair(og_bounds, other_bounds)
         },
     }
 }
 
-/// Positions the overlap between two [`RelativeBoundPair`]
+/// Positions the overlap between two [`RelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
-pub fn overlap_position_rel_bound_pair(og: &RelativeBoundPair, other: &RelativeBoundPair) -> OverlapPosition {
-    type Sb = RelativeStartBound;
-    type Eb = RelativeEndBound;
+pub fn overlap_position_rel_bound_pair(og: &RelBoundPair, other: &RelBoundPair) -> OverlapPosition {
+    type Sb = RelStartBound;
+    type Eb = RelEndBound;
     type Op = OverlapPosition;
 
     match ((og.start(), og.end()), (other.start(), other.end())) {
@@ -1816,12 +1796,12 @@ pub fn overlap_position_rel_bound_pair(og: &RelativeBoundPair, other: &RelativeB
         ((Sb::Finite(..), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::InfiniteFuture)) => Op::InsideAndSameEnd(None),
         (_, (Sb::InfinitePast, Eb::InfiniteFuture)) => Op::Inside,
         ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::InfinitePast, Eb::Finite(other_end))) => {
-            match og_end.offset().cmp(&other_end.offset()) {
+            match og_end.pos().cmp(&other_end.pos()) {
                 Ordering::Less => Op::InsideAndSameStart(None),
                 Ordering::Equal => Op::Equal(
                     Some(BoundOverlapAmbiguity::BothEnds(
-                        og_end.inclusivity(),
-                        other_end.inclusivity(),
+                        og_end.pos().inclusivity(),
+                        other_end.pos().inclusivity(),
                     )),
                     None,
                 ),
@@ -1829,12 +1809,12 @@ pub fn overlap_position_rel_bound_pair(og: &RelativeBoundPair, other: &RelativeB
             }
         },
         ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
-            match og_start.offset().cmp(&other_start.offset()) {
+            match og_start.pos().cmp(&other_start.pos()) {
                 Ordering::Less => Op::ContainsAndSameEnd(None),
                 Ordering::Equal => Op::Equal(
                     Some(BoundOverlapAmbiguity::BothStarts(
-                        og_start.inclusivity(),
-                        other_start.inclusivity(),
+                        og_start.pos().inclusivity(),
+                        other_start.pos().inclusivity(),
                     )),
                     None,
                 ),
@@ -1842,21 +1822,21 @@ pub fn overlap_position_rel_bound_pair(og: &RelativeBoundPair, other: &RelativeB
             }
         },
         ((Sb::InfinitePast, Eb::Finite(og_end)), (Sb::Finite(other_start), Eb::InfiniteFuture)) => {
-            match og_end.offset().cmp(&other_start.offset()) {
+            match og_end.pos().cmp(&other_start.pos()) {
                 Ordering::Less => Op::OutsideBefore,
                 Ordering::Equal => Op::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-                    og_end.inclusivity(),
-                    other_start.inclusivity(),
+                    og_end.pos().inclusivity(),
+                    other_start.pos().inclusivity(),
                 )),
                 Ordering::Greater => Op::CrossesStart,
             }
         },
         ((Sb::Finite(og_start), Eb::InfiniteFuture), (Sb::InfinitePast, Eb::Finite(other_end))) => {
-            match og_start.offset().cmp(&other_end.offset()) {
+            match og_start.pos().cmp(&other_end.pos()) {
                 Ordering::Less => Op::CrossesStart,
                 Ordering::Equal => Op::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-                    og_start.inclusivity(),
-                    other_end.inclusivity(),
+                    og_start.pos().inclusivity(),
+                    other_end.pos().inclusivity(),
                 )),
                 Ordering::Greater => Op::OutsideAfter,
             }
@@ -1886,23 +1866,23 @@ pub fn overlap_position_rel_bound_pair(og: &RelativeBoundPair, other: &RelativeB
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_half_bounded_past_bounded(
-    ref_bound: &RelativeFiniteBound,
-    other_start: &RelativeFiniteBound,
-    other_end: &RelativeFiniteBound,
+    ref_bound: &RelFiniteEndBound,
+    other_start: &RelFiniteStartBound,
+    other_end: &RelFiniteEndBound,
 ) -> OverlapPosition {
     match (
-        ref_bound.offset().cmp(&other_start.offset()),
-        ref_bound.offset().cmp(&other_end.offset()),
+        ref_bound.pos().cmp(&other_start.pos()),
+        ref_bound.pos().cmp(&other_end.pos()),
     ) {
         (Ordering::Less, _) => OverlapPosition::OutsideBefore,
         (Ordering::Equal, _) => OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-            ref_bound.inclusivity(),
-            other_start.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_start.pos().inclusivity(),
         )),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
         (_, Ordering::Equal) => OverlapPosition::ContainsAndSameEnd(Some(BoundOverlapAmbiguity::BothEnds(
-            ref_bound.inclusivity(),
-            other_end.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_end.pos().inclusivity(),
         ))),
         (_, Ordering::Greater) => OverlapPosition::Contains,
     }
@@ -1914,23 +1894,23 @@ pub fn overlap_position_rel_half_bounded_past_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_half_bounded_future_bounded(
-    ref_bound: &RelativeFiniteBound,
-    other_start: &RelativeFiniteBound,
-    other_end: &RelativeFiniteBound,
+    ref_bound: &RelFiniteStartBound,
+    other_start: &RelFiniteStartBound,
+    other_end: &RelFiniteEndBound,
 ) -> OverlapPosition {
     match (
-        ref_bound.offset().cmp(&other_start.offset()),
-        ref_bound.offset().cmp(&other_end.offset()),
+        ref_bound.pos().cmp(&other_start.pos()),
+        ref_bound.pos().cmp(&other_end.pos()),
     ) {
         (Ordering::Less, _) => OverlapPosition::Contains,
         (Ordering::Equal, _) => OverlapPosition::ContainsAndSameStart(Some(BoundOverlapAmbiguity::BothStarts(
-            ref_bound.inclusivity(),
-            other_start.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_start.pos().inclusivity(),
         ))),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
         (_, Ordering::Equal) => OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-            ref_bound.inclusivity(),
-            other_end.inclusivity(),
+            ref_bound.pos().inclusivity(),
+            other_end.pos().inclusivity(),
         )),
         (_, Ordering::Greater) => OverlapPosition::OutsideAfter,
     }
@@ -1942,23 +1922,20 @@ pub fn overlap_position_rel_half_bounded_future_bounded(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_half_bounded_past(
-    og_start: &RelativeFiniteBound,
-    og_end: &RelativeFiniteBound,
-    ref_bound: &RelativeFiniteBound,
+    og_start: &RelFiniteStartBound,
+    og_end: &RelFiniteEndBound,
+    ref_bound: &RelFiniteEndBound,
 ) -> OverlapPosition {
-    match (
-        ref_bound.offset().cmp(&og_start.offset()),
-        ref_bound.offset().cmp(&og_end.offset()),
-    ) {
+    match (ref_bound.pos().cmp(&og_start.pos()), ref_bound.pos().cmp(&og_end.pos())) {
         (Ordering::Less, _) => OverlapPosition::OutsideAfter,
         (Ordering::Equal, _) => OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-            og_start.inclusivity(),
-            ref_bound.inclusivity(),
+            og_start.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         )),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesEnd,
         (_, Ordering::Equal) => OverlapPosition::InsideAndSameEnd(Some(BoundOverlapAmbiguity::BothEnds(
-            og_end.inclusivity(),
-            ref_bound.inclusivity(),
+            og_end.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         ))),
         (_, Ordering::Greater) => OverlapPosition::Inside,
     }
@@ -1970,23 +1947,20 @@ pub fn overlap_position_rel_bounded_half_bounded_past(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_half_bounded_future(
-    og_start: &RelativeFiniteBound,
-    og_end: &RelativeFiniteBound,
-    ref_bound: &RelativeFiniteBound,
+    og_start: &RelFiniteStartBound,
+    og_end: &RelFiniteEndBound,
+    ref_bound: &RelFiniteStartBound,
 ) -> OverlapPosition {
-    match (
-        ref_bound.offset().cmp(&og_start.offset()),
-        ref_bound.offset().cmp(&og_end.offset()),
-    ) {
+    match (ref_bound.pos().cmp(&og_start.pos()), ref_bound.pos().cmp(&og_end.pos())) {
         (Ordering::Less, _) => OverlapPosition::Inside,
         (Ordering::Equal, _) => OverlapPosition::InsideAndSameStart(Some(BoundOverlapAmbiguity::BothStarts(
-            og_start.inclusivity(),
-            ref_bound.inclusivity(),
+            og_start.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         ))),
         (Ordering::Greater, Ordering::Less) => OverlapPosition::CrossesStart,
         (_, Ordering::Equal) => OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-            og_end.inclusivity(),
-            ref_bound.inclusivity(),
+            og_end.pos().inclusivity(),
+            ref_bound.pos().inclusivity(),
         )),
         (_, Ordering::Greater) => OverlapPosition::OutsideBefore,
     }
@@ -1997,73 +1971,70 @@ pub fn overlap_position_rel_bounded_half_bounded_future(
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_rel_bounded_pair(
-    og_start: &RelativeFiniteBound,
-    og_end: &RelativeFiniteBound,
-    other_start: &RelativeFiniteBound,
-    other_end: &RelativeFiniteBound,
+    og_start: &RelFiniteStartBound,
+    og_end: &RelFiniteEndBound,
+    other_start: &RelFiniteStartBound,
+    other_end: &RelFiniteEndBound,
 ) -> OverlapPosition {
     let og_start_cmp = (
-        og_start.offset().cmp(&other_start.offset()),
-        og_start.offset().cmp(&other_end.offset()),
+        og_start.pos().cmp(&other_start.pos()),
+        og_start.pos().cmp(&other_end.pos()),
     );
-    let og_end_cmp = (
-        og_end.offset().cmp(&other_start.offset()),
-        og_end.offset().cmp(&other_end.offset()),
-    );
+    let og_end_cmp = (og_end.pos().cmp(&other_start.pos()), og_end.pos().cmp(&other_end.pos()));
 
     match (og_start_cmp, og_end_cmp) {
         (_, (Ordering::Less, _)) => OverlapPosition::OutsideBefore,
         ((_, Ordering::Greater), _) => OverlapPosition::OutsideAfter,
         (_, (Ordering::Equal, _)) => OverlapPosition::EndsOnStart(BoundOverlapAmbiguity::EndStart(
-            og_end.inclusivity(),
-            other_start.inclusivity(),
+            og_end.pos().inclusivity(),
+            other_start.pos().inclusivity(),
         )),
         ((_, Ordering::Equal), _) => OverlapPosition::StartsOnEnd(BoundOverlapAmbiguity::StartEnd(
-            og_start.inclusivity(),
-            other_end.inclusivity(),
+            og_start.pos().inclusivity(),
+            other_end.pos().inclusivity(),
         )),
         ((Ordering::Less, _), (Ordering::Greater, Ordering::Less)) => OverlapPosition::CrossesStart,
         ((Ordering::Greater, Ordering::Less), (_, Ordering::Greater)) => OverlapPosition::CrossesEnd,
         ((Ordering::Greater, _), (_, Ordering::Less)) => OverlapPosition::Inside,
         ((Ordering::Equal, _), (_, Ordering::Less)) => OverlapPosition::InsideAndSameStart(Some(
-            BoundOverlapAmbiguity::BothStarts(og_start.inclusivity(), other_start.inclusivity()),
+            BoundOverlapAmbiguity::BothStarts(og_start.pos().inclusivity(), other_start.pos().inclusivity()),
         )),
         ((Ordering::Greater, _), (_, Ordering::Equal)) => OverlapPosition::InsideAndSameEnd(Some(
-            BoundOverlapAmbiguity::BothEnds(og_end.inclusivity(), other_end.inclusivity()),
+            BoundOverlapAmbiguity::BothEnds(og_end.pos().inclusivity(), other_end.pos().inclusivity()),
         )),
         ((Ordering::Equal, _), (_, Ordering::Equal)) => OverlapPosition::Equal(
             Some(BoundOverlapAmbiguity::BothStarts(
-                og_start.inclusivity(),
-                other_start.inclusivity(),
+                og_start.pos().inclusivity(),
+                other_start.pos().inclusivity(),
             )),
             Some(BoundOverlapAmbiguity::BothEnds(
-                og_end.inclusivity(),
-                other_end.inclusivity(),
+                og_end.pos().inclusivity(),
+                other_end.pos().inclusivity(),
             )),
         ),
         ((Ordering::Equal, _), (_, Ordering::Greater)) => OverlapPosition::ContainsAndSameStart(Some(
-            BoundOverlapAmbiguity::BothStarts(og_start.inclusivity(), other_start.inclusivity()),
+            BoundOverlapAmbiguity::BothStarts(og_start.pos().inclusivity(), other_start.pos().inclusivity()),
         )),
         ((Ordering::Less, _), (_, Ordering::Equal)) => OverlapPosition::ContainsAndSameEnd(Some(
-            BoundOverlapAmbiguity::BothEnds(og_end.inclusivity(), other_end.inclusivity()),
+            BoundOverlapAmbiguity::BothEnds(og_end.pos().inclusivity(), other_end.pos().inclusivity()),
         )),
         ((Ordering::Less, _), (_, Ordering::Greater)) => OverlapPosition::Contains,
     }
 }
 
 /// Positions the overlap between two implementors of
-/// [`HasEmptiableRelativeBoundPair`]
+/// [`HasEmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more info.
 #[must_use]
 pub fn overlap_position_emptiable_rel_bound_pair<T, U>(og: &T, other: &U) -> OverlapPosition
 where
-    T: HasEmptiableRelativeBoundPair,
-    U: HasEmptiableRelativeBoundPair,
+    T: HasEmptiableRelBoundPair,
+    U: HasEmptiableRelBoundPair,
 {
     match (og.emptiable_rel_bound_pair(), other.emptiable_rel_bound_pair()) {
-        (_, EmptiableRelativeBoundPair::Empty) | (EmptiableRelativeBoundPair::Empty, _) => OverlapPosition::Outside,
-        (EmptiableRelativeBoundPair::Bound(ref og_bounds), EmptiableRelativeBoundPair::Bound(ref other_bounds)) => {
+        (_, EmptiableRelBoundPair::Empty) | (EmptiableRelBoundPair::Empty, _) => OverlapPosition::Outside,
+        (EmptiableRelBoundPair::Bound(ref og_bounds), EmptiableRelBoundPair::Bound(ref other_bounds)) => {
             overlap_position_rel_bound_pair(og_bounds, other_bounds)
         },
     }

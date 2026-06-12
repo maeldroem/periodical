@@ -240,7 +240,7 @@ impl Precision {
         // How much needs to be removed to get to the past anchor
         let timestamp_diff_to_past = match duration.signum() {
             1 => timestamp_rem,
-            0 => 0,
+            0 => 0, // Unreachable: Previous guard would be triggered (0 mod N = 0)
             -1 => precision_nanos - timestamp_rem,
             _ => unreachable!("core::num::signum is guaranteed to return only in the range -1..=1"),
         };
@@ -1135,7 +1135,7 @@ impl<I> IntersectionResult<I> {
 
 /// Represents the result of a [difference][1]
 ///
-/// [1]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [1]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum DifferenceResult<D> {

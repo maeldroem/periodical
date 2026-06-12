@@ -3,41 +3,41 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
+use crate::intervals::relative::{RelEndBound, RelStartBound};
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
 /// State change of a
-/// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::relative::LayeredRelativeBounds)
+/// [`LayeredRelBounds`](crate::iter::intervals::layered_bounds::relative::LayeredRelBounds)
 ///
-/// This state change is situated using relative bounds: [`RelativeStartBound`]
-/// and [`RelativeEndBound`].
+/// This state change is situated using relative bounds: [`RelStartBound`]
+/// and [`RelEndBound`].
 ///
 /// A state change represents a point in the iterator where the
 /// [`LayeredBoundsState`] changes. It also stores with it _when_ the change
 /// happened, more precisely, when the old state ends, given by
-/// [`old_state_end`](LayeredBoundsStateChangeAtRelativeBound::old_state_end),
+/// [`old_state_end`](LayeredBoundsStateChangeAtRelBound::old_state_end),
 /// and when the new state begins,
-/// given by [`new_state_start`](LayeredBoundsStateChangeAtRelativeBound::new_state_start).
+/// given by [`new_state_start`](LayeredBoundsStateChangeAtRelBound::new_state_start).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct LayeredBoundsStateChangeAtRelativeBound {
+pub struct LayeredBoundsStateChangeAtRelBound {
     old_state: LayeredBoundsState,
     new_state: LayeredBoundsState,
-    old_state_end: Option<RelativeEndBound>,
-    new_state_start: Option<RelativeStartBound>,
-    // Could add a `cause` field containing the original RelativeBound, but idk if it's useful to do that now
+    old_state_end: Option<RelEndBound>,
+    new_state_start: Option<RelStartBound>,
+    // Could add a `cause` field containing the original RelBound, but idk if it's useful to do that now
 }
 
-impl LayeredBoundsStateChangeAtRelativeBound {
-    /// Creates a new [`LayeredBoundsStateChangeAtRelativeBound`]
+impl LayeredBoundsStateChangeAtRelBound {
+    /// Creates a new [`LayeredBoundsStateChangeAtRelBound`]
     #[must_use]
     pub fn new(
         old_state: LayeredBoundsState,
         new_state: LayeredBoundsState,
-        old_state_end: Option<RelativeEndBound>,
-        new_state_start: Option<RelativeStartBound>,
+        old_state_end: Option<RelEndBound>,
+        new_state_start: Option<RelStartBound>,
     ) -> Self {
-        LayeredBoundsStateChangeAtRelativeBound {
+        LayeredBoundsStateChangeAtRelBound {
             old_state,
             new_state,
             old_state_end,
@@ -52,16 +52,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::iter::intervals::layered_bounds::{
-    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelBound,
     /// # };
-    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    /// let change = LayeredBoundsStateChangeAtRelBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -83,16 +83,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::iter::intervals::layered_bounds::{
-    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelBound,
     /// # };
-    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    /// let change = LayeredBoundsStateChangeAtRelBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -109,11 +109,11 @@ impl LayeredBoundsStateChangeAtRelativeBound {
 
     /// Returns the end of the old state
     ///
-    /// Returns an [`RelativeEndBound`] wrapped in an [`Option`] that
+    /// Returns an [`RelEndBound`] wrapped in an [`Option`] that
     /// corresponds to the end of the old state.
     ///
     /// It is wrapped in an [`Option`] as the change can happen at
-    /// [`RelativeStartBound::InfinitePast`], therefore there is nothing
+    /// [`RelStartBound::InfinitePast`], therefore there is nothing
     /// that can be positioned _before_ infinite past.
     ///
     /// # Examples
@@ -121,16 +121,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::iter::intervals::layered_bounds::{
-    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelBound,
     /// # };
-    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    /// let change = LayeredBoundsStateChangeAtRelBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -140,21 +140,21 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     ///
     /// assert_eq!(
     ///     change.old_state_end(),
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8),).to_end_bound()),
+    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8),).to_end_bound()),
     /// );
     /// ```
     #[must_use]
-    pub fn old_state_end(&self) -> Option<RelativeEndBound> {
+    pub fn old_state_end(&self) -> Option<RelEndBound> {
         self.old_state_end
     }
 
     /// Returns the start of the new state
     ///
-    /// Returns an [`RelativeStartBound`] wrapped in an [`Option`] that
+    /// Returns an [`RelStartBound`] wrapped in an [`Option`] that
     /// corresponds to the start of the new state.
     ///
     /// It is wrapped in an [`Option`] as the change can happen at
-    /// [`RelativeEndBound::InfiniteFuture`], therefore there is nothing
+    /// [`RelEndBound::InfiniteFuture`], therefore there is nothing
     /// that can be positioned _after_ infinite future.
     ///
     /// # Examples
@@ -162,16 +162,16 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// ```
     /// # use jiff::SignedDuration;
     /// # use periodical::intervals::meta::BoundInclusivity;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
     /// # use periodical::iter::intervals::layered_bounds::{
-    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelativeBound,
+    /// #     LayeredBoundsState, LayeredBoundsStateChangeAtRelBound,
     /// # };
-    /// let change = LayeredBoundsStateChangeAtRelativeBound::new(
+    /// let change = LayeredBoundsStateChangeAtRelBound::new(
     ///     LayeredBoundsState::NoLayers,
     ///     LayeredBoundsState::FirstLayer,
-    ///     Some(RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound()),
+    ///     Some(RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound()),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -182,7 +182,7 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// assert_eq!(
     ///     change.new_state_start(),
     ///     Some(
-    ///         RelativeFiniteBound::new_with_inclusivity(
+    ///         RelFiniteBoundPos::new_with_incl(
     ///             SignedDuration::from_hours(8),
     ///             BoundInclusivity::Exclusive,
     ///         )
@@ -191,7 +191,7 @@ impl LayeredBoundsStateChangeAtRelativeBound {
     /// );
     /// ```
     #[must_use]
-    pub fn new_state_start(&self) -> Option<RelativeStartBound> {
+    pub fn new_state_start(&self) -> Option<RelStartBound> {
         self.new_state_start
     }
 }

@@ -6,37 +6,37 @@
 //! # use std::error::Error;
 //! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBoundPair, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::set_ops::diff::PeerDifferenceIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 08:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!         AbsEndBound::InfiniteFuture,
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 10:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!         AbsEndBound::InfiniteFuture,
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 12:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
 //!         )
 //!         .to_start_bound(),
-//!         AbsoluteFiniteBound::new(
+//!         AbsFiniteBoundPos::new(
 //!             "2025-01-01 14:00:00[Europe/Oslo]"
 //!                 .parse::<Zoned>()?
 //!                 .timestamp(),
@@ -49,14 +49,14 @@
 //!     intervals.peer_difference().collect::<Vec<_>>(),
 //!     vec![
 //!         (
-//!             AbsoluteBoundPair::new(
-//!                 AbsoluteFiniteBound::new(
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new(
 //!                     "2025-01-01 08:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
 //!                 )
 //!                 .to_start_bound(),
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsFiniteBoundPos::new_with_incl(
 //!                     "2025-01-01 10:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -68,14 +68,14 @@
 //!             None,
 //!         ),
 //!         (
-//!             AbsoluteBoundPair::new(
-//!                 AbsoluteFiniteBound::new(
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new(
 //!                     "2025-01-01 10:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
 //!                 )
 //!                 .to_start_bound(),
-//!                 AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsFiniteBoundPos::new_with_incl(
 //!                     "2025-01-01 12:00:00[Europe/Oslo]"
 //!                         .parse::<Zoned>()?
 //!                         .timestamp(),
@@ -85,15 +85,15 @@
 //!             )
 //!             .to_emptiable(),
 //!             Some(
-//!                 AbsoluteBoundPair::new(
-//!                     AbsoluteFiniteBound::new_with_inclusivity(
+//!                 AbsBoundPair::new(
+//!                     AbsFiniteBoundPos::new_with_incl(
 //!                         "2025-01-01 14:00:00[Europe/Oslo]"
 //!                             .parse::<Zoned>()?
 //!                             .timestamp(),
 //!                         BoundInclusivity::Exclusive,
 //!                     )
 //!                     .to_start_bound(),
-//!                     AbsoluteEndBound::InfiniteFuture,
+//!                     AbsEndBound::InfiniteFuture,
 //!                 )
 //!                 .to_emptiable()
 //!             ),
@@ -117,7 +117,7 @@ use crate::ops::DifferenceResult;
 ///
 /// Uses [`Differentiable`] under the hood.
 ///
-/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 #[derive(Debug, Clone, Hash)]
 pub struct PeerDifference<I> {
     iter: I,
@@ -160,7 +160,7 @@ where
             return None;
         };
 
-        match current.differentiate(peeked) {
+        match current.diff(peeked) {
             DifferenceResult::Single(shrunk) => Some((shrunk, None)),
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
@@ -205,7 +205,7 @@ where
     ///
     /// Uses [`Differentiable`] under the hood.
     ///
-    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
     fn peer_difference(self) -> PeerDifference<Peekable<Self::IntoIter>> {
         PeerDifference::new(self.into_iter())
     }
@@ -228,7 +228,7 @@ where
 ///
 /// Uses [`Differentiable`] under the hood.
 ///
-/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 #[derive(Debug, Clone)]
 pub struct PeerDifferenceWith<I, F> {
     iter: I,
@@ -319,7 +319,7 @@ where
     ///
     /// Uses [`Differentiable`] under the hood.
     ///
-    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
     fn peer_difference_with(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F> {
         PeerDifferenceWith::new(self.into_iter(), f)
     }

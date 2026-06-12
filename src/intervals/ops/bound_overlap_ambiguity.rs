@@ -4,8 +4,8 @@
 //! that have the same position, like time for absolute bounds, or offset for
 //! relative bounds.
 //!
-//! The ambiguity is stored in [`BoundOverlapAmbiguity`]. It stores the source
-//! of the bounds (start/end) and their inclusivities.
+//! The ambiguity is stored in [`BoundOverlapAmbiguity`].
+//! It stores the extremality of the bounds (start/end) and their inclusivities.
 //! From that structure, you can then choose how to disambiguate it.
 //! This is most commonly done using a [`BoundOverlapDisambiguationRuleSet`],
 //! but you can also use your own closure for disambiguation.
@@ -33,8 +33,8 @@
 //! );
 //!
 //! assert_eq!(
-//!     ambiguity.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
-//!     DisambiguatedBoundOverlap::Before,
+//!     ambiguity.disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
+//!     DisambiguatedBoundOverlap::After,
 //! );
 //! ```
 
@@ -57,8 +57,8 @@ use crate::intervals::meta::BoundInclusivity;
 /// [, ] = inclusive bounds
 /// (, ) = exclusive bounds
 ///
-/// reference:     [------]
-/// compared:  [---)
+/// A:      [------]
+/// B:  [---)
 /// ```
 ///
 /// Should we consider those two intervals as overlapping? in the strict
@@ -69,6 +69,19 @@ use crate::intervals::meta::BoundInclusivity;
 ///
 /// The first contained [`BoundInclusivity`] should always be the reference, the
 /// second should always be the compared.
+///
+/// # Reference / Compared confusion
+///
+/// The terms "reference" and "compared" can be confusing, so here's a bit more detail.
+/// When comparing two bounds, e.g. `a.bound_cmp(&b)`, `a` is the reference and `b` the compared.
+///
+/// The confusion starts because the comparison actually checks where `a` is compared to `b`,
+/// which would mean `a` is the compared and `b` the reference of the comparison.
+/// But since the comparison statements are structured as "where is `a` compared to `b`?",
+/// we hereby define `a` as _the reference_ and `b` as _the compared_.
+///
+/// The disambiguation of [`BoundOverlapAmbiguity`] should always result in the positioning of
+/// the reference (`a`) given the compared (`b`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -77,11 +90,9 @@ pub enum BoundOverlapAmbiguity {
     BothStarts(BoundInclusivity, BoundInclusivity),
     /// Inclusivities come from two end bounds
     BothEnds(BoundInclusivity, BoundInclusivity),
-    /// Inclusivities come from a start bound (reference) and an end bound
-    /// (compared)
+    /// Inclusivities come from a start bound (reference) and an end bound (compared)
     StartEnd(BoundInclusivity, BoundInclusivity),
-    /// Inclusivities come from an end bound (reference) and a start bound
-    /// (compared)
+    /// Inclusivities come from an end bound (reference) and a start bound (compared)
     EndStart(BoundInclusivity, BoundInclusivity),
 }
 
@@ -114,6 +125,37 @@ impl BoundOverlapAmbiguity {
         matches!(self, Self::EndStart(..))
     }
 
+    /// Swaps the inclusivities of the reference and the compared
+    ///
+    /// This is used if, for clarity, the comparison that created the ambiguity was
+    /// in the "wrong" direction, and therefore the ambiguity's inclusivities need to be swapped
+    /// as the result expects a different definition of what is the reference and what is the compared.
+    ///
+    /// Usually calls to this method should be avoided or clarified with a comment.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::ops::BoundOverlapAmbiguity;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let ambiguity =
+    ///     BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Inclusive, BoundInclusivity::Exclusive);
+    ///
+    /// assert_eq!(
+    ///     ambiguity.swap_reference_and_compared(),
+    ///     BoundOverlapAmbiguity::StartEnd(BoundInclusivity::Exclusive, BoundInclusivity::Inclusive),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn swap_reference_and_compared(self) -> Self {
+        match self {
+            Self::BothStarts(ref_incl, comp_incl) => Self::BothStarts(comp_incl, ref_incl),
+            Self::BothEnds(ref_incl, comp_incl) => Self::BothEnds(comp_incl, ref_incl),
+            Self::StartEnd(ref_incl, comp_incl) => Self::StartEnd(comp_incl, ref_incl),
+            Self::EndStart(ref_incl, comp_incl) => Self::EndStart(comp_incl, ref_incl),
+        }
+    }
+
     /// Disambiguates the ambiguity using the given
     /// [`BoundOverlapDisambiguationRuleSet`]
     ///
@@ -130,12 +172,12 @@ impl BoundOverlapAmbiguity {
     /// );
     ///
     /// assert_eq!(
-    ///     ambiguity.disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Strict),
-    ///     DisambiguatedBoundOverlap::Before,
+    ///     ambiguity.disambiguate(BoundOverlapDisambiguationRuleSet::Strict),
+    ///     DisambiguatedBoundOverlap::After,
     /// );
     /// ```
     #[must_use]
-    pub fn disambiguate_using_rule_set(self, rule_set: BoundOverlapDisambiguationRuleSet) -> DisambiguatedBoundOverlap {
+    pub fn disambiguate(self, rule_set: BoundOverlapDisambiguationRuleSet) -> DisambiguatedBoundOverlap {
         rule_set.disambiguate(self)
     }
 
@@ -251,7 +293,7 @@ impl BoundOverlapDisambiguationRuleSet {
     ///
     /// assert_eq!(
     ///     BoundOverlapDisambiguationRuleSet::Strict.disambiguate(ambiguity),
-    ///     DisambiguatedBoundOverlap::Before,
+    ///     DisambiguatedBoundOverlap::After,
     /// );
     /// ```
     #[must_use]
@@ -273,20 +315,20 @@ pub fn strict_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) -> 
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
-        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
+        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothStarts(Bi::Exclusive, Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothEnds(Bi::Exclusive, Bi::Exclusive)
         | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive)
         | Boa::EndStart(Bi::Inclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
-        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive, Bi::Exclusive)
-        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
+        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
+        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -297,14 +339,14 @@ pub fn lenient_bound_overlap_disambiguation(ambiguity: BoundOverlapAmbiguity) ->
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::StartEnd(Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::EndStart(Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive | Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
-        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::EndStart(Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
+        | Boa::StartEnd(Bi::Inclusive, Bi::Exclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Inclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Equal,
+        Boa::StartEnd(Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -325,18 +367,18 @@ pub fn continuous_to_future_bound_overlap_disambiguation(
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
-        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
+        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothStarts(Bi::Exclusive, Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothEnds(Bi::Exclusive, Bi::Exclusive)
         | Boa::StartEnd(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive)
         | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
-        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
+        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
+        | Boa::StartEnd(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -348,18 +390,18 @@ pub fn continuous_to_past_bound_overlap_disambiguation(ambiguity: BoundOverlapAm
     type Bi = BoundInclusivity;
 
     match ambiguity {
-        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
-        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
-        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
+        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
+        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
+        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Before,
         Boa::BothStarts(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothStarts(Bi::Exclusive, Bi::Exclusive)
         | Boa::BothEnds(Bi::Inclusive, Bi::Inclusive)
         | Boa::BothEnds(Bi::Exclusive, Bi::Exclusive)
         | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Inclusive)
         | Boa::EndStart(Bi::Inclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::Equal,
-        Boa::BothStarts(Bi::Inclusive, Bi::Exclusive)
-        | Boa::BothEnds(Bi::Exclusive, Bi::Inclusive)
-        | Boa::EndStart(Bi::Exclusive, Bi::Inclusive | Bi::Exclusive) => DisambiguatedBoundOverlap::After,
+        Boa::BothStarts(Bi::Exclusive, Bi::Inclusive)
+        | Boa::BothEnds(Bi::Inclusive, Bi::Exclusive)
+        | Boa::StartEnd(Bi::Inclusive | Bi::Exclusive, Bi::Exclusive) => DisambiguatedBoundOverlap::After,
     }
 }
 
@@ -377,4 +419,31 @@ pub enum DisambiguatedBoundOverlap {
     Equal,
     /// Compared bound is after the reference bound
     After,
+}
+
+impl DisambiguatedBoundOverlap {
+    #[must_use]
+    pub fn is_before(&self) -> bool {
+        matches!(self, Self::Before)
+    }
+
+    #[must_use]
+    pub fn is_equal(&self) -> bool {
+        matches!(self, Self::Equal)
+    }
+
+    #[must_use]
+    pub fn is_after(&self) -> bool {
+        matches!(self, Self::After)
+    }
+
+    #[must_use]
+    pub fn is_before_or_equal(&self) -> bool {
+        matches!(self, Self::Before | Self::Equal)
+    }
+
+    #[must_use]
+    pub fn is_after_or_equal(&self) -> bool {
+        matches!(self, Self::After | Self::Equal)
+    }
 }

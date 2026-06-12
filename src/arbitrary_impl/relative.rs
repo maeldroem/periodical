@@ -6,39 +6,39 @@ use jiff::SignedDuration;
 
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    HalfBoundedRelativeInterval,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeStartBound,
+    BoundedRelInterval,
+    HalfBoundedRelInterval,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelStartBound,
 };
 
-impl<'a> Arbitrary<'a> for RelativeFiniteBound {
+impl<'a> Arbitrary<'a> for RelFiniteBoundPos {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
         let signed_duration = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range)?)
             .ok_or(Error::IncorrectFormat)?;
 
-        Ok(Self::new_with_inclusivity(
+        Ok(Self::new_with_incl(
             signed_duration,
             BoundInclusivity::arbitrary(u)?,
         ))
     }
 }
 
-impl<'a> Arbitrary<'a> for RelativeBoundPair {
+impl<'a> Arbitrary<'a> for RelBoundPair {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
-        let start = RelativeStartBound::arbitrary(u)?;
-        let end = RelativeEndBound::arbitrary(u)?;
+        let start = RelStartBound::arbitrary(u)?;
+        let end = RelEndBound::arbitrary(u)?;
 
-        // We use RelativeBoundPair::new so that if start > end, they get swapped
+        // We use RelBoundPair::new so that if start > end, they get swapped
         // A fuzz test exists to verify that this behavior is correct
-        Ok(RelativeBoundPair::new(start, end))
+        Ok(RelBoundPair::new(start, end))
     }
 }
 
-impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
+impl<'a> Arbitrary<'a> for BoundedRelInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
 
@@ -48,14 +48,14 @@ impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
             .ok_or(Error::IncorrectFormat)?;
 
         if start_offset == end_offset {
-            Ok(BoundedRelativeInterval::new_with_inclusivity(
+            Ok(BoundedRelInterval::from_offsets_incl(
                 start_offset,
                 BoundInclusivity::Inclusive,
                 end_offset,
                 BoundInclusivity::Inclusive,
             ))
         } else {
-            Ok(BoundedRelativeInterval::new_with_inclusivity(
+            Ok(BoundedRelInterval::from_offsets_incl(
                 start_offset,
                 BoundInclusivity::arbitrary(u)?,
                 end_offset,
@@ -65,14 +65,14 @@ impl<'a> Arbitrary<'a> for BoundedRelativeInterval {
     }
 }
 
-impl<'a> Arbitrary<'a> for HalfBoundedRelativeInterval {
+impl<'a> Arbitrary<'a> for HalfBoundedRelInterval {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let signed_duration_range = SignedDuration::MIN.as_nanos()..=SignedDuration::MAX.as_nanos();
 
         let reference_offset = SignedDuration::try_from_nanos_i128(u.int_in_range(signed_duration_range.clone())?)
             .ok_or(Error::IncorrectFormat)?;
 
-        Ok(HalfBoundedRelativeInterval::new_with_inclusivity(
+        Ok(HalfBoundedRelInterval::from_offset_incl(
             reference_offset,
             BoundInclusivity::arbitrary(u)?,
             OpeningDirection::arbitrary(u)?,

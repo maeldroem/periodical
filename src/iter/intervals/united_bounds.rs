@@ -8,36 +8,59 @@
 //! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
-//! # use periodical::intervals::absolute::{AbsoluteBound, AbsoluteBoundPair, AbsoluteFiniteBound};
-//! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+//! # use periodical::intervals::absolute::{AbsBound, AbsBoundPair, AbsFiniteBoundPos};
+//! # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
-//!     AbsoluteBoundPair::new(
-//!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
-//!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
 //! assert_eq!(
-//!     intervals.abs_bounds_iter().unite_bounds().collect::<Vec<_>>(),
+//!     intervals
+//!         .abs_bounds_iter()
+//!         .unite_bounds()
+//!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound().to_bound(),
-//!         AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound().to_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound()
+//!         .to_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound()
+//!         .to_bound(),
 //!     ],
 //! );
 //! # Ok::<(), Box<dyn Error>>(())
@@ -46,51 +69,51 @@
 use std::cmp::Ordering;
 use std::iter::{FusedIterator, Peekable};
 
-use crate::intervals::absolute::{AbsoluteBound, AbsoluteEndBound};
-use crate::intervals::ops::bound_ord::PartialBoundOrd;
+use crate::intervals::absolute::{AbsBound, AbsEndBound};
+use crate::intervals::ops::BoundOrd;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapDisambiguationRuleSet;
-use crate::intervals::relative::{RelativeBound, RelativeEndBound};
-use crate::iter::intervals::layered_bounds::{LayeredAbsoluteBounds, LayeredRelativeBounds};
+use crate::intervals::relative::{RelBound, RelEndBound};
+use crate::iter::intervals::layered_bounds::{LayeredAbsBounds, LayeredRelBounds};
 
 /// Iterator for uniting absolute bounds
 ///
 /// # Panics
 ///
 /// Panics if the number of active layers overflows [`u64`].
-pub struct AbsoluteUnitedBoundsIter<I> {
+pub struct AbsUnitedBoundsIter<I> {
     iter: I,
     layer: u64,
     is_next_start_adjacent: bool,
     exhausted: bool,
 }
 
-impl<I> AbsoluteUnitedBoundsIter<I>
+impl<I> AbsUnitedBoundsIter<I>
 where
-    I: Iterator<Item = AbsoluteBound>,
+    I: Iterator<Item = AbsBound>,
 {
-    /// Creates a new [`AbsoluteUnitedBoundsIter`]
+    /// Creates a new [`AbsUnitedBoundsIter`]
     ///
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal amount of [`Start`](AbsoluteBound::Start)s
-    ///    and [`End`](AbsoluteBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal amount of [`Start`](AbsBound::Start)s and
+    ///    [`End`](AbsBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
     ///
     /// Requirement 1 is automatically guaranteed if the iterator is created
-    /// from [`AbsoluteBoundsIter::unite_bounds`](crate::iter::intervals::bounds::AbsoluteBoundsIter::unite_bounds).
+    /// from [`AbsBoundsIter::unite_bounds`](crate::iter::intervals::bounds::AbsBoundsIter::unite_bounds).
     ///
     /// Requirement 2 is automatically guaranteed if the bounds are obtained
     /// from
-    /// a set of [intervals](crate::intervals::absolute::AbsoluteInterval)
-    /// or from [bound pairs](crate::intervals::absolute::AbsoluteBoundPair) and
+    /// a set of [intervals](crate::intervals::absolute::AbsInterval)
+    /// or from [bound pairs](crate::intervals::absolute::AbsBoundPair) and
     /// then processed through
-    /// [`AbsoluteBoundsIter`](crate::iter::intervals::bounds::AbsoluteBoundsIter).
+    /// [`AbsBoundsIter`](crate::iter::intervals::bounds::AbsBoundsIter).
     #[must_use]
-    pub fn new(iter: I) -> AbsoluteUnitedBoundsIter<Peekable<I>> {
-        AbsoluteUnitedBoundsIter {
+    pub fn new(iter: I) -> AbsUnitedBoundsIter<Peekable<I>> {
+        AbsUnitedBoundsIter {
             iter: iter.peekable(),
             layer: 0,
             is_next_start_adjacent: false,
@@ -99,45 +122,45 @@ where
     }
 }
 
-impl<I> AbsoluteUnitedBoundsIter<Peekable<I>>
+impl<I> AbsUnitedBoundsIter<Peekable<I>>
 where
-    I: Iterator<Item = AbsoluteBound>,
+    I: Iterator<Item = AbsBound>,
 {
-    /// Layers this iterator with the given other [`AbsoluteUnitedBoundsIter`]
+    /// Layers this iterator with the given other [`AbsUnitedBoundsIter`]
     ///
-    /// The given other [`AbsoluteUnitedBoundsIter`] acts at the second layer in
-    /// the resulting [`LayeredAbsoluteBounds`].
+    /// The given other [`AbsUnitedBoundsIter`] acts at the second layer in
+    /// the resulting [`LayeredAbsBounds`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
-    /// # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
+    /// # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 08:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 12:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 13:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 16:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -147,28 +170,28 @@ where
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 07:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 11:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_end_bound(),
     ///     ),
-    ///     AbsoluteBoundPair::new(
-    ///         AbsoluteFiniteBound::new(
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 14:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
     ///         )
     ///         .to_start_bound(),
-    ///         AbsoluteFiniteBound::new(
+    ///         AbsFiniteBoundPos::new(
     ///             "2025-01-01 18:00:00[Europe/Oslo]"
     ///                 .parse::<Zoned>()?
     ///                 .timestamp(),
@@ -185,20 +208,20 @@ where
     /// ```
     pub fn layer<J>(
         self,
-        second_layer: AbsoluteUnitedBoundsIter<Peekable<J>>,
-    ) -> LayeredAbsoluteBounds<Peekable<Self>, Peekable<AbsoluteUnitedBoundsIter<Peekable<J>>>>
+        second_layer: AbsUnitedBoundsIter<Peekable<J>>,
+    ) -> LayeredAbsBounds<Peekable<Self>, Peekable<AbsUnitedBoundsIter<Peekable<J>>>>
     where
-        J: Iterator<Item = AbsoluteBound>,
+        J: Iterator<Item = AbsBound>,
     {
-        LayeredAbsoluteBounds::new(self, second_layer)
+        LayeredAbsBounds::new(self, second_layer)
     }
 }
 
-impl<I> Iterator for AbsoluteUnitedBoundsIter<Peekable<I>>
+impl<I> Iterator for AbsUnitedBoundsIter<Peekable<I>>
 where
-    I: Iterator<Item = AbsoluteBound>,
+    I: Iterator<Item = AbsBound>,
 {
-    type Item = AbsoluteBound;
+    type Item = AbsBound;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -212,11 +235,11 @@ where
             };
 
             match next {
-                AbsoluteBound::Start(_) => {
+                AbsBound::Start(_) => {
                     self.layer = self
                         .layer
                         .checked_add(1)
-                        .expect("The number of active layers overflowed when using `AbsoluteUniteBoundsIter`");
+                        .expect("The number of active layers overflowed when using `AbsUniteBoundsIter`");
 
                     if self.is_next_start_adjacent {
                         self.is_next_start_adjacent = false;
@@ -233,10 +256,10 @@ where
                         continue;
                     }
                 },
-                AbsoluteBound::End(next_end) => {
+                AbsBound::End(next_end) => {
                     self.layer = self.layer.checked_sub(1).expect(
-                        "An error occurred with `AbsoluteUniteBoundsIter`: The number of active layers underflowed, \
-                         which is unexpected",
+                        "An error occurred with `AbsUniteBoundsIter`: The number of active layers underflowed, which \
+                         is unexpected",
                     );
 
                     // Since we already decremented the layer, the last counted end bound must be on
@@ -279,16 +302,16 @@ where
     }
 }
 
-impl<I> FusedIterator for AbsoluteUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = AbsoluteBound> {}
+impl<I> FusedIterator for AbsUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = AbsBound> {}
 
-fn is_abs_end_bound_adjacent_to_abs_peeked(end: &AbsoluteEndBound, peeked: &AbsoluteBound) -> bool {
-    let AbsoluteBound::Start(peeked_start) = peeked else {
+fn is_abs_end_bound_adjacent_to_abs_peeked(end: &AbsEndBound, peeked: &AbsBound) -> bool {
+    let AbsBound::Start(peeked_start) = peeked else {
         return false;
     };
 
     matches!(
         end.bound_cmp(peeked_start)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         Ordering::Equal,
     )
 }
@@ -298,41 +321,41 @@ fn is_abs_end_bound_adjacent_to_abs_peeked(end: &AbsoluteEndBound, peeked: &Abso
 /// # Panics
 ///
 /// Panics if the number of active layers overflows [`u64`].
-pub struct RelativeUnitedBoundsIter<I> {
+pub struct RelUnitedBoundsIter<I> {
     iter: I,
     layer: u64,
     is_next_start_adjacent: bool,
     exhausted: bool,
 }
 
-impl<I> RelativeUnitedBoundsIter<I>
+impl<I> RelUnitedBoundsIter<I>
 where
-    I: Iterator<Item = RelativeBound>,
+    I: Iterator<Item = RelBound>,
 {
-    /// Creates a new [`RelativeUnitedBoundsIter`]
+    /// Creates a new [`RelUnitedBoundsIter`]
     ///
     /// # Input requirements
     ///
     /// 1. The bounds **must be sorted chronologically**
-    /// 2. The bounds **must be paired**, that means there should be an equal amount of [`Start`](RelativeBound::Start)s
-    ///    and [`End`](RelativeBound::End)s.
+    /// 2. The bounds **must be paired**, that means there should be an equal amount of [`Start`](RelBound::Start)s and
+    ///    [`End`](RelBound::End)s.
     ///
     /// The responsibility of verifying those requirements are left to the
     /// caller in order to prevent double-processing.
     ///
     /// Requirement 1 is automatically guaranteed if the iterator is created
-    /// from [`RelativeBoundsIter::unite_bounds`](crate::iter::intervals::bounds::RelativeBoundsIter::unite_bounds).
+    /// from [`RelBoundsIter::unite_bounds`](crate::iter::intervals::bounds::RelBoundsIter::unite_bounds).
     ///
     /// Requirement 2 is automatically guaranteed if the bounds are obtained
     /// from
-    /// a set of [intervals](crate::intervals::relative::RelativeInterval)
-    /// or from [bound pairs](crate::intervals::relative::RelativeBoundPair) and
+    /// a set of [intervals](crate::intervals::relative::RelInterval)
+    /// or from [bound pairs](crate::intervals::relative::RelBoundPair) and
     /// then processed through
-    /// [`RelativeBoundsIter`](crate::iter::intervals::bounds::RelativeBoundsIter).
+    /// [`RelBoundsIter`](crate::iter::intervals::bounds::RelBoundsIter).
     #[must_use]
-    pub fn new(iter: I) -> RelativeUnitedBoundsIter<Peekable<I>> {
+    pub fn new(iter: I) -> RelUnitedBoundsIter<Peekable<I>> {
         // Add debug assertion on iter being sorted
-        RelativeUnitedBoundsIter {
+        RelUnitedBoundsIter {
             iter: iter.peekable(),
             layer: 0,
             is_next_start_adjacent: false,
@@ -341,40 +364,40 @@ where
     }
 }
 
-impl<I> RelativeUnitedBoundsIter<Peekable<I>>
+impl<I> RelUnitedBoundsIter<Peekable<I>>
 where
-    I: Iterator<Item = RelativeBound>,
+    I: Iterator<Item = RelBound>,
 {
-    /// Layers this iterator with the given other [`RelativeUnitedBoundsIter`]
+    /// Layers this iterator with the given other [`RelUnitedBoundsIter`]
     ///
-    /// The given other [`RelativeUnitedBoundsIter`] acts at the second layer in
-    /// the resulting [`LayeredRelativeBounds`].
+    /// The given other [`RelUnitedBoundsIter`] acts at the second layer in
+    /// the resulting [`LayeredRelBounds`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
-    /// # use periodical::iter::intervals::bounds::RelativeBoundsIteratorDispatcher;
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::iter::intervals::bounds::RelBoundsIteratorDispatcher;
     /// let first_layer_intervals = [
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(12)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(12)).to_end_bound(),
     ///     ),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(13)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(16)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(13)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let second_layer_intervals = [
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(11)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(7)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(11)).to_end_bound(),
     ///     ),
-    ///     RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(14)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(18)).to_end_bound(),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(14)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(18)).to_end_bound(),
     ///     ),
     /// ];
     ///
@@ -385,20 +408,20 @@ where
     /// ```
     pub fn layer<J>(
         self,
-        second_layer: RelativeUnitedBoundsIter<Peekable<J>>,
-    ) -> LayeredRelativeBounds<Peekable<Self>, Peekable<RelativeUnitedBoundsIter<Peekable<J>>>>
+        second_layer: RelUnitedBoundsIter<Peekable<J>>,
+    ) -> LayeredRelBounds<Peekable<Self>, Peekable<RelUnitedBoundsIter<Peekable<J>>>>
     where
-        J: Iterator<Item = RelativeBound>,
+        J: Iterator<Item = RelBound>,
     {
-        LayeredRelativeBounds::new(self, second_layer)
+        LayeredRelBounds::new(self, second_layer)
     }
 }
 
-impl<I> Iterator for RelativeUnitedBoundsIter<Peekable<I>>
+impl<I> Iterator for RelUnitedBoundsIter<Peekable<I>>
 where
-    I: Iterator<Item = RelativeBound>,
+    I: Iterator<Item = RelBound>,
 {
-    type Item = RelativeBound;
+    type Item = RelBound;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -412,11 +435,11 @@ where
             };
 
             match next {
-                RelativeBound::Start(_) => {
+                RelBound::Start(_) => {
                     self.layer = self
                         .layer
                         .checked_add(1)
-                        .expect("The number of active layers overflowed when using `RelativeUniteBoundsIter`");
+                        .expect("The number of active layers overflowed when using `RelUniteBoundsIter`");
 
                     if self.is_next_start_adjacent {
                         self.is_next_start_adjacent = false;
@@ -433,10 +456,10 @@ where
                         continue;
                     }
                 },
-                RelativeBound::End(next_end) => {
+                RelBound::End(next_end) => {
                     self.layer = self.layer.checked_sub(1).expect(
-                        "An error occurred with `RelativeUniteBoundsIter`: The number of active layers underflowed, \
-                         which is unexpected",
+                        "An error occurred with `RelUniteBoundsIter`: The number of active layers underflowed, which \
+                         is unexpected",
                     );
 
                     // Since we already decremented the layer, the last counted end bound must be on
@@ -479,16 +502,16 @@ where
     }
 }
 
-impl<I> FusedIterator for RelativeUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = RelativeBound> {}
+impl<I> FusedIterator for RelUnitedBoundsIter<Peekable<I>> where I: Iterator<Item = RelBound> {}
 
-fn is_rel_end_bound_adjacent_to_rel_peeked(end: &RelativeEndBound, peeked: &RelativeBound) -> bool {
-    let RelativeBound::Start(peeked_start) = peeked else {
+fn is_rel_end_bound_adjacent_to_rel_peeked(end: &RelEndBound, peeked: &RelBound) -> bool {
+    let RelBound::Start(peeked_start) = peeked else {
         return false;
     };
 
     matches!(
         end.bound_cmp(peeked_start)
-            .disambiguate_using_rule_set(BoundOverlapDisambiguationRuleSet::Lenient),
+            .disambiguate(BoundOverlapDisambiguationRuleSet::Lenient),
         Ordering::Equal,
     )
 }

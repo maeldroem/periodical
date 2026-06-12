@@ -14,33 +14,33 @@ use super::overlap::{CanPositionOverlap, DisambiguatedOverlapPosition, OverlapRu
 use super::remove_overlap::{remove_end_overlap_abs, remove_start_overlap_abs};
 use super::shrink::{ShrinkableEndBound, ShrinkableStartBound};
 use crate::intervals::absolute::{
-    AbsoluteBoundPair,
-    AbsoluteEndBound,
-    AbsoluteFiniteBound,
-    AbsoluteInterval,
-    AbsoluteStartBound,
-    BoundedAbsoluteInterval,
-    EmptiableAbsoluteBoundPair,
-    EmptiableAbsoluteInterval,
-    HalfBoundedAbsoluteInterval,
-    HasAbsoluteBoundPair,
-    HasEmptiableAbsoluteBoundPair,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
 use crate::intervals::meta::{HasBoundInclusivity, Interval};
 use crate::intervals::ops::Complementable;
 use crate::intervals::ops::remove_overlap::{remove_end_overlap_rel, remove_start_overlap_rel};
 use crate::intervals::relative::{
-    BoundedRelativeInterval,
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HalfBoundedRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeEndBound,
-    RelativeFiniteBound,
-    RelativeInterval,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::ComplementResult;
@@ -180,34 +180,34 @@ impl<T> OverlapOrGapRemovalResult<T> {
 /// ```
 /// # use std::error::Error;
 /// # use jiff::Zoned;
-/// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
-/// let first_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+/// let first_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
-/// let second_interval = AbsoluteBoundPair::new(
-///     AbsoluteFiniteBound::new(
+/// let second_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_start_bound(),
-///     AbsoluteFiniteBound::new(
+///     AbsFiniteBoundPos::new(
 ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     first_interval.remove_overlap_or_gap(&second_interval),
-///     OverlapOrGapRemovalResult::Single(AbsoluteBoundPair::new(
-///         AbsoluteFiniteBound::new(
+///     OverlapOrGapRemovalResult::Single(AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
 ///             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         ).to_start_bound(),
-///         AbsoluteFiniteBound::new_with_inclusivity(
+///         AbsFiniteBoundPos::new_with_incl(
 ///             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///             BoundInclusivity::Exclusive,
 ///         ).to_end_bound(),
@@ -229,23 +229,23 @@ pub trait RemovableOverlapOrGap<Rhs = Self> {
     /// ```
     /// # use std::error::Error;
     /// # use jiff::Zoned;
-    /// # use periodical::intervals::absolute::{AbsoluteBoundPair, AbsoluteFiniteBound};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::meta::BoundInclusivity;
     /// # use periodical::intervals::ops::remove_overlap_or_gap::{OverlapOrGapRemovalResult, RemovableOverlapOrGap};
-    /// let first_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let first_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 17:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
     ///
-    /// let second_interval = AbsoluteBoundPair::new(
-    ///     AbsoluteFiniteBound::new(
+    /// let second_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_start_bound(),
-    ///     AbsoluteFiniteBound::new(
+    ///     AbsFiniteBoundPos::new(
     ///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///     ).to_end_bound(),
     /// );
@@ -253,21 +253,21 @@ pub trait RemovableOverlapOrGap<Rhs = Self> {
     /// assert_eq!(
     ///     first_interval.remove_overlap_or_gap(&second_interval),
     ///     OverlapOrGapRemovalResult::Split(
-    ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
-    ///         AbsoluteBoundPair::new(
-    ///             AbsoluteFiniteBound::new_with_inclusivity(
+    ///         AbsBoundPair::new(
+    ///             AbsFiniteBoundPos::new_with_incl(
     ///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///                 BoundInclusivity::Exclusive,
     ///             ).to_start_bound(),
-    ///             AbsoluteFiniteBound::new(
+    ///             AbsFiniteBoundPos::new(
     ///                 "2025-01-01 17:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
     ///             ).to_end_bound(),
     ///         ).to_emptiable(),
@@ -279,20 +279,20 @@ pub trait RemovableOverlapOrGap<Rhs = Self> {
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output>;
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for AbsoluteBoundPair
+impl<Rhs> RemovableOverlapOrGap<Rhs> for AbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteBoundPair;
+    type Output = EmptiableAbsBoundPair;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(self, &rhs.emptiable_abs_bound_pair())
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableAbsoluteBoundPair
+impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableAbsBoundPair
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -301,11 +301,11 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for AbsoluteInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for AbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -316,9 +316,9 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableAbsoluteInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
     type Output = Self;
 
@@ -331,11 +331,11 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for BoundedAbsoluteInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for BoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -346,11 +346,11 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for HalfBoundedAbsoluteInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for HalfBoundedAbsInterval
 where
-    Rhs: HasEmptiableAbsoluteBoundPair,
+    Rhs: HasEmptiableAbsBoundPair,
 {
-    type Output = EmptiableAbsoluteInterval;
+    type Output = EmptiableAbsInterval;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
@@ -361,20 +361,20 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for RelativeBoundPair
+impl<Rhs> RemovableOverlapOrGap<Rhs> for RelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeBoundPair;
+    type Output = EmptiableRelBoundPair;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(self, &rhs.emptiable_rel_bound_pair())
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableRelativeBoundPair
+impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableRelBoundPair
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -383,11 +383,11 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for RelativeInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for RelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -398,9 +398,9 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableRelativeInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for EmptiableRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
     type Output = Self;
 
@@ -413,11 +413,11 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for BoundedRelativeInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for BoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -428,11 +428,11 @@ where
     }
 }
 
-impl<Rhs> RemovableOverlapOrGap<Rhs> for HalfBoundedRelativeInterval
+impl<Rhs> RemovableOverlapOrGap<Rhs> for HalfBoundedRelInterval
 where
-    Rhs: HasEmptiableRelativeBoundPair,
+    Rhs: HasEmptiableRelBoundPair,
 {
-    type Output = EmptiableRelativeInterval;
+    type Output = EmptiableRelInterval;
 
     fn remove_overlap_or_gap(&self, rhs: &Rhs) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
@@ -443,18 +443,18 @@ where
     }
 }
 
-impl RemovableOverlapOrGap<AbsoluteBoundPair> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl RemovableOverlapOrGap<AbsBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &AbsoluteBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &AbsBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair(&self.abs_bound_pair(), &rhs.abs_bound_pair()).map(Self::Output::from)
     }
 }
 
-impl RemovableOverlapOrGap<EmptiableAbsoluteBoundPair> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl RemovableOverlapOrGap<EmptiableAbsBoundPair> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &EmptiableAbsoluteBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &EmptiableAbsBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -463,10 +463,10 @@ impl RemovableOverlapOrGap<EmptiableAbsoluteBoundPair> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<AbsoluteInterval> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl RemovableOverlapOrGap<AbsInterval> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &AbsoluteInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &AbsInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -475,10 +475,10 @@ impl RemovableOverlapOrGap<AbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<EmptiableAbsoluteInterval> for UnboundedInterval {
-    type Output = EmptiableAbsoluteInterval;
+impl RemovableOverlapOrGap<EmptiableAbsInterval> for UnboundedInterval {
+    type Output = EmptiableAbsInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &EmptiableAbsoluteInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &EmptiableAbsInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
             &self.abs_bound_pair(),
             &rhs.emptiable_abs_bound_pair(),
@@ -487,10 +487,10 @@ impl RemovableOverlapOrGap<EmptiableAbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<BoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl RemovableOverlapOrGap<BoundedAbsInterval> for UnboundedInterval {
+    type Output = HalfBoundedAbsInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &BoundedAbsoluteInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &BoundedAbsInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => OverlapOrGapRemovalResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -500,10 +500,10 @@ impl RemovableOverlapOrGap<BoundedAbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<HalfBoundedAbsoluteInterval> for UnboundedInterval {
-    type Output = HalfBoundedAbsoluteInterval;
+impl RemovableOverlapOrGap<HalfBoundedAbsInterval> for UnboundedInterval {
+    type Output = HalfBoundedAbsInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &HalfBoundedAbsoluteInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &HalfBoundedAbsInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => OverlapOrGapRemovalResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -513,18 +513,18 @@ impl RemovableOverlapOrGap<HalfBoundedAbsoluteInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<RelativeBoundPair> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl RemovableOverlapOrGap<RelBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &RelativeBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &RelBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair(&self.rel_bound_pair(), &rhs.rel_bound_pair()).map(Self::Output::from)
     }
 }
 
-impl RemovableOverlapOrGap<EmptiableRelativeBoundPair> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl RemovableOverlapOrGap<EmptiableRelBoundPair> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &EmptiableRelativeBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &EmptiableRelBoundPair) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -533,10 +533,10 @@ impl RemovableOverlapOrGap<EmptiableRelativeBoundPair> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<RelativeInterval> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl RemovableOverlapOrGap<RelInterval> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &RelativeInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &RelInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -545,10 +545,10 @@ impl RemovableOverlapOrGap<RelativeInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<EmptiableRelativeInterval> for UnboundedInterval {
-    type Output = EmptiableRelativeInterval;
+impl RemovableOverlapOrGap<EmptiableRelInterval> for UnboundedInterval {
+    type Output = EmptiableRelInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &EmptiableRelativeInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &EmptiableRelInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
             &self.rel_bound_pair(),
             &rhs.emptiable_rel_bound_pair(),
@@ -557,10 +557,10 @@ impl RemovableOverlapOrGap<EmptiableRelativeInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<BoundedRelativeInterval> for UnboundedInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl RemovableOverlapOrGap<BoundedRelInterval> for UnboundedInterval {
+    type Output = HalfBoundedRelInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &BoundedRelativeInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &BoundedRelInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => OverlapOrGapRemovalResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -570,10 +570,10 @@ impl RemovableOverlapOrGap<BoundedRelativeInterval> for UnboundedInterval {
     }
 }
 
-impl RemovableOverlapOrGap<HalfBoundedRelativeInterval> for UnboundedInterval {
-    type Output = HalfBoundedRelativeInterval;
+impl RemovableOverlapOrGap<HalfBoundedRelInterval> for UnboundedInterval {
+    type Output = HalfBoundedRelInterval;
 
-    fn remove_overlap_or_gap(&self, rhs: &HalfBoundedRelativeInterval) -> OverlapOrGapRemovalResult<Self::Output> {
+    fn remove_overlap_or_gap(&self, rhs: &HalfBoundedRelInterval) -> OverlapOrGapRemovalResult<Self::Output> {
         match rhs.complement() {
             ComplementResult::Single(single) => OverlapOrGapRemovalResult::Single(single),
             ComplementResult::Split(split_before, split_after) => {
@@ -610,14 +610,14 @@ where
     }
 }
 
-/// Removes any overlap or gap between two [`AbsoluteBoundPair`]
+/// Removes any overlap or gap between two [`AbsBoundPair`]
 ///
 /// See [module documentation](self) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_abs_bound_pair(
-    a: &AbsoluteBoundPair,
-    b: &AbsoluteBoundPair,
-) -> OverlapOrGapRemovalResult<EmptiableAbsoluteBoundPair> {
+    a: &AbsBoundPair,
+    b: &AbsBoundPair,
+) -> OverlapOrGapRemovalResult<EmptiableAbsBoundPair> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
@@ -625,152 +625,156 @@ pub fn remove_overlap_or_gap_abs_bound_pair(
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `OutsideBefore`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.grow_end(new_end_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(a.grow_end(new_end_bound)))
         },
         Dop::OutsideAfter => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `OutsideAfter`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.grow_start(new_start_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(a.grow_start(new_start_bound)))
         },
         Dop::EndsOnStart => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `EndsOnStart`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(a.shrink_end(new_end_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::Bound(a.shrink_end(new_end_bound)))
         },
         Dop::StartsOnEnd => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `StartsOnEnd`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Bound(a.shrink_start(new_start_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::Bound(a.shrink_start(new_start_bound)))
         },
         Dop::CrossesStart => {
-            let AbsoluteStartBound::Finite(finite_bound) = b.abs_start() else {
+            let AbsStartBound::Finite(finite_bound_position) = b.abs_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `CrossesStart`"
                 );
             };
 
-            let new_end_bound = AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = AbsFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.shrink_end(new_end_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(a.shrink_end(new_end_bound)))
         },
         Dop::CrossesEnd => {
-            let AbsoluteEndBound::Finite(finite_bound) = b.abs_end() else {
+            let AbsEndBound::Finite(finite_bound_position) = b.abs_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `CrossesEnd`"
                 );
             };
 
-            let new_start_bound = AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                finite_bound.time(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = AbsFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().time(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.shrink_start(new_start_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(a.shrink_start(new_start_bound)))
         },
         Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd | Dop::Equal => {
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::Empty)
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::Empty)
         },
         Dop::ContainsAndSameStart => {
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(remove_end_overlap_abs(a, b)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(remove_end_overlap_abs(a, b)))
         },
         Dop::ContainsAndSameEnd => {
-            OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(remove_start_overlap_abs(a, b)))
+            OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(remove_start_overlap_abs(a, b)))
         },
         Dop::Contains => OverlapOrGapRemovalResult::Split(
-            EmptiableAbsoluteBoundPair::from(remove_start_overlap_abs(a, b)),
-            EmptiableAbsoluteBoundPair::from(remove_end_overlap_abs(a, b)),
+            EmptiableAbsBoundPair::from(remove_start_overlap_abs(a, b)),
+            EmptiableAbsBoundPair::from(remove_end_overlap_abs(a, b)),
         ),
     }
 }
 
-/// Removes any overlap or gap between an [`AbsoluteBoundPair`] and an
-/// [`EmptiableAbsoluteBoundPair`]
+/// Removes any overlap or gap between an [`AbsBoundPair`] and an
+/// [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_abs_bound_pair_with_emptiable_abs_bound_pair(
-    a: &AbsoluteBoundPair,
-    b: &EmptiableAbsoluteBoundPair,
-) -> OverlapOrGapRemovalResult<EmptiableAbsoluteBoundPair> {
-    let EmptiableAbsoluteBoundPair::Bound(b_abs_bound_pair) = b else {
-        return OverlapOrGapRemovalResult::Single(EmptiableAbsoluteBoundPair::from(a.clone()));
+    a: &AbsBoundPair,
+    b: &EmptiableAbsBoundPair,
+) -> OverlapOrGapRemovalResult<EmptiableAbsBoundPair> {
+    let EmptiableAbsBoundPair::Bound(b_abs_bound_pair) = b else {
+        return OverlapOrGapRemovalResult::Single(EmptiableAbsBoundPair::from(a.clone()));
     };
 
     remove_overlap_or_gap_abs_bound_pair(a, b_abs_bound_pair)
 }
 
-/// Removes any overlap or gap between two [`EmptiableAbsoluteBoundPair`]
+/// Removes any overlap or gap between two [`EmptiableAbsBoundPair`]
 ///
 /// See [module documentation](self) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_emptiable_abs_bound_pair(
-    a: &EmptiableAbsoluteBoundPair,
-    b: &EmptiableAbsoluteBoundPair,
-) -> OverlapOrGapRemovalResult<EmptiableAbsoluteBoundPair> {
-    if let (EmptiableAbsoluteBoundPair::Bound(a_abs_bound_pair), EmptiableAbsoluteBoundPair::Bound(b_abs_bound_pair)) =
-        (a, b)
-    {
+    a: &EmptiableAbsBoundPair,
+    b: &EmptiableAbsBoundPair,
+) -> OverlapOrGapRemovalResult<EmptiableAbsBoundPair> {
+    if let (EmptiableAbsBoundPair::Bound(a_abs_bound_pair), EmptiableAbsBoundPair::Bound(b_abs_bound_pair)) = (a, b) {
         return remove_overlap_or_gap_abs_bound_pair(a_abs_bound_pair, b_abs_bound_pair);
     }
 
     OverlapOrGapRemovalResult::Single(a.clone())
 }
 
-/// Removes any overlap or gap between two [`RelativeBoundPair`]
+/// Removes any overlap or gap between two [`RelBoundPair`]
 ///
 /// See [module documentation](self) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_rel_bound_pair(
-    a: &RelativeBoundPair,
-    b: &RelativeBoundPair,
-) -> OverlapOrGapRemovalResult<EmptiableRelativeBoundPair> {
+    a: &RelBoundPair,
+    b: &RelBoundPair,
+) -> OverlapOrGapRemovalResult<EmptiableRelBoundPair> {
     type Dop = DisambiguatedOverlapPosition;
 
     let Ok(overlap_position) = a.disambiguated_overlap_position(b, OverlapRuleSet::default());
@@ -778,138 +782,142 @@ pub fn remove_overlap_or_gap_rel_bound_pair(
     match overlap_position {
         Dop::Outside => unreachable!("Only empty intervals can produce `OverlapPosition::Outside`"),
         Dop::OutsideBefore => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `OutsideBefore`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.grow_end(new_end_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(a.grow_end(new_end_bound)))
         },
         Dop::OutsideAfter => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `OutsideAfter`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.grow_start(new_start_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(a.grow_start(new_start_bound)))
         },
         Dop::EndsOnStart => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `EndsOnStart`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Bound(a.shrink_end(new_end_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::Bound(a.shrink_end(new_end_bound)))
         },
         Dop::StartsOnEnd => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `StartsOnEnd`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Bound(a.shrink_start(new_start_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::Bound(a.shrink_start(new_start_bound)))
         },
         Dop::CrossesStart => {
-            let RelativeStartBound::Finite(finite_bound) = b.rel_start() else {
+            let RelStartBound::Finite(finite_bound_position) = b.rel_start() else {
                 unreachable!(
                     "If the start of the compared bounds is `InfinitePast`, then it is impossible that the overlap \
                      was `CrossesStart`"
                 );
             };
 
-            let new_end_bound = RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_end_bound = RelFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_end_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.shrink_end(new_end_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(a.shrink_end(new_end_bound)))
         },
         Dop::CrossesEnd => {
-            let RelativeEndBound::Finite(finite_bound) = b.rel_end() else {
+            let RelEndBound::Finite(finite_bound_position) = b.rel_end() else {
                 unreachable!(
                     "If the end of the compared bounds is `InfiniteFuture`, then it is impossible that the overlap \
                      was `CrossesEnd`"
                 );
             };
 
-            let new_start_bound = RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                finite_bound.offset(),
-                finite_bound.inclusivity().opposite(), // So that it fully closes the gap
-            ));
+            let new_start_bound = RelFiniteBoundPos::new_with_incl(
+                finite_bound_position.pos().offset(),
+                finite_bound_position.pos().inclusivity().opposite(), // So that it fully closes the gap
+            )
+            .to_start_bound();
 
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.shrink_start(new_start_bound)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(a.shrink_start(new_start_bound)))
         },
         Dop::Inside | Dop::InsideAndSameStart | Dop::InsideAndSameEnd | Dop::Equal => {
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::Empty)
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::Empty)
         },
         Dop::ContainsAndSameStart => {
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(remove_end_overlap_rel(a, b)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(remove_end_overlap_rel(a, b)))
         },
         Dop::ContainsAndSameEnd => {
-            OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(remove_start_overlap_rel(a, b)))
+            OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(remove_start_overlap_rel(a, b)))
         },
         Dop::Contains => OverlapOrGapRemovalResult::Split(
-            EmptiableRelativeBoundPair::from(remove_start_overlap_rel(a, b)),
-            EmptiableRelativeBoundPair::from(remove_end_overlap_rel(a, b)),
+            EmptiableRelBoundPair::from(remove_start_overlap_rel(a, b)),
+            EmptiableRelBoundPair::from(remove_end_overlap_rel(a, b)),
         ),
     }
 }
 
-/// Removes any overlap or gap between an [`RelativeBoundPair`] and an
-/// [`EmptiableRelativeBoundPair`]
+/// Removes any overlap or gap between an [`RelBoundPair`] and an
+/// [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_rel_bound_pair_with_emptiable_rel_bound_pair(
-    a: &RelativeBoundPair,
-    b: &EmptiableRelativeBoundPair,
-) -> OverlapOrGapRemovalResult<EmptiableRelativeBoundPair> {
-    let EmptiableRelativeBoundPair::Bound(b_rel_bound_pair) = b else {
-        return OverlapOrGapRemovalResult::Single(EmptiableRelativeBoundPair::from(a.clone()));
+    a: &RelBoundPair,
+    b: &EmptiableRelBoundPair,
+) -> OverlapOrGapRemovalResult<EmptiableRelBoundPair> {
+    let EmptiableRelBoundPair::Bound(b_rel_bound_pair) = b else {
+        return OverlapOrGapRemovalResult::Single(EmptiableRelBoundPair::from(a.clone()));
     };
 
     remove_overlap_or_gap_rel_bound_pair(a, b_rel_bound_pair)
 }
 
-/// Removes any overlap or gap between two [`EmptiableRelativeBoundPair`]
+/// Removes any overlap or gap between two [`EmptiableRelBoundPair`]
 ///
 /// See [module documentation](self) for more information.
 #[must_use]
 pub fn remove_overlap_or_gap_emptiable_rel_bound_pair(
-    a: &EmptiableRelativeBoundPair,
-    b: &EmptiableRelativeBoundPair,
-) -> OverlapOrGapRemovalResult<EmptiableRelativeBoundPair> {
-    if let (EmptiableRelativeBoundPair::Bound(a_rel_bound_pair), EmptiableRelativeBoundPair::Bound(b_rel_bound_pair)) =
-        (a, b)
-    {
+    a: &EmptiableRelBoundPair,
+    b: &EmptiableRelBoundPair,
+) -> OverlapOrGapRemovalResult<EmptiableRelBoundPair> {
+    if let (EmptiableRelBoundPair::Bound(a_rel_bound_pair), EmptiableRelBoundPair::Bound(b_rel_bound_pair)) = (a, b) {
         return remove_overlap_or_gap_rel_bound_pair(a_rel_bound_pair, b_rel_bound_pair);
     }
 

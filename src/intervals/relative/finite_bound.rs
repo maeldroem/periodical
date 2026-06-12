@@ -1,202 +1,318 @@
 //! Relative finite bound
 //!
-//! A relative finite bound has two components: an offset, represented by a
-//! [`SignedDuration`], and a [bound inclusivity](BoundInclusivity).
-//!
-//! Relative finite bounds are usually converted into either an
-//! [`RelativeStartBound`] through the [`to_start_bound`](RelativeFiniteBound::to_start_bound) method,
-//! or into an [`RelativeEndBound`] through the [`to_end_bound`](RelativeFiniteBound::to_end_bound) method.
+//! Represents an relative finite bound regardless of its extremality.
+//! This is particularly useful for representing finite relative bounds of an interval
+//! as a single type, while still conserving their extremalities.
 
-use std::cmp::Ordering;
-use std::error::Error;
-use std::fmt::Display;
-use std::ops::Bound;
+use crate::intervals::meta::{BoundExtremality, HasBoundExtremality};
+use crate::intervals::ops::{BoundEq, BoundOrd, BoundOrdExtremaOps, BoundOrdering, BoundOverlapDisambiguationRuleSet};
+use crate::intervals::relative::{
+    RelBound,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelFiniteEndBound,
+    RelFiniteStartBound,
+    RelStartBound,
+};
 
-use jiff::SignedDuration;
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
-use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::relative::{RelativeEndBound, RelativeStartBound};
-
-/// A relative finite bound
+/// Relative finite bound
 ///
-/// Contains an offset [`SignedDuration`] and an ambiguous [`BoundInclusivity`]:
-/// if it is [`Exclusive`](BoundInclusivity::Exclusive), then we additionally
-/// need the _source_ (whether it acts as the start or end of an interval) in
-/// order to know what this bound truly encompasses.
-///
-/// This is why when comparing finite bounds, only its position (for relative
-/// bounds, its offset) is used.
-///
-/// # Examples
-///
-/// ## Basic use
-///
-/// ```
-/// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::RelativeFiniteBound;
-/// let finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(21));
-/// ```
-///
-/// ## Creating an [`RelativeFiniteBound`] with an explicit [`BoundInclusivity`]
-///
-/// ```
-/// # use jiff::SignedDuration;
-/// # use periodical::intervals::relative::RelativeFiniteBound;
-/// # use periodical::intervals::meta::BoundInclusivity;
-/// let finite_bound = RelativeFiniteBound::new_with_inclusivity(
-///     SignedDuration::from_hours(21),
-///     BoundInclusivity::Exclusive,
-/// );
-/// ```
+/// Represents an relative finite bound regardless of its extremality.
+/// This is particularly useful for representing finite relative bounds of an interval
+/// as a single type, while still conserving their extremalities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-pub struct RelativeFiniteBound {
-    pub(crate) offset: SignedDuration,
-    pub(crate) inclusivity: BoundInclusivity,
+pub enum RelFiniteBound {
+    Start(RelFiniteStartBound),
+    End(RelFiniteEndBound),
 }
 
-impl RelativeFiniteBound {
-    /// Creates a new [`RelativeFiniteBound`] using the given offset
+impl RelFiniteBound {
+    /// Returns whether it is of the [`End`](RelFiniteBound::End) variant
     ///
-    /// This creates a finite bound using the [default `BoundInclusivity`](BoundInclusivity::default)
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// let finite_bound_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    /// let finite_bound_end = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+    ///     .to_finite_end_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert!(finite_bound_start.is_start());
+    /// assert!(!finite_bound_end.is_start());
+    /// ```
     #[must_use]
-    pub fn new(offset: SignedDuration) -> Self {
-        Self::new_with_inclusivity(offset, BoundInclusivity::default())
+    pub fn is_start(&self) -> bool {
+        matches!(self, Self::Start(_))
     }
 
-    /// Creates a new [`RelativeFiniteBound`] using the given offset and
-    /// [`BoundInclusivity`]
+    /// Returns whether it is of the [`End`](RelFiniteBound::End) variant
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// let finite_bound_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    /// let finite_bound_end = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+    ///     .to_finite_end_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert!(!finite_bound_start.is_end());
+    /// assert!(finite_bound_end.is_end());
+    /// ```
     #[must_use]
-    pub fn new_with_inclusivity(offset: SignedDuration, inclusivity: BoundInclusivity) -> Self {
-        RelativeFiniteBound {
-            offset,
-            inclusivity,
+    pub fn is_end(&self) -> bool {
+        matches!(self, Self::End(_))
+    }
+
+    /// Returns the content of the [`Start`](RelFiniteBound::Start) variant
+    ///
+    /// Consumes `self` and puts the content of the [`Start`](RelFiniteBound::Start) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use jiff::SignedDuration;
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// let finite_start_bound =
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+    /// let finite_bound_start = finite_start_bound.to_finite_bound();
+    /// let finite_bound_end = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+    ///     .to_finite_end_bound()
+    ///     .to_finite_bound();
+    ///
+    /// assert_eq!(finite_bound_start.start(), Some(finite_start_bound));
+    /// assert_eq!(finite_bound_end.start(), None);
+    /// ```
+    #[must_use]
+    pub fn start(self) -> Option<RelFiniteStartBound> {
+        match self {
+            Self::Start(start) => Some(start),
+            Self::End(_) => None,
         }
     }
 
-    /// Returns the offset
+    /// Returns the content of the [`End`](RelFiniteBound::End) variant
+    ///
+    /// Consumes `self` and puts the content of the [`End`](RelFiniteBound::End) variant in an [`Option`].
+    /// If instead `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(12));
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// let finite_bound_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2))
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
+    /// let finite_end_bound =
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+    /// let finite_bound_end = finite_end_bound.to_finite_bound();
     ///
-    /// assert_eq!(finite_bound.offset(), SignedDuration::from_hours(12));
+    /// assert_eq!(finite_bound_start.end(), None);
+    /// assert_eq!(finite_bound_end.end(), Some(finite_end_bound));
     /// ```
     #[must_use]
-    pub fn offset(&self) -> SignedDuration {
-        self.offset
+    pub fn end(self) -> Option<RelFiniteEndBound> {
+        match self {
+            Self::Start(_) => None,
+            Self::End(end) => Some(end),
+        }
     }
 
-    /// Sets the offset
+    /// Returns the finite bound position
+    #[must_use]
+    pub fn pos(self) -> RelFiniteBoundPos {
+        match self {
+            Self::Start(start) => start.pos(),
+            Self::End(end) => end.pos(),
+        }
+    }
+
+    /// Returns the opposite finite bound
+    ///
+    /// Returns a finite bound of opposite extremality and bound inclusivity.
     ///
     /// # Examples
     ///
     /// ```
     /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1));
-    /// finite_bound.set_offset(SignedDuration::from_hours(32));
+    /// # use periodical::intervals::relative::RelFiniteBoundPos;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// let offset = SignedDuration::from_hours(10);
+    /// let start = RelFiniteBoundPos::new(offset)
+    ///     .to_finite_start_bound()
+    ///     .to_finite_bound();
     ///
-    /// assert_eq!(finite_bound.offset(), SignedDuration::from_hours(32));
+    /// assert_eq!(
+    ///     start.opposite(),
+    ///     RelFiniteBoundPos::new_with_incl(offset, BoundInclusivity::Exclusive)
+    ///         .to_finite_end_bound()
+    ///         .to_finite_bound()
+    /// );
     /// ```
-    pub fn set_offset(&mut self, offset: SignedDuration) {
-        self.offset = offset;
-    }
-
-    /// Sets the inclusivity
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use jiff::SignedDuration;
-    /// # use periodical::intervals::relative::RelativeFiniteBound;
-    /// # use periodical::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-    /// let mut finite_bound = RelativeFiniteBound::new(SignedDuration::from_hours(1));
-    /// finite_bound.set_inclusivity(BoundInclusivity::Exclusive);
-    ///
-    /// assert_eq!(finite_bound.inclusivity(), BoundInclusivity::Exclusive);
-    /// ```
-    pub fn set_inclusivity(&mut self, inclusivity: BoundInclusivity) {
-        self.inclusivity = inclusivity;
-    }
-
-    /// Wraps the finite bound in an [`RelativeStartBound`]
     #[must_use]
-    pub fn to_start_bound(self) -> RelativeStartBound {
-        RelativeStartBound::from(self)
+    pub fn opposite(self) -> Self {
+        match self {
+            Self::Start(start) => Self::End(start.opposite()),
+            Self::End(end) => Self::Start(end.opposite()),
+        }
     }
 
-    /// Wraps the finite bound in an [`RelativeEndBound`]
+    /// Converts `self` into [`RelBound`]
     #[must_use]
-    pub fn to_end_bound(self) -> RelativeEndBound {
-        RelativeEndBound::from(self)
+    pub fn to_bound(self) -> RelBound {
+        RelBound::from(self)
     }
 }
 
-impl HasBoundInclusivity for RelativeFiniteBound {
-    fn inclusivity(&self) -> BoundInclusivity {
-        self.inclusivity
+impl HasBoundExtremality for RelFiniteBound {
+    fn bound_extremality(&self) -> BoundExtremality {
+        match self {
+            Self::Start(_) => BoundExtremality::Start,
+            Self::End(_) => BoundExtremality::End,
+        }
     }
 }
 
-impl PartialOrd for RelativeFiniteBound {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+impl BoundEq for RelFiniteBound {
+    fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(start) => start.bound_eq(other, rule_set),
+            Self::End(end) => end.bound_eq(other, rule_set),
+        }
     }
 }
 
-impl Ord for RelativeFiniteBound {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.offset.cmp(&other.offset)
+impl BoundEq<RelFiniteStartBound> for RelFiniteBound {
+    fn bound_eq(&self, other: &RelFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
+        }
     }
 }
 
-impl From<SignedDuration> for RelativeFiniteBound {
-    fn from(value: SignedDuration) -> Self {
-        RelativeFiniteBound::new(value)
+impl BoundEq<RelFiniteEndBound> for RelFiniteBound {
+    fn bound_eq(&self, other: &RelFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
+        }
     }
 }
 
-impl From<(SignedDuration, BoundInclusivity)> for RelativeFiniteBound {
-    fn from((offset, inclusivity): (SignedDuration, BoundInclusivity)) -> Self {
-        RelativeFiniteBound::new_with_inclusivity(offset, inclusivity)
+impl BoundEq<RelStartBound> for RelFiniteBound {
+    fn bound_eq(&self, other: &RelStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
+        }
     }
 }
 
-/// Error that can occur when trying to convert [`Bound<SignedDuration>`] into [`RelativeFiniteBound`]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RelativeFiniteBoundTryFromBoundError;
-
-impl Display for RelativeFiniteBoundTryFromBoundError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "An error occurred when trying to convert `Bound<SignedDuration>` into `RelativeFiniteBound`"
-        )
+impl BoundEq<RelEndBound> for RelFiniteBound {
+    fn bound_eq(&self, other: &RelEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
+        }
     }
 }
 
-impl Error for RelativeFiniteBoundTryFromBoundError {}
+impl BoundEq<RelBound> for RelFiniteBound {
+    fn bound_eq(&self, other: &RelBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_eq(other, rule_set),
+            Self::End(finite_end) => finite_end.bound_eq(other, rule_set),
+        }
+    }
+}
 
-impl TryFrom<Bound<SignedDuration>> for RelativeFiniteBound {
-    type Error = RelativeFiniteBoundTryFromBoundError;
+impl BoundOrd for RelFiniteBound {
+    fn bound_cmp(&self, other: &Self) -> BoundOrdering {
+        match (self, other) {
+            (Self::Start(lhs_finite_start), Self::Start(rhs_finite_start)) => {
+                lhs_finite_start.bound_cmp(rhs_finite_start)
+            },
+            (Self::Start(finite_start), Self::End(finite_end)) => finite_start.bound_cmp(finite_end),
+            (Self::End(finite_end), Self::Start(finite_start)) => finite_end.bound_cmp(finite_start),
+            (Self::End(lhs_finite_end), Self::End(rhs_finite_end)) => lhs_finite_end.bound_cmp(rhs_finite_end),
+        }
+    }
+}
 
-    fn try_from(value: Bound<SignedDuration>) -> Result<Self, Self::Error> {
-        match value {
-            Bound::Included(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Inclusive,
-            )),
-            Bound::Excluded(offset) => Ok(RelativeFiniteBound::new_with_inclusivity(
-                offset,
-                BoundInclusivity::Exclusive,
-            )),
-            Bound::Unbounded => Err(RelativeFiniteBoundTryFromBoundError),
+impl BoundOrdExtremaOps for RelFiniteBound {}
+
+impl BoundOrd<RelFiniteStartBound> for RelFiniteBound {
+    fn bound_cmp(&self, other: &RelFiniteStartBound) -> BoundOrdering {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<RelFiniteEndBound> for RelFiniteBound {
+    fn bound_cmp(&self, other: &RelFiniteEndBound) -> BoundOrdering {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<RelStartBound> for RelFiniteBound {
+    fn bound_cmp(&self, other: &RelStartBound) -> BoundOrdering {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<RelEndBound> for RelFiniteBound {
+    fn bound_cmp(&self, other: &RelEndBound) -> BoundOrdering {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
+        }
+    }
+}
+
+impl BoundOrd<RelBound> for RelFiniteBound {
+    fn bound_cmp(&self, other: &RelBound) -> BoundOrdering {
+        match self {
+            Self::Start(finite_start) => finite_start.bound_cmp(other),
+            Self::End(finite_end) => finite_end.bound_cmp(other),
+        }
+    }
+}
+
+impl From<RelFiniteStartBound> for RelFiniteBound {
+    fn from(value: RelFiniteStartBound) -> Self {
+        Self::Start(value)
+    }
+}
+
+impl From<RelFiniteEndBound> for RelFiniteBound {
+    fn from(value: RelFiniteEndBound) -> Self {
+        Self::End(value)
+    }
+}
+
+impl From<(RelFiniteBoundPos, BoundExtremality)> for RelFiniteBound {
+    fn from((finite_pos, extremality): (RelFiniteBoundPos, BoundExtremality)) -> Self {
+        match extremality {
+            BoundExtremality::Start => Self::Start(RelFiniteStartBound::from(finite_pos)),
+            BoundExtremality::End => Self::End(RelFiniteEndBound::from(finite_pos)),
         }
     }
 }

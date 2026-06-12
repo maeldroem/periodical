@@ -1,3 +1,7 @@
+//! Precision change for relative intervals
+//!
+//! See [module documentation](crate::intervals::ops::precision) for more info.
+
 use jiff::SignedDuration;
 
 use crate::intervals::ops::precision::relative::bound::{
@@ -7,12 +11,12 @@ use crate::intervals::ops::precision::relative::bound::{
     precise_rel_start_bound_with_base_offset,
 };
 use crate::intervals::relative::{
-    EmptiableRelativeBoundPair,
-    EmptiableRelativeInterval,
-    HasEmptiableRelativeBoundPair,
-    HasRelativeBoundPair,
-    RelativeBoundPair,
-    RelativeInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelInterval,
 };
 use crate::intervals::special::EmptyInterval;
 use crate::ops::{Precision, PrecisionOutOfRangeError};
@@ -21,6 +25,8 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 ///
 /// The precision itself is defined by [`Precision`].
 ///
+/// See [module documentation](crate::intervals::ops::precision) for more info.
+///
 /// # Examples
 ///
 /// ```
@@ -28,29 +34,29 @@ use crate::ops::{Precision, PrecisionOutOfRangeError};
 /// # use std::time::Duration;
 /// # use jiff::SignedDuration;
 /// # use periodical::ops::{Precision, PrecisionMode};
-/// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
-/// # use periodical::intervals::ops::PreciseRelativeInterval;
-/// let interval = RelativeBoundPair::new(
-///     RelativeFiniteBound::new(SignedDuration::from_mins(3)).to_start_bound(),
-///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+/// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+/// # use periodical::intervals::ops::PreciseRelInterval;
+/// let interval = RelBoundPair::new(
+///     RelFiniteBoundPos::new(SignedDuration::from_mins(3)).to_start_bound(),
+///     RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
 ///         .to_end_bound(),
 /// );
 ///
 /// assert_eq!(
-///     interval.precise_interval(Precision::new(
+///     interval.precise(Precision::new(
 ///         Duration::from_mins(5),
 ///         PrecisionMode::ToPast
 ///     )?),
-///     Ok(RelativeBoundPair::new(
-///         RelativeFiniteBound::new(SignedDuration::ZERO).to_start_bound(),
-///         RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
+///     Ok(RelBoundPair::new(
+///         RelFiniteBoundPos::new(SignedDuration::ZERO).to_start_bound(),
+///         RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
 ///             .to_end_bound(),
 ///     )),
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub trait PreciseRelativeInterval {
-    /// Output of methods precising an interval
+pub trait PreciseRelInterval {
+    /// Precised interval type
     type PrecisedIntervalOutput;
 
     /// Precises the start and end bounds with different [`Precision`]s
@@ -64,28 +70,28 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
-    /// # use periodical::intervals::ops::PreciseRelativeInterval;
-    /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(3)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::intervals::ops::PreciseRelInterval;
+    /// let interval = RelBoundPair::new(
+    ///     RelFiniteBoundPos::new(SignedDuration::from_mins(3)).to_start_bound(),
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///         .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval_with_different_precisions(
+    ///     interval.precise_different_precisions(
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///     ),
-    ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::ZERO).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8)).to_end_bound(),
+    ///     Ok(RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::ZERO).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
@@ -102,30 +108,30 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
-    /// # use periodical::intervals::ops::PreciseRelativeInterval;
-    /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(3)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::intervals::ops::PreciseRelInterval;
+    /// let interval = RelBoundPair::new(
+    ///     RelFiniteBoundPos::new(SignedDuration::from_mins(3)).to_start_bound(),
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///         .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval(Precision::new(
+    ///     interval.precise(Precision::new(
     ///         Duration::from_mins(5),
     ///         PrecisionMode::ToPast
     ///     )?),
-    ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::ZERO).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
+    ///     Ok(RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::ZERO).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(55))
     ///             .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval(&self, precision: Precision) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions(precision, precision)
+    fn precise(&self, precision: Precision) -> Self::PrecisedIntervalOutput {
+        self.precise_different_precisions(precision, precision)
     }
 
     /// Precises the start and end bounds with different precisions and base
@@ -140,31 +146,31 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
-    /// # use periodical::intervals::ops::PreciseRelativeInterval;
-    /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(13)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::intervals::ops::PreciseRelInterval;
+    /// let interval = RelBoundPair::new(
+    ///     RelFiniteBoundPos::new(SignedDuration::from_mins(13)).to_start_bound(),
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///         .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval_with_different_precisions_with_base_offset(
+    ///     interval.precise_different_precisions_with_base_offset(
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///         SignedDuration::from_mins(2),
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
     ///         SignedDuration::from_mins(1),
     ///     ),
-    ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_mins(12)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(8) + SignedDuration::from_mins(1))
+    ///     Ok(RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_mins(12)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8) + SignedDuration::from_mins(1))
     ///             .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_different_precisions_with_base_offset(
+    fn precise_different_precisions_with_base_offset(
         &self,
         precision_start: Precision,
         base_start: SignedDuration,
@@ -183,41 +189,37 @@ pub trait PreciseRelativeInterval {
     /// # use std::time::Duration;
     /// # use jiff::SignedDuration;
     /// # use periodical::ops::{Precision, PrecisionMode};
-    /// # use periodical::intervals::relative::{RelativeBoundPair, RelativeFiniteBound};
-    /// # use periodical::intervals::ops::PreciseRelativeInterval;
-    /// let interval = RelativeBoundPair::new(
-    ///     RelativeFiniteBound::new(SignedDuration::from_mins(13)).to_start_bound(),
-    ///     RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(58))
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// # use periodical::intervals::ops::PreciseRelInterval;
+    /// let interval = RelBoundPair::new(
+    ///     RelFiniteBoundPos::new(SignedDuration::from_mins(13)).to_start_bound(),
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(58))
     ///         .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     interval.precise_interval_with_base_offset(
+    ///     interval.precise_with_base_offset(
     ///         Precision::new(Duration::from_mins(5), PrecisionMode::ToPast)?,
     ///         SignedDuration::from_mins(2),
     ///     ),
-    ///     Ok(RelativeBoundPair::new(
-    ///         RelativeFiniteBound::new(SignedDuration::from_mins(12)).to_start_bound(),
-    ///         RelativeFiniteBound::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
+    ///     Ok(RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_mins(12)).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(7) + SignedDuration::from_mins(57))
     ///             .to_end_bound(),
     ///     )),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn precise_interval_with_base_offset(
-        &self,
-        precision: Precision,
-        base: SignedDuration,
-    ) -> Self::PrecisedIntervalOutput {
-        self.precise_interval_with_different_precisions_with_base_offset(precision, base, precision, base)
+    fn precise_with_base_offset(&self, precision: Precision, base: SignedDuration) -> Self::PrecisedIntervalOutput {
+        self.precise_different_precisions_with_base_offset(precision, base, precision, base)
     }
 }
 
-impl PreciseRelativeInterval for RelativeBoundPair {
+impl PreciseRelInterval for RelBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
@@ -225,7 +227,7 @@ impl PreciseRelativeInterval for RelativeBoundPair {
         precise_rel_bound_pair(self, precision_start, precision_end)
     }
 
-    fn precise_interval_with_different_precisions_with_base_offset(
+    fn precise_different_precisions_with_base_offset(
         &self,
         precision_start: Precision,
         base_start: SignedDuration,
@@ -236,10 +238,10 @@ impl PreciseRelativeInterval for RelativeBoundPair {
     }
 }
 
-impl PreciseRelativeInterval for EmptiableRelativeBoundPair {
+impl PreciseRelInterval for EmptiableRelBoundPair {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
@@ -251,7 +253,7 @@ impl PreciseRelativeInterval for EmptiableRelativeBoundPair {
         }
     }
 
-    fn precise_interval_with_different_precisions_with_base_offset(
+    fn precise_different_precisions_with_base_offset(
         &self,
         precision_start: Precision,
         base_start: SignedDuration,
@@ -273,10 +275,10 @@ impl PreciseRelativeInterval for EmptiableRelativeBoundPair {
     }
 }
 
-impl PreciseRelativeInterval for RelativeInterval {
+impl PreciseRelInterval for RelInterval {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
@@ -284,7 +286,7 @@ impl PreciseRelativeInterval for RelativeInterval {
         Ok(precise_rel_bound_pair(&self.rel_bound_pair(), precision_start, precision_end)?.to_interval())
     }
 
-    fn precise_interval_with_different_precisions_with_base_offset(
+    fn precise_different_precisions_with_base_offset(
         &self,
         precision_start: Precision,
         base_start: SignedDuration,
@@ -302,29 +304,29 @@ impl PreciseRelativeInterval for RelativeInterval {
     }
 }
 
-impl PreciseRelativeInterval for EmptiableRelativeInterval {
+impl PreciseRelInterval for EmptiableRelInterval {
     type PrecisedIntervalOutput = Result<Self, PrecisionOutOfRangeError>;
 
-    fn precise_interval_with_different_precisions(
+    fn precise_different_precisions(
         &self,
         precision_start: Precision,
         precision_end: Precision,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableRelativeBoundPair::Bound(ref rel_bound_pair) = self.emptiable_rel_bound_pair() {
+        if let EmptiableRelBoundPair::Bound(ref rel_bound_pair) = self.emptiable_rel_bound_pair() {
             Ok(precise_rel_bound_pair(rel_bound_pair, precision_start, precision_end)?.to_emptiable_interval())
         } else {
             Ok(Self::Empty(EmptyInterval))
         }
     }
 
-    fn precise_interval_with_different_precisions_with_base_offset(
+    fn precise_different_precisions_with_base_offset(
         &self,
         precision_start: Precision,
         base_start: SignedDuration,
         precision_end: Precision,
         base_end: SignedDuration,
     ) -> Self::PrecisedIntervalOutput {
-        if let EmptiableRelativeBoundPair::Bound(ref rel_bound_pair) = self.emptiable_rel_bound_pair() {
+        if let EmptiableRelBoundPair::Bound(ref rel_bound_pair) = self.emptiable_rel_bound_pair() {
             Ok(precise_rel_bound_pair_with_base_offset(
                 rel_bound_pair,
                 precision_start,
@@ -339,35 +341,35 @@ impl PreciseRelativeInterval for EmptiableRelativeInterval {
     }
 }
 
-/// Precises [`RelativeBoundPair`] with the given [`Precision`]s
+/// Precises [`RelBoundPair`] with the given [`Precision`]s
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_signed_duration`]
 pub fn precise_rel_bound_pair(
-    bound_pair: &RelativeBoundPair,
+    bound_pair: &RelBoundPair,
     precision_start: Precision,
     precision_end: Precision,
-) -> Result<RelativeBoundPair, PrecisionOutOfRangeError> {
-    Ok(RelativeBoundPair::new(
+) -> Result<RelBoundPair, PrecisionOutOfRangeError> {
+    Ok(RelBoundPair::new(
         precise_rel_start_bound(&bound_pair.start(), precision_start)?,
         precise_rel_end_bound(&bound_pair.end(), precision_end)?,
     ))
 }
 
-/// Precises [`RelativeBoundPair`] with the given [`Precision`]s and base offsets
+/// Precises [`RelBoundPair`] with the given [`Precision`]s and base offsets
 ///
 /// # Errors
 ///
 /// See [`Precision::precise_signed_duration_with_base_offset`]
 pub fn precise_rel_bound_pair_with_base_offset(
-    bound_pair: &RelativeBoundPair,
+    bound_pair: &RelBoundPair,
     precision_start: Precision,
     base_start: SignedDuration,
     precision_end: Precision,
     base_end: SignedDuration,
-) -> Result<RelativeBoundPair, PrecisionOutOfRangeError> {
-    Ok(RelativeBoundPair::new(
+) -> Result<RelBoundPair, PrecisionOutOfRangeError> {
+    Ok(RelBoundPair::new(
         precise_rel_start_bound_with_base_offset(&bound_pair.start(), precision_start, base_start)?,
         precise_rel_end_bound_with_base_offset(&bound_pair.end(), precision_end, base_end)?,
     ))

@@ -520,6 +520,249 @@ mod precision {
         }
     }
 
+    mod precise_duration_with_base_offset {
+        use super::*;
+
+        #[test]
+        fn zero_duration_zero_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset(Duration::ZERO, Duration::ZERO)?,
+                Duration::ZERO,
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset(Duration::ZERO, Duration::ZERO)?,
+                Duration::ZERO,
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset(Duration::ZERO, Duration::ZERO)?,
+                Duration::ZERO,
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn after_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset(Duration::from_mins(18), Duration::from_mins(2))?,
+                Duration::from_mins(22),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset(Duration::from_mins(20), Duration::from_mins(2))?,
+                Duration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset(Duration::from_mins(13), Duration::from_mins(2))?,
+                Duration::from_mins(12),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset(Duration::from_mins(16), Duration::from_mins(2))?,
+                Duration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_duration_with_base_offset(
+                    Duration::from_mins(14) + Duration::from_secs(30),
+                    Duration::from_mins(2)
+                )?,
+                Duration::from_mins(17),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn on_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset(Duration::from_mins(2), Duration::from_mins(2))?,
+                Duration::from_mins(2),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset(Duration::from_mins(2), Duration::from_mins(2))?,
+                Duration::from_mins(2),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset(Duration::from_mins(2), Duration::from_mins(2))?,
+                Duration::from_mins(2),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn before_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset(Duration::from_mins(15), Duration::from_mins(27)),
+                Err(PrecisionOutOfRangeError),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset(Duration::from_mins(15), Duration::from_mins(27)),
+                Err(PrecisionOutOfRangeError),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset(Duration::from_mins(15), Duration::from_mins(27)),
+                Err(PrecisionOutOfRangeError),
+            );
+
+            Ok(())
+        }
+    }
+
+    mod precise_duration_with_base_offset_via_signed {
+        use super::*;
+
+        #[test]
+        fn zero_duration_zero_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset_via_signed(Duration::ZERO, Duration::ZERO)?,
+                Duration::ZERO,
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset_via_signed(Duration::ZERO, Duration::ZERO)?,
+                Duration::ZERO,
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::ZERO, Duration::ZERO)?,
+                Duration::ZERO,
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn after_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(18), Duration::from_mins(2))?,
+                Duration::from_mins(22),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(20), Duration::from_mins(2))?,
+                Duration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(13), Duration::from_mins(2))?,
+                Duration::from_mins(12),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(16), Duration::from_mins(2))?,
+                Duration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(
+                        Duration::from_mins(14) + Duration::from_secs(30),
+                        Duration::from_mins(2)
+                    )?,
+                Duration::from_mins(17),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn on_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(2), Duration::from_mins(2))?,
+                Duration::from_mins(2),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(2), Duration::from_mins(2))?,
+                Duration::from_mins(2),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(2), Duration::from_mins(2))?,
+                Duration::from_mins(2),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn before_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(15), Duration::from_mins(27))?,
+                Duration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(15), Duration::from_mins(27))?,
+                Duration::from_mins(12),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(15), Duration::from_mins(27))?,
+                Duration::from_mins(17),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn duration_too_large_for_signed_duration() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset_via_signed(Duration::MAX, Duration::from_mins(2)),
+                Err(PrecisionOutOfRangeError)
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset_via_signed(Duration::MAX, Duration::from_mins(2)),
+                Err(PrecisionOutOfRangeError)
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::MAX, Duration::from_mins(2)),
+                Err(PrecisionOutOfRangeError)
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn base_too_large_for_signed_duration() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(27), Duration::MAX),
+                Err(PrecisionOutOfRangeError)
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(27), Duration::MAX),
+                Err(PrecisionOutOfRangeError)
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_duration_with_base_offset_via_signed(Duration::from_mins(27), Duration::MAX),
+                Err(PrecisionOutOfRangeError)
+            );
+
+            Ok(())
+        }
+    }
+
     mod precise_signed_duration {
         use super::*;
 
@@ -714,6 +957,140 @@ mod precision {
         }
     }
 
+    mod precise_signed_duration_with_base_offset {
+        use super::*;
+
+        #[test]
+        fn zero_duration_zero_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?
+                    .precise_signed_duration_with_base_offset(SignedDuration::ZERO, SignedDuration::ZERO)?,
+                SignedDuration::ZERO,
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?
+                    .precise_signed_duration_with_base_offset(SignedDuration::ZERO, SignedDuration::ZERO)?,
+                SignedDuration::ZERO,
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?
+                    .precise_signed_duration_with_base_offset(SignedDuration::ZERO, SignedDuration::ZERO)?,
+                SignedDuration::ZERO,
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn after_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(18),
+                    SignedDuration::from_mins(-3)
+                )?,
+                SignedDuration::from_mins(22),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(20),
+                    SignedDuration::from_mins(-3)
+                )?,
+                SignedDuration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(13),
+                    SignedDuration::from_mins(-3)
+                )?,
+                SignedDuration::from_mins(12),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(16),
+                    SignedDuration::from_mins(-3)
+                )?,
+                SignedDuration::from_mins(17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(14) + SignedDuration::from_secs(30),
+                    SignedDuration::from_mins(-3)
+                )?,
+                SignedDuration::from_mins(17),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn on_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-2),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-2),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-2),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-2),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-2),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-2),
+            );
+
+            Ok(())
+        }
+
+        #[test]
+        fn before_base() -> Result<(), Box<dyn Error>> {
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToFuture)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-18),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToPast)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-18),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-22),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-18),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-16),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-17),
+            );
+            assert_eq!(
+                Precision::new(U_DUR_FIVE_MINS, PrecisionMode::ToNearest)?.precise_signed_duration_with_base_offset(
+                    SignedDuration::from_mins(-14) + SignedDuration::from_secs(-30),
+                    SignedDuration::from_mins(-2)
+                )?,
+                SignedDuration::from_mins(-12),
+            );
+
+            Ok(())
+        }
+    }
+
     mod precise_time {
         use super::*;
 
@@ -864,6 +1241,10 @@ mod running_result {
             RunningResult::<u8>::Running(10).map_running(|x| x + 10),
             RunningResult::<u8>::Running(20)
         );
+        assert_eq!(
+            RunningResult::<u8>::Done(10).map_running(|x| x + 10),
+            RunningResult::<u8>::Done(10),
+        );
     }
 
     #[test]
@@ -871,6 +1252,10 @@ mod running_result {
         assert_eq!(
             RunningResult::<u8>::Done(10).map_done(|x| x + 10),
             RunningResult::<u8>::Done(20)
+        );
+        assert_eq!(
+            RunningResult::<u8>::Running(10).map_done(|x| x + 10),
+            RunningResult::<u8>::Running(10),
         );
     }
 }
@@ -942,6 +1327,10 @@ mod union_result {
             UnionResult::<u8>::United(10).map_united(|x| x + 10),
             UnionResult::United(20)
         );
+        assert_eq!(
+            UnionResult::<u8>::Separate.map_united(|x| x + 10),
+            UnionResult::<u8>::Separate,
+        );
     }
 }
 
@@ -972,11 +1361,22 @@ mod intersection_result {
             IntersectionResult::<u8>::Intersected(10).map_intersected(|x| x + 10),
             IntersectionResult::<u8>::Intersected(20),
         );
+        assert_eq!(
+            IntersectionResult::<u8>::Separate.map_intersected(|x| x + 10),
+            IntersectionResult::<u8>::Separate,
+        );
     }
 }
 
 mod difference_result {
     use super::*;
+
+    #[test]
+    fn is_difference() {
+        assert!(DifferenceResult::<()>::Single(()).is_difference());
+        assert!(DifferenceResult::<()>::Split((), ()).is_difference());
+        assert!(!DifferenceResult::<()>::Separate.is_difference());
+    }
 
     #[test]
     fn is_shrunk() {
@@ -1022,6 +1422,10 @@ mod difference_result {
         assert_eq!(
             DifferenceResult::<u8>::Split(10, 20).map_difference(|x| x + 10),
             DifferenceResult::<u8>::Split(20, 30),
+        );
+        assert_eq!(
+            DifferenceResult::<u8>::Separate.map_difference(|x| x + 10),
+            DifferenceResult::<u8>::Separate,
         );
     }
 }
@@ -1080,6 +1484,10 @@ mod sym_difference_result {
         assert_eq!(
             SymmetricDifferenceResult::<u8>::Split(10, 20).map_symmetric_difference(|x| x + 10),
             SymmetricDifferenceResult::<u8>::Split(20, 30),
+        );
+        assert_eq!(
+            SymmetricDifferenceResult::<u8>::Separate.map_symmetric_difference(|x| x + 10),
+            SymmetricDifferenceResult::<u8>::Separate,
         );
     }
 }

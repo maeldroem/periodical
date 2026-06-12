@@ -3,14 +3,14 @@ use std::error::Error;
 use jiff::Zoned;
 
 use super::abs_state_change::*;
-use crate::intervals::absolute::AbsoluteFiniteBound;
+use crate::intervals::absolute::AbsFiniteBoundPos;
 use crate::intervals::meta::BoundInclusivity;
 use crate::iter::intervals::layered_bounds::state::LayeredBoundsState;
 
 #[test]
 fn at_abs_bound_old_state() {
     assert_eq!(
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
+        LayeredBoundsStateChangeAtAbsBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             None,
@@ -24,7 +24,7 @@ fn at_abs_bound_old_state() {
 #[test]
 fn at_abs_bound_new_state() {
     assert_eq!(
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
+        LayeredBoundsStateChangeAtAbsBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             None,
@@ -38,18 +38,18 @@ fn at_abs_bound_new_state() {
 #[test]
 fn at_abs_bound_old_state_end() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
+        LayeredBoundsStateChangeAtAbsBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             Some(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound()
             ),
             Some(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -58,7 +58,7 @@ fn at_abs_bound_old_state_end() -> Result<(), Box<dyn Error>> {
         )
         .old_state_end(),
         Some(
-            AbsoluteFiniteBound::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Inclusive,
             )
@@ -72,18 +72,18 @@ fn at_abs_bound_old_state_end() -> Result<(), Box<dyn Error>> {
 #[test]
 fn at_abs_bound_new_state_start() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        LayeredBoundsStateChangeAtAbsoluteBound::new(
+        LayeredBoundsStateChangeAtAbsBound::new(
             LayeredBoundsState::FirstLayer,
             LayeredBoundsState::SecondLayer,
             Some(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Inclusive,
                 )
                 .to_end_bound()
             ),
             Some(
-                AbsoluteFiniteBound::new_with_inclusivity(
+                AbsFiniteBoundPos::new_with_incl(
                     "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                 )
@@ -92,7 +92,7 @@ fn at_abs_bound_new_state_start() -> Result<(), Box<dyn Error>> {
         )
         .new_state_start(),
         Some(
-            AbsoluteFiniteBound::new_with_inclusivity(
+            AbsFiniteBoundPos::new_with_incl(
                 "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 BoundInclusivity::Exclusive,
             )

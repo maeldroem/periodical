@@ -5,22 +5,22 @@ use jiff::Zoned;
 use jiff::tz::TimeZone;
 
 use super::bound::*;
-use crate::intervals::absolute::{AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound};
+use crate::intervals::absolute::{AbsEndBound, AbsFiniteBoundPos, AbsStartBound};
 use crate::intervals::meta::BoundInclusivity;
 use crate::ops::{Precision, PrecisionMode};
 
 #[test]
-fn finite_bound() -> Result<(), Box<dyn Error>> {
+fn finite_bound_position() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:42:31[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive
         )
-        .precise_bound(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?
         ),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:45:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )),
@@ -32,11 +32,11 @@ fn finite_bound() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_infinite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteStartBound::InfinitePast.precise_bound(
+        AbsStartBound::InfinitePast.precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
-        Ok(AbsoluteStartBound::InfinitePast),
+        Ok(AbsStartBound::InfinitePast),
     );
 
     Ok(())
@@ -45,16 +45,16 @@ fn start_infinite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_common_precision() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
-        .precise_bound(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -67,12 +67,12 @@ fn start_common_precision() -> Result<(), Box<dyn Error>> {
 #[test]
 fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_start_bound()
-        .precise_bound_with_base_time(
+        .precise_with_base_time(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(
                 Duration::from_mins(7) + Duration::from_secs(31),
@@ -80,7 +80,7 @@ fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
             )?,
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 02:30:20[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -93,11 +93,11 @@ fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_infinite() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteEndBound::InfiniteFuture.precise_bound(
+        AbsEndBound::InfiniteFuture.precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
-        Ok(AbsoluteEndBound::InfiniteFuture),
+        Ok(AbsEndBound::InfiniteFuture),
     );
 
     Ok(())
@@ -106,16 +106,16 @@ fn end_infinite() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_common_precision() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
-        .precise_bound(
+        .precise(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
         ),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
@@ -128,12 +128,12 @@ fn end_common_precision() -> Result<(), Box<dyn Error>> {
 #[test]
 fn end_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        AbsoluteFiniteBound::new_with_inclusivity(
+        AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
         .to_end_bound()
-        .precise_bound_with_base_time(
+        .precise_with_base_time(
             TimeZone::get("Europe/Oslo")?,
             Precision::new(
                 Duration::from_mins(7) + Duration::from_secs(31),
@@ -141,7 +141,7 @@ fn end_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
             )?,
             "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         ),
-        Ok(AbsoluteFiniteBound::new_with_inclusivity(
+        Ok(AbsFiniteBoundPos::new_with_incl(
             "2025-01-01 10:01:20[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )

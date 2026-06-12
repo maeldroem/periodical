@@ -80,7 +80,7 @@ pub enum Relativity {
     /// Interval lives in absolute time
     ///
     /// This means that it uses an absolute [`Zoned`](jiff::Zoned).
-    Absolute,
+    Abs,
     /// Interval lives in relative time
     ///
     /// This means that it uses [`SignedDuration`](jiff::SignedDuration)s, also
@@ -89,7 +89,7 @@ pub enum Relativity {
     /// For example, if you compare and absolute interval to a point in time,
     /// e.g. this day compared to this year's 1st of January at midnight,
     /// you will end up with a relative interval.
-    Relative,
+    Rel,
     /// Interval isn't bound to relativity
     ///
     /// This means the interval uses a concept rather than representing itself
@@ -107,8 +107,8 @@ pub enum Relativity {
 impl Display for Relativity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Absolute => write!(f, "Absolute"),
-            Self::Relative => write!(f, "Relative"),
+            Self::Abs => write!(f, "Abs"),
+            Self::Rel => write!(f, "Rel"),
             Self::Any => write!(f, "Any relativity"),
         }
     }
@@ -168,6 +168,11 @@ impl From<bool> for OpeningDirection {
             OpeningDirection::ToPast
         }
     }
+}
+
+pub trait HasOpeningDirection {
+    #[must_use]
+    fn opening_direction(&self) -> OpeningDirection;
 }
 
 /// Infinitesimal duration variation of an interval
@@ -353,21 +358,6 @@ impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
             (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Epsilon::Start,
             (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Epsilon::End,
             (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Epsilon::Both,
-        }
-    }
-}
-
-/// Converts `(bool, bool)` into [`Epsilon`]
-///
-/// The first tuple element represents whether the start bound has an epsilon,
-/// the second tuple element represents whether the end bound has an epsilon.
-impl From<(bool, bool)> for Epsilon {
-    fn from((start_has_epsilon, end_has_epsilon): (bool, bool)) -> Self {
-        match (start_has_epsilon, end_has_epsilon) {
-            (false, false) => Epsilon::None,
-            (true, false) => Epsilon::Start,
-            (false, true) => Epsilon::End,
-            (true, true) => Epsilon::Both,
         }
     }
 }
@@ -617,4 +607,37 @@ pub trait HasBoundInclusivity {
 pub trait IsEmpty {
     /// Returns whether the interval is empty
     fn is_empty(&self) -> bool;
+}
+
+/// Bound extremality — start or end
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundExtremality {
+    Start,
+    End,
+}
+
+impl BoundExtremality {
+    /// Returns the opposite bound extremality
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundExtremality;
+    /// assert_eq!(BoundExtremality::Start.opposite(), BoundExtremality::End);
+    /// assert_eq!(BoundExtremality::End.opposite(), BoundExtremality::Start);
+    /// ```
+    #[must_use]
+    pub fn opposite(self) -> Self {
+        match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+        }
+    }
+}
+
+/// Capacity of a bound to have an associated extreme (start/end)
+pub trait HasBoundExtremality {
+    /// Returns the associated [`BoundExtremality`]
+    #[must_use]
+    fn bound_extremality(&self) -> BoundExtremality;
 }
