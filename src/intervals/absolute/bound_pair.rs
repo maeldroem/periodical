@@ -39,10 +39,13 @@ use crate::intervals::meta::{
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
+    OpeningDirection,
     Openness,
     Relativity,
 };
@@ -471,7 +474,7 @@ impl HasRelativity for AbsBoundPair {
     fn relativity(&self) -> Relativity {
         match (self.start(), self.end()) {
             (AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture) => Relativity::Any,
-            _ => Relativity::Abs,
+            _ => Relativity::Absolute,
         }
     }
 }
@@ -497,6 +500,21 @@ impl Ord for AbsBoundPair {
 impl IsEmpty for AbsBoundPair {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for AbsBoundPair {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match (self.start(), self.end()) {
+            (AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture) => IntervalTypeWithRel::Unbounded,
+            (AbsStartBound::InfinitePast, AbsEndBound::Finite(_)) => {
+                IntervalTypeWithRel::AbsHalfBounded(OpeningDirection::ToPast)
+            },
+            (AbsStartBound::Finite(_), AbsEndBound::InfiniteFuture) => {
+                IntervalTypeWithRel::AbsHalfBounded(OpeningDirection::ToFuture)
+            },
+            (AbsStartBound::Finite(_), AbsEndBound::Finite(_)) => IntervalTypeWithRel::AbsBounded,
+        }
     }
 }
 

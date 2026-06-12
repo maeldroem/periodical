@@ -18,9 +18,11 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     Openness,
     Relativity,
@@ -232,6 +234,15 @@ impl HasRelativity for EmptiableRelBoundPair {
         match self {
             Self::Bound(bound) => bound.relativity(),
             Self::Empty => Relativity::Any,
+        }
+    }
+}
+
+impl HasIntervalTypeWithRel for EmptiableRelBoundPair {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match self {
+            Self::Empty => IntervalTypeWithRel::Empty,
+            Self::Bound(bound_pair) => bound_pair.interval_type_with_rel(),
         }
     }
 }

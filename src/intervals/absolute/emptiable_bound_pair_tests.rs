@@ -554,8 +554,8 @@ fn relativity() -> Result<(), Box<dyn Error>> {
     .to_emptiable();
     let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture).to_emptiable();
 
-    assert_eq!(bounded.relativity(), Relativity::Abs);
-    assert_eq!(half_bounded.relativity(), Relativity::Abs);
+    assert_eq!(bounded.relativity(), Relativity::Absolute);
+    assert_eq!(half_bounded.relativity(), Relativity::Absolute);
     assert_eq!(unbounded.relativity(), Relativity::Any);
     assert_eq!(EmptiableAbsBoundPair::Empty.relativity(), Relativity::Any);
     Ok(())

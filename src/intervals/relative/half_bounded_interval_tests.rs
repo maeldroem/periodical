@@ -275,7 +275,7 @@ fn openness() {
 fn relativity() {
     assert_eq!(
         HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture).relativity(),
-        Relativity::Rel
+        Relativity::Relative
     );
 }
 

@@ -501,8 +501,8 @@ fn relativity() {
     .to_emptiable();
     let unbounded = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
 
-    assert_eq!(bounded.relativity(), Relativity::Rel);
-    assert_eq!(half_bounded.relativity(), Relativity::Rel);
+    assert_eq!(bounded.relativity(), Relativity::Relative);
+    assert_eq!(half_bounded.relativity(), Relativity::Relative);
     assert_eq!(unbounded.relativity(), Relativity::Any);
     assert_eq!(EmptiableRelBoundPair::Empty.relativity(), Relativity::Any);
 }

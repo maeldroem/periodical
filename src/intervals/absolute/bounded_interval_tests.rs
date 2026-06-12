@@ -723,7 +723,7 @@ fn relativity() -> Result<(), Box<dyn Error>> {
             "2026-01-02 00:00:00Z".parse::<Timestamp>()?
         )
         .relativity(),
-        Relativity::Abs
+        Relativity::Absolute
     );
     Ok(())
 }
