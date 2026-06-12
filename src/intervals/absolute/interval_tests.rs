@@ -962,7 +962,7 @@ mod relativity {
                 "2026-01-02 00:00:00Z".parse::<Timestamp>()?
             ))
             .relativity(),
-            Relativity::Abs
+            Relativity::Absolute
         );
         Ok(())
     }
@@ -975,7 +975,7 @@ mod relativity {
                 OpeningDirection::ToFuture
             ))
             .relativity(),
-            Relativity::Abs
+            Relativity::Absolute
         );
         Ok(())
     }

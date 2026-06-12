@@ -29,10 +29,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -648,7 +650,7 @@ impl HasOpenness for HalfBoundedRelInterval {
 
 impl HasRelativity for HalfBoundedRelInterval {
     fn relativity(&self) -> Relativity {
-        Relativity::Rel
+        Relativity::Relative
     }
 }
 
@@ -690,6 +692,12 @@ impl HasRelBoundPair for HalfBoundedRelInterval {
 impl IsEmpty for HalfBoundedRelInterval {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for HalfBoundedRelInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        IntervalTypeWithRel::RelHalfBounded(self.opening_direction())
     }
 }
 

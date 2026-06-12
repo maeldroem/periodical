@@ -308,7 +308,7 @@ fn relativity() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         HalfBoundedAbsInterval::from_time("2026-01-01 00:00:00Z".parse::<Timestamp>()?, OpeningDirection::ToFuture)
             .relativity(),
-        Relativity::Abs
+        Relativity::Absolute
     );
     Ok(())
 }

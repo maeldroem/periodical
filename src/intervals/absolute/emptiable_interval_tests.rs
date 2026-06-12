@@ -658,7 +658,7 @@ mod relativity {
             ))
             .to_emptiable()
             .relativity(),
-            Relativity::Abs
+            Relativity::Absolute
         );
         Ok(())
     }
@@ -672,7 +672,7 @@ mod relativity {
             ))
             .to_emptiable()
             .relativity(),
-            Relativity::Abs
+            Relativity::Absolute
         );
         Ok(())
     }

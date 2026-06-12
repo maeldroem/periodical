@@ -44,9 +44,12 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasDuration,
+    HasIntervalTypeWithRel,
+    HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -295,6 +298,16 @@ impl Ord for AbsInterval {
 impl IsEmpty for AbsInterval {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for AbsInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match self {
+            Self::Bounded(_) => IntervalTypeWithRel::AbsBounded,
+            Self::HalfBounded(half_bounded) => IntervalTypeWithRel::AbsHalfBounded(half_bounded.opening_direction()),
+            Self::Unbounded(_) => IntervalTypeWithRel::Unbounded,
+        }
     }
 }
 

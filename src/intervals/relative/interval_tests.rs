@@ -899,7 +899,7 @@ mod relativity {
                 SignedDuration::from_hours(2)
             ))
             .relativity(),
-            Relativity::Rel
+            Relativity::Relative
         );
     }
 
@@ -911,7 +911,7 @@ mod relativity {
                 OpeningDirection::ToFuture
             ))
             .relativity(),
-            Relativity::Rel
+            Relativity::Relative
         );
     }
 

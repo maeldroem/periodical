@@ -711,8 +711,8 @@ fn relativity() -> Result<(), Box<dyn Error>> {
     );
     let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
 
-    assert_eq!(bounded.relativity(), Relativity::Abs);
-    assert_eq!(half_bounded.relativity(), Relativity::Abs);
+    assert_eq!(bounded.relativity(), Relativity::Absolute);
+    assert_eq!(half_bounded.relativity(), Relativity::Absolute);
     assert_eq!(unbounded.relativity(), Relativity::Any);
 
     Ok(())

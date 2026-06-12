@@ -27,9 +27,11 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     Openness,
     Relativity,
@@ -96,10 +98,7 @@ impl EmptiableRelInterval {
     /// );
     /// assert_eq!(
     ///     interval.partial_rel_end(),
-    ///     Some(
-    ///         RelFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive)
-    ///             .to_end_bound()
-    ///     ),
+    ///     Some(RelFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -220,6 +219,15 @@ impl HasEmptiableRelBoundPair for EmptiableRelInterval {
 impl IsEmpty for EmptiableRelInterval {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty(_))
+    }
+}
+
+impl HasIntervalTypeWithRel for EmptiableRelInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match self {
+            Self::Empty(_) => IntervalTypeWithRel::Empty,
+            Self::Bound(interval) => interval.interval_type_with_rel(),
+        }
     }
 }
 

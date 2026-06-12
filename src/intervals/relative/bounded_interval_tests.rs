@@ -771,7 +771,7 @@ fn openness() {
 fn relativity() {
     assert_eq!(
         BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).relativity(),
-        Relativity::Rel
+        Relativity::Relative
     );
 }
 

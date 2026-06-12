@@ -40,9 +40,11 @@ use crate::intervals::absolute::{
 use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     Openness,
     Relativity,
@@ -96,10 +98,7 @@ impl EmptiableAbsInterval {
     /// );
     /// assert_eq!(
     ///     interval.partial_abs_end(),
-    ///     Some(
-    ///         AbsFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive)
-    ///             .to_end_bound()
-    ///     ),
+    ///     Some(AbsFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound()),
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -222,6 +221,15 @@ impl HasEmptiableAbsBoundPair for EmptiableAbsInterval {
 impl IsEmpty for EmptiableAbsInterval {
     fn is_empty(&self) -> bool {
         matches!(self, Self::Empty(_))
+    }
+}
+
+impl HasIntervalTypeWithRel for EmptiableAbsInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match self {
+            Self::Empty(_) => IntervalTypeWithRel::Empty,
+            Self::Bound(interval) => interval.interval_type_with_rel(),
+        }
     }
 }
 

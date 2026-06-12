@@ -625,7 +625,7 @@ mod relativity {
             ))
             .to_emptiable()
             .relativity(),
-            Relativity::Rel
+            Relativity::Relative
         );
     }
 
@@ -638,7 +638,7 @@ mod relativity {
             ))
             .to_emptiable()
             .relativity(),
-            Relativity::Rel
+            Relativity::Relative
         );
     }
 
