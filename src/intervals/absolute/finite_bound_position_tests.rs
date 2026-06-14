@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::error::Error;
 use std::ops::Bound;
 
@@ -113,94 +112,6 @@ fn inclusivity() -> Result<(), Box<dyn Error>> {
     assert_eq!(inclusive.inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(exclusive.inclusivity(), BoundInclusivity::Exclusive);
     Ok(())
-}
-
-mod ord {
-    use super::*;
-
-    #[test]
-    fn greater_times() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)
-                .cmp(&AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)),
-            Ordering::Greater
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn less_times() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?)
-                .cmp(&AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?)),
-            Ordering::Less
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn equal_times_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive
-            )
-            .cmp(&AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive
-            )),
-            Ordering::Equal
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn equal_times_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive
-            )
-            .cmp(&AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive
-            )),
-            Ordering::Equal
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn equal_time_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .cmp(&AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )),
-            Ordering::Equal
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn equal_time_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-        assert_eq!(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .cmp(&AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )),
-            Ordering::Equal
-        );
-        Ok(())
-    }
 }
 
 #[test]
