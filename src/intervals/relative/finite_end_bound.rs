@@ -126,7 +126,7 @@ impl Ord for RelFiniteEndBound {
 
 impl BoundEq for RelFiniteEndBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.eq(other)
+        self.pos().offset().eq(&other.pos().offset())
             && BoundOverlapAmbiguity::BothEnds(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
                 .is_equal()
@@ -143,7 +143,7 @@ impl BoundEq<RelEndBound> for RelFiniteEndBound {
 
 impl BoundEq<RelFiniteStartBound> for RelFiniteEndBound {
     fn bound_eq(&self, other: &RelFiniteStartBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.pos().eq(&other.pos())
+        self.pos().offset().eq(&other.pos().offset())
             && BoundOverlapAmbiguity::EndStart(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
                 .is_equal()

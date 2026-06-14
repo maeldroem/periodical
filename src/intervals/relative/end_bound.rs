@@ -172,12 +172,9 @@ impl Ord for RelEndBound {
 
 impl BoundEq for RelEndBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        if let Some(rhs_finite_end) = self.finite()
-            && let Some(lhs_finite_end) = other.finite()
-        {
-            rhs_finite_end.bound_eq(&lhs_finite_end, rule_set)
-        } else {
-            self.eq(other)
+        match self {
+            Self::Finite(lhs_finite_start) => lhs_finite_start.bound_eq(other, rule_set),
+            Self::InfiniteFuture => other.is_infinite_future(),
         }
     }
 }
@@ -212,8 +209,10 @@ impl BoundEq<RelStartBound> for RelEndBound {
 
 impl BoundEq<RelBound> for RelEndBound {
     fn bound_eq(&self, other: &RelBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.finite()
-            .is_some_and(|finite_end| finite_end.bound_eq(other, rule_set))
+        match other {
+            RelBound::Start(rhs_start) => self.bound_eq(rhs_start, rule_set),
+            RelBound::End(rhs_end) => self.bound_eq(rhs_end, rule_set),
+        }
     }
 }
 
