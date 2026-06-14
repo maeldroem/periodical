@@ -114,14 +114,14 @@ impl PartialOrd for AbsFiniteEndBound {
 
 impl Ord for AbsFiniteEndBound {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.pos()
-            .cmp(&other.pos())
-            .then_with(|| match (self.pos().inclusivity(), other.pos().inclusivity()) {
+        self.pos().time().cmp(&other.pos().time()).then_with(|| {
+            match (self.pos().inclusivity(), other.pos().inclusivity()) {
                 (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
                 | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
                 (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Greater,
                 (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Less,
-            })
+            }
+        })
     }
 }
 
