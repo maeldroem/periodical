@@ -127,7 +127,7 @@ impl Ord for AbsFiniteStartBound {
 
 impl BoundEq for AbsFiniteStartBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.eq(other)
+        self.pos().time().eq(&other.pos().time())
             && BoundOverlapAmbiguity::BothStarts(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
                 .is_equal()
@@ -144,7 +144,7 @@ impl BoundEq<AbsStartBound> for AbsFiniteStartBound {
 
 impl BoundEq<AbsFiniteEndBound> for AbsFiniteStartBound {
     fn bound_eq(&self, other: &AbsFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.pos().eq(&other.pos())
+        self.pos().time().eq(&other.pos().time())
             && BoundOverlapAmbiguity::StartEnd(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
                 .is_equal()

@@ -8,9 +8,9 @@ pub mod bound_eq;
 pub mod bound_ord;
 
 #[cfg(test)]
+mod bound_eq_tests;
+#[cfg(test)]
 mod bound_ord_tests;
-// #[cfg(test)]
-// mod bound_eq_tests;
 
 #[doc(inline)]
 pub use bound_eq::*;

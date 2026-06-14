@@ -22,6 +22,8 @@ TODO: add missing conversions, rework conversions
 - Completed/Fixed tests for…
   - `intervals`
     - `ops`
+      - `bound_cmp`
+        - `bound_eq`
       - `abridge`
 
 ## Deprecated

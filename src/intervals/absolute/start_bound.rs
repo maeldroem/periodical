@@ -178,12 +178,9 @@ impl Ord for AbsStartBound {
 
 impl BoundEq for AbsStartBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        if let Some(rhs_finite_start) = self.finite()
-            && let Some(lhs_finite_start) = other.finite()
-        {
-            rhs_finite_start.bound_eq(&lhs_finite_start, rule_set)
-        } else {
-            self.eq(other)
+        match self {
+            Self::Finite(lhs_finite_start) => lhs_finite_start.bound_eq(other, rule_set),
+            Self::InfinitePast => other.is_infinite_past(),
         }
     }
 }
@@ -218,8 +215,10 @@ impl BoundEq<AbsEndBound> for AbsStartBound {
 
 impl BoundEq<AbsBound> for AbsStartBound {
     fn bound_eq(&self, other: &AbsBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.finite()
-            .is_some_and(|finite_start| finite_start.bound_eq(other, rule_set))
+        match other {
+            AbsBound::Start(rhs_start) => self.bound_eq(rhs_start, rule_set),
+            AbsBound::End(rhs_end) => self.bound_eq(rhs_end, rule_set),
+        }
     }
 }
 
