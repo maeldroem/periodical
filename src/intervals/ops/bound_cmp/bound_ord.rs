@@ -311,13 +311,7 @@ where
     /// ```
     #[must_use]
     fn bound_lt(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        match self.bound_cmp(other) {
-            BoundOrdering::Less => true,
-            BoundOrdering::Equal(Some(ambiguity)) => {
-                matches!(ambiguity.disambiguate(rule_set), DisambiguatedBoundOverlap::Before)
-            },
-            BoundOrdering::Equal(None) | BoundOrdering::Greater => false,
-        }
+        self.bound_cmp(other).disambiguate(rule_set).is_lt()
     }
 
     /// Returns whether `self` is less than or equal to the given other bound
@@ -350,16 +344,7 @@ where
     /// ```
     #[must_use]
     fn bound_le(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        match self.bound_cmp(other) {
-            BoundOrdering::Less | BoundOrdering::Equal(None) => true,
-            BoundOrdering::Equal(Some(ambiguity)) => {
-                matches!(
-                    ambiguity.disambiguate(rule_set),
-                    DisambiguatedBoundOverlap::Before | DisambiguatedBoundOverlap::Equal,
-                )
-            },
-            BoundOrdering::Greater => false,
-        }
+        self.bound_cmp(other).disambiguate(rule_set).is_le()
     }
 
     /// Returns whether `self` is greater than the given other bound using the given rule set
@@ -391,13 +376,7 @@ where
     /// ```
     #[must_use]
     fn bound_gt(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        match self.bound_cmp(other) {
-            BoundOrdering::Less | BoundOrdering::Equal(None) => false,
-            BoundOrdering::Equal(Some(ambiguity)) => {
-                matches!(ambiguity.disambiguate(rule_set), DisambiguatedBoundOverlap::After)
-            },
-            BoundOrdering::Greater => true,
-        }
+        self.bound_cmp(other).disambiguate(rule_set).is_gt()
     }
 
     /// Returns whether `self` is greater than or equal to the given other bound
@@ -430,16 +409,7 @@ where
     /// ```
     #[must_use]
     fn bound_ge(&self, other: &Rhs, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        match self.bound_cmp(other) {
-            BoundOrdering::Less => false,
-            BoundOrdering::Equal(Some(ambiguity)) => {
-                matches!(
-                    ambiguity.disambiguate(rule_set),
-                    DisambiguatedBoundOverlap::Equal | DisambiguatedBoundOverlap::After,
-                )
-            },
-            BoundOrdering::Equal(None) | BoundOrdering::Greater => true,
-        }
+        self.bound_cmp(other).disambiguate(rule_set).is_ge()
     }
 }
 

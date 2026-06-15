@@ -19,11 +19,12 @@ TODO: add missing conversions, rework conversions
 
 ## Changed
 
-- Completed/Fixed tests for…
+- Completed tests/Fixed relevant tested code for…
   - `intervals`
     - `ops`
       - `bound_cmp`
         - `bound_eq`
+        - `bound_ord`
       - `abridge`
 
 ## Deprecated
