@@ -377,6 +377,8 @@ pub fn check_abs_start_end_bounds_for_interval_creation(
 /// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
 /// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
+/// Returns whether a change has occurred.
+///
 /// # Examples
 ///
 /// ```
@@ -435,6 +437,8 @@ pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
 /// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
 /// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
+/// Returns whether a change has occurred.
+///
 /// # Examples
 ///
 /// ```
@@ -462,7 +466,7 @@ pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn prepare_abs_bound_pair_for_interval_creation(start: &mut AbsStartBound, end: &mut AbsEndBound) -> bool {
+pub fn prepare_abs_start_end_bounds_for_interval_creation(start: &mut AbsStartBound, end: &mut AbsEndBound) -> bool {
     match check_abs_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {

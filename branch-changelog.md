@@ -21,6 +21,8 @@ TODO: add missing conversions, rework conversions
 
 - Completed tests/Fixed relevant tested code for…
   - `intervals`
+    - `absolute`
+    - `relative`
     - `ops`
       - `bound_cmp`
         - `bound_eq`

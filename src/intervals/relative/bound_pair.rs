@@ -48,7 +48,7 @@ use crate::intervals::relative::{
     RelInterval,
     RelStartBound,
     check_rel_start_end_bounds_for_interval_creation,
-    prepare_rel_bound_pair_for_interval_creation,
+    prepare_rel_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::special::UnboundedInterval;
 
@@ -144,7 +144,7 @@ impl RelBoundPair {
     /// ```
     #[must_use]
     pub fn new(mut start: RelStartBound, mut end: RelEndBound) -> Self {
-        prepare_rel_bound_pair_for_interval_creation(&mut start, &mut end);
+        prepare_rel_start_end_bounds_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
     }
 

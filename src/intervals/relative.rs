@@ -355,6 +355,8 @@ pub fn check_rel_start_end_bounds_for_interval_creation(
 /// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
 /// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
+/// Returns whether a change has occurred.
+///
 /// # Examples
 ///
 /// ```
@@ -403,6 +405,8 @@ pub fn prepare_rel_finite_start_end_bounds_for_interval_creation(
 /// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
 /// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
+/// Returns whether a change has occurred.
+///
 /// # Examples
 ///
 /// ```
@@ -426,7 +430,7 @@ pub fn prepare_rel_finite_start_end_bounds_for_interval_creation(
 ///     RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound()
 /// );
 /// ```
-pub fn prepare_rel_bound_pair_for_interval_creation(start: &mut RelStartBound, end: &mut RelEndBound) -> bool {
+pub fn prepare_rel_start_end_bounds_for_interval_creation(start: &mut RelStartBound, end: &mut RelEndBound) -> bool {
     match check_rel_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(RelStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {
