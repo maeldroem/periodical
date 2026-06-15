@@ -39,8 +39,16 @@ use crate::test_data::bound_overlap::{
 
 type BodRuleSet = BoundOverlapDisambiguationRuleSet;
 
-pub mod utils {
+mod utils {
     use super::*;
+
+    const RULE_SETS: [BodRuleSet; 5] = [
+        BodRuleSet::Strict,
+        BodRuleSet::Lenient,
+        BodRuleSet::VeryLenient,
+        BodRuleSet::ContinuousToFuture,
+        BodRuleSet::ContinuousToPast,
+    ];
 
     pub mod abs {
         use super::*;
@@ -52,308 +60,320 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteStartBound, AbsFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteStartBound, AbsFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteStartBound, AbsStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteStartBound, AbsStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<AbsStartBound, AbsFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsStartBound, AbsFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<AbsStartBound, AbsStartBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsStartBound, AbsStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -365,308 +385,320 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteStartBound, AbsFiniteEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteStartBound, AbsFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteStartBound, AbsEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteStartBound, AbsEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<AbsStartBound, AbsFiniteEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsStartBound, AbsFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<AbsStartBound, AbsEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsStartBound, AbsEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -678,308 +710,320 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteEndBound, AbsFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteEndBound, AbsFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_end_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_end_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_end_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_end_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteEndBound, AbsStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteEndBound, AbsStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<AbsEndBound, AbsFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsEndBound, AbsFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<AbsEndBound, AbsStartBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsEndBound, AbsStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -991,298 +1035,318 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<AbsFiniteEndBound, AbsFiniteEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteEndBound, AbsFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_end_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_end_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<AbsFiniteEndBound, AbsEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsFiniteEndBound, AbsEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<AbsEndBound, AbsFiniteEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsEndBound, AbsFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<AbsEndBound, AbsEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<AbsEndBound, AbsEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -1298,308 +1362,320 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteStartBound, RelFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteStartBound, RelFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteStartBound, RelStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteStartBound, RelStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<RelStartBound, RelFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelStartBound, RelFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<RelStartBound, RelStartBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelStartBound, RelStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -1611,308 +1687,320 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteStartBound, RelFiniteEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteStartBound, RelFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_start_bound()
-                            .bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_start_bound()
+                                .bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteStartBound, RelEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteStartBound, RelEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_start_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_start_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_start_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<RelStartBound, RelFiniteEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelStartBound, RelFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<RelStartBound, RelEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelStartBound, RelEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -1924,308 +2012,320 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteEndBound, RelFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteEndBound, RelFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_end_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_end_bound()
-                            .bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_end_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_end_bound()
+                                .bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteEndBound, RelStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteEndBound, RelStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(
-                    data: &BinOpPair<RelEndBound, RelFiniteStartBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelEndBound, RelFiniteStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_start_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_start_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_start_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<RelEndBound, RelStartBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelEndBound, RelStartBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -2237,298 +2337,318 @@ pub mod utils {
                 use super::*;
 
                 #[allow(clippy::too_many_lines)]
-                pub fn assert(
-                    data: &BinOpPair<RelFiniteEndBound, RelFiniteEndBound>,
-                    rule_set: BodRuleSet,
-                    expected: bool,
-                ) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteEndBound, RelFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_finite_bound()
-                            .bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_finite_bound()
+                                .bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs()
-                            .to_end_bound()
-                            .bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs()
+                                .to_end_bound()
+                                .bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod fin_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<RelFiniteEndBound, RelEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelFiniteEndBound, RelEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_finite_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_finite_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_finite_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_end_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_end_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_end_bound(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_fin {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<RelEndBound, RelFiniteEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelEndBound, RelFiniteEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_finite_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_end_bound(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_finite_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_finite_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_end_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_end_bound(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
 
             pub mod inf_inf {
                 use super::*;
 
-                pub fn assert(data: &BinOpPair<RelEndBound, RelEndBound>, rule_set: BodRuleSet, expected: bool) {
-                    assert_eq!(
-                        data.lhs().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs(),
-                        data.rhs().to_bound(),
-                    );
+                #[track_caller]
+                pub fn assert<F>(data: &BinOpPair<RelEndBound, RelEndBound>, mut expected_f: F)
+                where
+                    F: FnMut(BodRuleSet) -> bool,
+                {
+                    for rule_set in RULE_SETS {
+                        assert_eq!(
+                            data.lhs().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs(),
+                            data.rhs().to_bound(),
+                        );
 
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs(),
-                    );
-                    assert_eq!(
-                        data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
-                        expected,
-                        "Equality between {:#?} and {:#?}",
-                        data.lhs().to_bound(),
-                        data.rhs().to_bound(),
-                    );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(data.rhs(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs(),
+                        );
+                        assert_eq!(
+                            data.lhs().to_bound().bound_eq(&data.rhs().to_bound(), rule_set),
+                            expected_f(rule_set),
+                            "Equality between {:#?} and {:#?}",
+                            data.lhs().to_bound(),
+                            data.rhs().to_bound(),
+                        );
+                    }
                 }
             }
         }
@@ -2546,13 +2666,9 @@ mod absolute {
 
             #[test]
             fn before() {
-                let data = FINITE_START_FINITE_START_ABS.get("before").unwrap();
-
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::start_start::fin_fin::assert(FINITE_START_FINITE_START_ABS.get("before").unwrap(), |_| {
+                    false
+                });
             }
 
             mod equal {
@@ -2560,92 +2676,58 @@ mod absolute {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_START_FINITE_START_ABS.get("equal_incl_incl").unwrap();
-
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_ABS.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_START_FINITE_START_ABS.get("equal_incl_excl").unwrap();
-
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_ABS.get("equal_incl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_START_FINITE_START_ABS.get("equal_excl_incl").unwrap();
-
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_ABS.get("equal_excl_incl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_START_FINITE_START_ABS.get("equal_excl_excl").unwrap();
-
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_ABS.get("equal_excl_excl").unwrap(),
+                        |_| true,
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_START_FINITE_START_ABS.get("after").unwrap();
-
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::start_start::fin_fin::assert(FINITE_START_FINITE_START_ABS.get("after").unwrap(), |_| {
+                    false
+                });
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_START_INF_START_ABS;
-
-            utils::abs::start_start::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::abs::start_start::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::start_start::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::start_start::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::start_start::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::start_start::fin_inf::assert(&FINITE_START_INF_START_ABS, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_START_FINITE_START_ABS;
-
-            utils::abs::start_start::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::abs::start_start::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::start_start::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::start_start::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::start_start::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::start_start::inf_fin::assert(&INF_START_FINITE_START_ABS, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_START_INF_START_ABS;
-
-            utils::abs::start_start::inf_inf::assert(data, BodRuleSet::Strict, true);
-            utils::abs::start_start::inf_inf::assert(data, BodRuleSet::Lenient, true);
-            utils::abs::start_start::inf_inf::assert(data, BodRuleSet::VeryLenient, true);
-            utils::abs::start_start::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, true);
-            utils::abs::start_start::inf_inf::assert(data, BodRuleSet::ContinuousToPast, true);
+            utils::abs::start_start::inf_inf::assert(&INF_START_INF_START_ABS, |_| true);
         }
     }
 
@@ -2657,13 +2739,7 @@ mod absolute {
 
             #[test]
             fn before() {
-                let data = FINITE_START_FINITE_END_ABS.get("before").unwrap();
-
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::start_end::fin_fin::assert(FINITE_START_FINITE_END_ABS.get("before").unwrap(), |_| false);
             }
 
             mod equal {
@@ -2671,92 +2747,66 @@ mod absolute {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_START_FINITE_END_ABS.get("equal_incl_incl").unwrap();
-
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_ABS.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_START_FINITE_END_ABS.get("equal_incl_excl").unwrap();
-
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_ABS.get("equal_incl_excl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToFuture
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_START_FINITE_END_ABS.get("equal_excl_incl").unwrap();
-
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_ABS.get("equal_excl_incl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToPast
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_START_FINITE_END_ABS.get("equal_excl_excl").unwrap();
-
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_ABS.get("equal_excl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::VeryLenient),
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_START_FINITE_END_ABS.get("after").unwrap();
-
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::start_end::fin_fin::assert(FINITE_START_FINITE_END_ABS.get("after").unwrap(), |_| false);
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_START_INF_END_ABS;
-
-            utils::abs::start_end::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::abs::start_end::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::start_end::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::start_end::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::start_end::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::start_end::fin_inf::assert(&FINITE_START_INF_END_ABS, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_START_FINITE_END_ABS;
-
-            utils::abs::start_end::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::abs::start_end::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::start_end::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::start_end::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::start_end::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::start_end::inf_fin::assert(&INF_START_FINITE_END_ABS, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_START_INF_END_ABS;
-
-            utils::abs::start_end::inf_inf::assert(data, BodRuleSet::Strict, false);
-            utils::abs::start_end::inf_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::start_end::inf_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::start_end::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::start_end::inf_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::start_end::inf_inf::assert(&INF_START_INF_END_ABS, |_| false);
         }
     }
 
@@ -2768,13 +2818,7 @@ mod absolute {
 
             #[test]
             fn before() {
-                let data = FINITE_END_FINITE_START_ABS.get("before").unwrap();
-
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::end_start::fin_fin::assert(FINITE_END_FINITE_START_ABS.get("before").unwrap(), |_| false);
             }
 
             mod equal {
@@ -2782,92 +2826,66 @@ mod absolute {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_END_FINITE_START_ABS.get("equal_incl_incl").unwrap();
-
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_ABS.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_END_FINITE_START_ABS.get("equal_incl_excl").unwrap();
-
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_ABS.get("equal_incl_excl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToPast
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_END_FINITE_START_ABS.get("equal_excl_incl").unwrap();
-
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_ABS.get("equal_excl_incl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToFuture
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_END_FINITE_START_ABS.get("equal_excl_excl").unwrap();
-
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_ABS.get("equal_excl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::VeryLenient),
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_END_FINITE_START_ABS.get("after").unwrap();
-
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::end_start::fin_fin::assert(FINITE_END_FINITE_START_ABS.get("after").unwrap(), |_| false);
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_END_INF_START_ABS;
-
-            utils::abs::end_start::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::abs::end_start::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::end_start::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::end_start::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::end_start::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::end_start::fin_inf::assert(&FINITE_END_INF_START_ABS, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_END_FINITE_START_ABS;
-
-            utils::abs::end_start::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::abs::end_start::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::end_start::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::end_start::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::end_start::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::end_start::inf_fin::assert(&INF_END_FINITE_START_ABS, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_END_INF_START_ABS;
-
-            utils::abs::end_start::inf_inf::assert(data, BodRuleSet::Strict, false);
-            utils::abs::end_start::inf_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::end_start::inf_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::end_start::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::end_start::inf_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::end_start::inf_inf::assert(&INF_END_INF_START_ABS, |_| false);
         }
     }
 
@@ -2879,13 +2897,7 @@ mod absolute {
 
             #[test]
             fn before() {
-                let data = FINITE_END_FINITE_END_ABS.get("before").unwrap();
-
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::end_end::fin_fin::assert(FINITE_END_FINITE_END_ABS.get("before").unwrap(), |_| false);
             }
 
             mod equal {
@@ -2893,92 +2905,56 @@ mod absolute {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_END_FINITE_END_ABS.get("equal_incl_incl").unwrap();
-
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_ABS.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_END_FINITE_END_ABS.get("equal_incl_excl").unwrap();
-
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_ABS.get("equal_incl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_END_FINITE_END_ABS.get("equal_excl_incl").unwrap();
-
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::abs::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_ABS.get("equal_excl_incl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_END_FINITE_END_ABS.get("equal_excl_excl").unwrap();
-
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::abs::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_ABS.get("equal_excl_excl").unwrap(),
+                        |_| true,
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_END_FINITE_END_ABS.get("after").unwrap();
-
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::abs::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::abs::end_end::fin_fin::assert(FINITE_END_FINITE_END_ABS.get("after").unwrap(), |_| false);
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_END_INF_END_ABS;
-
-            utils::abs::end_end::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::abs::end_end::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::end_end::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::end_end::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::end_end::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::end_end::fin_inf::assert(&FINITE_END_INF_END_ABS, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_END_FINITE_END_ABS;
-
-            utils::abs::end_end::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::abs::end_end::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::abs::end_end::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::abs::end_end::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::abs::end_end::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::abs::end_end::inf_fin::assert(&INF_END_FINITE_END_ABS, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_END_INF_END_ABS;
-
-            utils::abs::end_end::inf_inf::assert(data, BodRuleSet::Strict, true);
-            utils::abs::end_end::inf_inf::assert(data, BodRuleSet::Lenient, true);
-            utils::abs::end_end::inf_inf::assert(data, BodRuleSet::VeryLenient, true);
-            utils::abs::end_end::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, true);
-            utils::abs::end_end::inf_inf::assert(data, BodRuleSet::ContinuousToPast, true);
+            utils::abs::end_end::inf_inf::assert(&INF_END_INF_END_ABS, |_| true);
         }
     }
 }
@@ -2994,13 +2970,9 @@ mod relative {
 
             #[test]
             fn before() {
-                let data = FINITE_START_FINITE_START_REL.get("before").unwrap();
-
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::start_start::fin_fin::assert(FINITE_START_FINITE_START_REL.get("before").unwrap(), |_| {
+                    false
+                });
             }
 
             mod equal {
@@ -3008,92 +2980,58 @@ mod relative {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_START_FINITE_START_REL.get("equal_incl_incl").unwrap();
-
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_REL.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_START_FINITE_START_REL.get("equal_incl_excl").unwrap();
-
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_REL.get("equal_incl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_START_FINITE_START_REL.get("equal_excl_incl").unwrap();
-
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_REL.get("equal_excl_incl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_START_FINITE_START_REL.get("equal_excl_excl").unwrap();
-
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::start_start::fin_fin::assert(
+                        FINITE_START_FINITE_START_REL.get("equal_excl_excl").unwrap(),
+                        |_| true,
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_START_FINITE_START_REL.get("after").unwrap();
-
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::start_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::start_start::fin_fin::assert(FINITE_START_FINITE_START_REL.get("after").unwrap(), |_| {
+                    false
+                });
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_START_INF_START_REL;
-
-            utils::rel::start_start::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::rel::start_start::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::start_start::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::start_start::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::start_start::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::start_start::fin_inf::assert(&FINITE_START_INF_START_REL, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_START_FINITE_START_REL;
-
-            utils::rel::start_start::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::rel::start_start::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::start_start::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::start_start::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::start_start::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::start_start::inf_fin::assert(&INF_START_FINITE_START_REL, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_START_INF_START_REL;
-
-            utils::rel::start_start::inf_inf::assert(data, BodRuleSet::Strict, true);
-            utils::rel::start_start::inf_inf::assert(data, BodRuleSet::Lenient, true);
-            utils::rel::start_start::inf_inf::assert(data, BodRuleSet::VeryLenient, true);
-            utils::rel::start_start::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, true);
-            utils::rel::start_start::inf_inf::assert(data, BodRuleSet::ContinuousToPast, true);
+            utils::rel::start_start::inf_inf::assert(&INF_START_INF_START_REL, |_| true);
         }
     }
 
@@ -3105,13 +3043,7 @@ mod relative {
 
             #[test]
             fn before() {
-                let data = FINITE_START_FINITE_END_REL.get("before").unwrap();
-
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::start_end::fin_fin::assert(FINITE_START_FINITE_END_REL.get("before").unwrap(), |_| false);
             }
 
             mod equal {
@@ -3119,92 +3051,66 @@ mod relative {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_START_FINITE_END_REL.get("equal_incl_incl").unwrap();
-
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_REL.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_START_FINITE_END_REL.get("equal_incl_excl").unwrap();
-
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_REL.get("equal_incl_excl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToFuture
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_START_FINITE_END_REL.get("equal_excl_incl").unwrap();
-
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_REL.get("equal_excl_incl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToPast
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_START_FINITE_END_REL.get("equal_excl_excl").unwrap();
-
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::start_end::fin_fin::assert(
+                        FINITE_START_FINITE_END_REL.get("equal_excl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::VeryLenient),
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_START_FINITE_END_REL.get("after").unwrap();
-
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::start_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::start_end::fin_fin::assert(FINITE_START_FINITE_END_REL.get("after").unwrap(), |_| false);
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_START_INF_END_REL;
-
-            utils::rel::start_end::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::rel::start_end::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::start_end::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::start_end::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::start_end::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::start_end::fin_inf::assert(&FINITE_START_INF_END_REL, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_START_FINITE_END_REL;
-
-            utils::rel::start_end::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::rel::start_end::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::start_end::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::start_end::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::start_end::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::start_end::inf_fin::assert(&INF_START_FINITE_END_REL, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_START_INF_END_REL;
-
-            utils::rel::start_end::inf_inf::assert(data, BodRuleSet::Strict, false);
-            utils::rel::start_end::inf_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::start_end::inf_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::start_end::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::start_end::inf_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::start_end::inf_inf::assert(&INF_START_INF_END_REL, |_| false);
         }
     }
 
@@ -3216,13 +3122,7 @@ mod relative {
 
             #[test]
             fn before() {
-                let data = FINITE_END_FINITE_START_REL.get("before").unwrap();
-
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::end_start::fin_fin::assert(FINITE_END_FINITE_START_REL.get("before").unwrap(), |_| false);
             }
 
             mod equal {
@@ -3230,92 +3130,66 @@ mod relative {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_END_FINITE_START_REL.get("equal_incl_incl").unwrap();
-
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_REL.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_END_FINITE_START_REL.get("equal_incl_excl").unwrap();
-
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_REL.get("equal_incl_excl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToPast
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_END_FINITE_START_REL.get("equal_excl_incl").unwrap();
-
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_REL.get("equal_excl_incl").unwrap(),
+                        |rule_set| {
+                            matches!(
+                                rule_set,
+                                BodRuleSet::Lenient | BodRuleSet::VeryLenient | BodRuleSet::ContinuousToFuture
+                            )
+                        },
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_END_FINITE_START_REL.get("equal_excl_excl").unwrap();
-
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::end_start::fin_fin::assert(
+                        FINITE_END_FINITE_START_REL.get("equal_excl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::VeryLenient),
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_END_FINITE_START_REL.get("after").unwrap();
-
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::end_start::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::end_start::fin_fin::assert(FINITE_END_FINITE_START_REL.get("after").unwrap(), |_| false);
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_END_INF_START_REL;
-
-            utils::rel::end_start::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::rel::end_start::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::end_start::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::end_start::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::end_start::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::end_start::fin_inf::assert(&FINITE_END_INF_START_REL, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_END_FINITE_START_REL;
-
-            utils::rel::end_start::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::rel::end_start::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::end_start::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::end_start::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::end_start::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::end_start::inf_fin::assert(&INF_END_FINITE_START_REL, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_END_INF_START_REL;
-
-            utils::rel::end_start::inf_inf::assert(data, BodRuleSet::Strict, false);
-            utils::rel::end_start::inf_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::end_start::inf_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::end_start::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::end_start::inf_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::end_start::inf_inf::assert(&INF_END_INF_START_REL, |_| false);
         }
     }
 
@@ -3327,13 +3201,7 @@ mod relative {
 
             #[test]
             fn before() {
-                let data = FINITE_END_FINITE_END_REL.get("before").unwrap();
-
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::end_end::fin_fin::assert(FINITE_END_FINITE_END_REL.get("before").unwrap(), |_| false);
             }
 
             mod equal {
@@ -3341,92 +3209,56 @@ mod relative {
 
                 #[test]
                 fn inclusive_inclusive() {
-                    let data = FINITE_END_FINITE_END_REL.get("equal_incl_incl").unwrap();
-
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_REL.get("equal_incl_incl").unwrap(),
+                        |_| true,
+                    );
                 }
 
                 #[test]
                 fn inclusive_exclusive() {
-                    let data = FINITE_END_FINITE_END_REL.get("equal_incl_excl").unwrap();
-
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_REL.get("equal_incl_excl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_inclusive() {
-                    let data = FINITE_END_FINITE_END_REL.get("equal_excl_incl").unwrap();
-
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                    utils::rel::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_REL.get("equal_excl_incl").unwrap(),
+                        |rule_set| matches!(rule_set, BodRuleSet::Lenient | BodRuleSet::VeryLenient),
+                    );
                 }
 
                 #[test]
                 fn exclusive_exclusive() {
-                    let data = FINITE_END_FINITE_END_REL.get("equal_excl_excl").unwrap();
-
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Strict, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Lenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, true);
-                    utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, true);
+                    utils::rel::end_end::fin_fin::assert(
+                        FINITE_END_FINITE_END_REL.get("equal_excl_excl").unwrap(),
+                        |_| true,
+                    );
                 }
             }
 
             #[test]
             fn after() {
-                let data = FINITE_END_FINITE_END_REL.get("after").unwrap();
-
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Strict, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::Lenient, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::VeryLenient, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-                utils::rel::end_end::fin_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+                utils::rel::end_end::fin_fin::assert(FINITE_END_FINITE_END_REL.get("after").unwrap(), |_| false);
             }
         }
 
         #[test]
         fn finite_infinite() {
-            let data = &*FINITE_END_INF_END_REL;
-
-            utils::rel::end_end::fin_inf::assert(data, BodRuleSet::Strict, false);
-            utils::rel::end_end::fin_inf::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::end_end::fin_inf::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::end_end::fin_inf::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::end_end::fin_inf::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::end_end::fin_inf::assert(&FINITE_END_INF_END_REL, |_| false);
         }
 
         #[test]
         fn infinite_finite() {
-            let data = &*INF_END_FINITE_END_REL;
-
-            utils::rel::end_end::inf_fin::assert(data, BodRuleSet::Strict, false);
-            utils::rel::end_end::inf_fin::assert(data, BodRuleSet::Lenient, false);
-            utils::rel::end_end::inf_fin::assert(data, BodRuleSet::VeryLenient, false);
-            utils::rel::end_end::inf_fin::assert(data, BodRuleSet::ContinuousToFuture, false);
-            utils::rel::end_end::inf_fin::assert(data, BodRuleSet::ContinuousToPast, false);
+            utils::rel::end_end::inf_fin::assert(&INF_END_FINITE_END_REL, |_| false);
         }
 
         #[test]
         fn infinite_infinite() {
-            let data = &*INF_END_INF_END_REL;
-
-            utils::rel::end_end::inf_inf::assert(data, BodRuleSet::Strict, true);
-            utils::rel::end_end::inf_inf::assert(data, BodRuleSet::Lenient, true);
-            utils::rel::end_end::inf_inf::assert(data, BodRuleSet::VeryLenient, true);
-            utils::rel::end_end::inf_inf::assert(data, BodRuleSet::ContinuousToFuture, true);
-            utils::rel::end_end::inf_inf::assert(data, BodRuleSet::ContinuousToPast, true);
+            utils::rel::end_end::inf_inf::assert(&INF_END_INF_END_REL, |_| true);
         }
     }
 }
