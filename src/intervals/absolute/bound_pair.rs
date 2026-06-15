@@ -31,7 +31,7 @@ use crate::intervals::absolute::{
     HalfBoundedAbsInterval,
     HasEmptiableAbsBoundPair,
     check_abs_start_end_bounds_for_interval_creation,
-    prepare_abs_bound_pair_for_interval_creation,
+    prepare_abs_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
@@ -147,7 +147,7 @@ impl AbsBoundPair {
     /// ```
     #[must_use]
     pub fn new(mut start: AbsStartBound, mut end: AbsEndBound) -> Self {
-        prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+        prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
     }
 
