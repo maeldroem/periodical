@@ -674,7 +674,7 @@ impl IntervalType {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use periodical::intervals::meta::{IntervalType, Relativity};
+    /// # use periodical::intervals::meta::{IntervalType, IntervalTypeWithRel, Relativity};
     /// assert_eq!(
     ///     IntervalType::Bounded.try_with_rel(Relativity::Absolute)?,
     ///     IntervalTypeWithRel::AbsBounded,
