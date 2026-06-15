@@ -56,35 +56,35 @@ mod interval_tests;
 mod start_bound_tests;
 
 #[doc(inline)]
-pub use bound::*;
+pub use bound::AbsBound;
 #[doc(inline)]
-pub use bound_pair::*;
+pub use bound_pair::{AbsBoundPair, HasAbsBoundPair};
 #[doc(inline)]
-pub use bounded_interval::*;
+pub use bounded_interval::BoundedAbsInterval;
 #[doc(inline)]
-pub use emptiable_bound_pair::*;
+pub use emptiable_bound_pair::{EmptiableAbsBoundPair, HasEmptiableAbsBoundPair};
 #[doc(inline)]
-pub use emptiable_interval::*;
+pub use emptiable_interval::EmptiableAbsInterval;
 #[doc(inline)]
-pub use end_bound::*;
+pub use end_bound::AbsEndBound;
 #[doc(inline)]
-pub use finite_bound::*;
+pub use finite_bound::AbsFiniteBound;
 #[doc(inline)]
-pub use finite_bound_position::*;
+pub use finite_bound_position::AbsFiniteBoundPos;
 #[doc(inline)]
-pub use finite_end_bound::*;
+pub use finite_end_bound::AbsFiniteEndBound;
 #[doc(inline)]
-pub use finite_start_bound::*;
+pub use finite_start_bound::AbsFiniteStartBound;
 #[doc(inline)]
-pub use half_bounded_interval::*;
+pub use half_bounded_interval::HalfBoundedAbsInterval;
 #[doc(inline)]
-pub use half_bounded_to_future_interval::*;
+pub use half_bounded_to_future_interval::HalfBoundedToFutureAbsInterval;
 #[doc(inline)]
-pub use half_bounded_to_past_interval::*;
+pub use half_bounded_to_past_interval::HalfBoundedToPastAbsInterval;
 #[doc(inline)]
-pub use interval::*;
+pub use interval::AbsInterval;
 #[doc(inline)]
-pub use start_bound::*;
+pub use start_bound::AbsStartBound;
 
 /// Swaps an absolute finite start bound with an absolute finite end bound
 ///

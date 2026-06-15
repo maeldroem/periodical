@@ -4,7 +4,8 @@ use jiff::Timestamp;
 use jiff::civil::Date;
 use jiff::tz::TimeZone;
 
-use crate::intervals::absolute::{HalfBoundedAbsInterval, HalfBoundedAbsIntervalCreationError};
+use crate::intervals::absolute::HalfBoundedAbsInterval;
+use crate::intervals::absolute::half_bounded_interval::HalfBoundedAbsIntervalCreationError;
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::time::{
     CalendarAnchorOffset,
