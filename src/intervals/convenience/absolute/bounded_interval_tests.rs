@@ -4,7 +4,8 @@ use jiff::Zoned;
 use jiff::civil::Date;
 use jiff::tz::TimeZone;
 
-use crate::intervals::absolute::{BoundedAbsInterval, BoundedAbsIntervalCreationError};
+use crate::intervals::absolute::BoundedAbsInterval;
+use crate::intervals::absolute::bounded_interval::BoundedAbsIntervalCreationError;
 use crate::intervals::meta::BoundInclusivity;
 use crate::time::{CalendarAnchorOffset, Month, OffsetIsoWeek};
 

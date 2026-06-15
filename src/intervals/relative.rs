@@ -56,35 +56,35 @@ mod interval_tests;
 mod start_bound_tests;
 
 #[doc(inline)]
-pub use bound::*;
+pub use bound::RelBound;
 #[doc(inline)]
-pub use bound_pair::*;
+pub use bound_pair::{HasRelBoundPair, RelBoundPair};
 #[doc(inline)]
-pub use bounded_interval::*;
+pub use bounded_interval::BoundedRelInterval;
 #[doc(inline)]
-pub use emptiable_bound_pair::*;
+pub use emptiable_bound_pair::{EmptiableRelBoundPair, HasEmptiableRelBoundPair};
 #[doc(inline)]
-pub use emptiable_interval::*;
+pub use emptiable_interval::EmptiableRelInterval;
 #[doc(inline)]
-pub use end_bound::*;
+pub use end_bound::RelEndBound;
 #[doc(inline)]
-pub use finite_bound::*;
+pub use finite_bound::RelFiniteBound;
 #[doc(inline)]
-pub use finite_bound_position::*;
+pub use finite_bound_position::RelFiniteBoundPos;
 #[doc(inline)]
-pub use finite_end_bound::*;
+pub use finite_end_bound::RelFiniteEndBound;
 #[doc(inline)]
-pub use finite_start_bound::*;
+pub use finite_start_bound::RelFiniteStartBound;
 #[doc(inline)]
-pub use half_bounded_interval::*;
+pub use half_bounded_interval::HalfBoundedRelInterval;
 #[doc(inline)]
-pub use half_bounded_to_future_interval::*;
+pub use half_bounded_to_future_interval::HalfBoundedToFutureRelInterval;
 #[doc(inline)]
-pub use half_bounded_to_past_interval::*;
+pub use half_bounded_to_past_interval::HalfBoundedToPastRelInterval;
 #[doc(inline)]
-pub use interval::*;
+pub use interval::RelInterval;
 #[doc(inline)]
-pub use start_bound::*;
+pub use start_bound::RelStartBound;
 
 /// Swaps a relative finite start bound with a relative finite end bound
 ///

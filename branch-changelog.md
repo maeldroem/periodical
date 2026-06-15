@@ -35,6 +35,7 @@ TODO: add missing conversions, rework conversions
 
 - Removed `PartialOrd` and `Ord` implementations on `*FiniteBoundPos`, as their previous implementation
   didn't conserve the `a == b => a.cmp(b) == Ordering::Equal` invariant.
+- Removed re-exports of errors
 
 ## Fixed
 
