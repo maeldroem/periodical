@@ -21,6 +21,7 @@ TODO: add missing conversions, rework conversions
 
 - Completed tests/Fixed relevant tested code for…
   - `intervals`
+    - `meta`
     - `absolute`
     - `relative`
     - `ops`
