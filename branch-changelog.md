@@ -16,10 +16,12 @@ TODO: add missing conversions, rework conversions
 - Implemented `HasIntervalType` and `HasIntervalTypeWithRel` on every interval type to obtain their identifying type
 - Created `test_data` module with test utilities
 - Created test data for interval overlap and bound overlap
+- Mock value behind `cfg!` in `time::date_today` for testing purposes
 
 ## Changed
 
 - Completed tests/Fixed relevant tested code for…
+  - `time`
   - `intervals`
     - `meta`
     - `absolute`

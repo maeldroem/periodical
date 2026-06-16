@@ -2,6 +2,10 @@
 
 use std::collections::HashMap;
 
+use jiff::Timestamp;
+use jiff::civil::{Date, Time, date, datetime};
+use jiff::tz::TimeZone;
+
 pub mod bound_overlap;
 pub mod interval_overlap;
 
@@ -19,9 +23,8 @@ macro_rules! bin_op_map {
 }
 
 pub(crate) use bin_op_map;
-use jiff::Timestamp;
-use jiff::civil::{Time, date, datetime};
-use jiff::tz::TimeZone;
+
+pub const FAKE_TODAY_DATE: Date = date(2026, 1, 1);
 
 /// Returns the [`Timestamp`] of a date in UTC
 ///
