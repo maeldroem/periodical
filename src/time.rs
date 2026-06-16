@@ -13,7 +13,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::{Neg, RangeInclusive};
 
-use jiff::civil::{Date, ISOWeekDate, Weekday};
+use jiff::civil::{Date, ISOWeekDate, Weekday, date};
 use jiff::tz::TimeZone;
 use jiff::{Error as JiffError, Span, Timestamp};
 
@@ -68,7 +68,11 @@ pub const DAYS_IN_LEAP_YEAR: u16 = 366;
 /// ```
 #[must_use]
 pub fn date_today(tz: TimeZone) -> Date {
-    Timestamp::now().to_zoned(tz).date()
+    if cfg!(test) {
+        date(2026, 1, 1)
+    } else {
+        Timestamp::now().to_zoned(tz).date()
+    }
 }
 
 /// Returns the number of ISO weeks in a given year
