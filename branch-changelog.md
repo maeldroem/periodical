@@ -29,10 +29,12 @@ TODO: add missing conversions, rework conversions
       - `bound_pair`
       - `bounded_interval`
       - `emptiable_bound_pair`
+      - `emptiable_interval`
     - `relative`
       - `bound_pair`
       - `bounded_interval`
       - `emptiable_bound_pair`
+      - `emptiable_interval`
     - `ops`
       - `bound_cmp`
         - `bound_eq`

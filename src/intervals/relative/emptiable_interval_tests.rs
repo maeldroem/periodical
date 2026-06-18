@@ -8,8 +8,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalType,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
+    IntervalType,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -19,6 +23,8 @@ use crate::intervals::relative::{
     BoundedRelInterval,
     EmptiableRelBoundPair,
     HalfBoundedRelInterval,
+    HalfBoundedToFutureRelInterval,
+    HalfBoundedToPastRelInterval,
     HasEmptiableRelBoundPair,
     RelBoundPair,
     RelEndBound,
@@ -909,6 +915,104 @@ mod is_empty {
     }
 }
 
+mod interval_type {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1))
+            .to_emptiable_interval();
+
+        assert_eq!(bounded.interval_type(), IntervalType::Bounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded =
+            HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+                .to_emptiable_interval();
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToPast)
+            .to_emptiable_interval();
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = UnboundedInterval.to_emptiable_rel_interval();
+
+        assert_eq!(unbounded.interval_type(), IntervalType::Unbounded);
+    }
+
+    #[test]
+    fn empty() {
+        let empty = EmptyInterval.to_emptiable_rel_interval();
+
+        assert_eq!(empty.interval_type(), IntervalType::Empty);
+    }
+}
+
+mod interval_type_with_rel {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1))
+            .to_emptiable_interval();
+
+        assert_eq!(bounded.interval_type_with_rel(), IntervalTypeWithRel::RelBounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded =
+            HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
+                .to_emptiable_interval();
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToPast)
+            .to_emptiable_interval();
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = UnboundedInterval.to_emptiable_rel_interval();
+
+        assert_eq!(unbounded.interval_type_with_rel(), IntervalTypeWithRel::Unbounded);
+    }
+
+    #[test]
+    fn empty() {
+        let empty = EmptyInterval.to_emptiable_rel_interval();
+
+        assert_eq!(empty.interval_type_with_rel(), IntervalTypeWithRel::Empty);
+    }
+}
+
 mod ord {
     use super::*;
 
@@ -1429,9 +1533,31 @@ fn from_bounded_interval() {
 }
 
 #[test]
-fn from_half_bounded_interval() {
+fn from_half_bounded_to_future_interval() {
+    let half_bounded = HalfBoundedToFutureRelInterval::new(
+        RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound(),
+    );
+
+    assert_eq!(
+        EmptiableRelInterval::from(half_bounded.clone()),
+        EmptiableRelInterval::Bound(RelInterval::HalfBounded(HalfBoundedRelInterval::ToFuture(half_bounded)))
+    );
+}
+
+#[test]
+fn from_half_bounded_to_past_interval() {
     let half_bounded =
-        HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
+        HalfBoundedToPastRelInterval::new(RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound());
+
+    assert_eq!(
+        EmptiableRelInterval::from(half_bounded.clone()),
+        EmptiableRelInterval::Bound(RelInterval::HalfBounded(HalfBoundedRelInterval::ToPast(half_bounded)))
+    );
+}
+
+#[test]
+fn from_half_bounded_interval() {
+    let half_bounded = HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture);
     assert_eq!(
         EmptiableRelInterval::from(half_bounded.clone()),
         RelInterval::HalfBounded(half_bounded).to_emptiable()
@@ -1592,8 +1718,8 @@ mod from_emptiable_bound_pair {
 
 #[test]
 fn from_interval() {
-    let interval = HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture)
-        .to_interval();
+    let interval =
+        HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture).to_interval();
 
     assert_eq!(
         EmptiableRelInterval::from(interval.clone()),
