@@ -1,8 +1,5 @@
 use std::cmp::Ordering;
-use std::error::Error;
 use std::time::Duration;
-
-use jiff::Timestamp;
 
 use super::bound_pair::*;
 use crate::intervals::absolute::{
@@ -20,241 +17,175 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalType,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
+    IntervalType,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
     Relativity,
 };
 use crate::intervals::special::UnboundedInterval;
+use crate::test_data::{date_timestamp, datetime_timestamp};
 
 #[test]
-fn unchecked_new() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn unchecked_new() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_end_bound();
 
     let abs_bounds = AbsBoundPair::unchecked_new(start, end);
 
     assert_eq!(abs_bounds.abs_start(), start);
     assert_eq!(abs_bounds.abs_end(), end);
-    Ok(())
 }
 
 #[test]
-fn new_should_swap() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn new_should_swap() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_end_bound();
 
     let abs_bounds = AbsBoundPair::new(start, end);
 
     assert_eq!(
         abs_bounds.abs_start(),
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+        AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
     );
     assert_eq!(
         abs_bounds.abs_end(),
-        AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_end_bound(),
     );
-    Ok(())
 }
 
 #[test]
-fn new_from_same_times_exclusive_bounds() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_start_bound();
-    let end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_end_bound();
+fn new_from_same_times_exclusive_bounds() {
+    let start =
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound();
+    let end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_end_bound();
 
     let abs_bounds = AbsBoundPair::new(start, end);
 
     assert_eq!(
         abs_bounds.abs_start(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_start_bound(),
     );
     assert_eq!(
         abs_bounds.abs_end(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_end_bound(),
     );
-    Ok(())
 }
 
 #[test]
-fn new_from_same_times_inclusive_exclusive_bounds() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Inclusive,
-    )
-    .to_start_bound();
-    let end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_end_bound();
+fn new_from_same_times_inclusive_exclusive_bounds() {
+    let start =
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound();
+    let end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_end_bound();
 
     let abs_bounds = AbsBoundPair::new(start, end);
 
     assert_eq!(
         abs_bounds.abs_start(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_start_bound(),
     );
     assert_eq!(
         abs_bounds.abs_end(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_end_bound(),
     );
-    Ok(())
 }
 
 #[test]
-fn new_from_same_times_exclusive_inclusive_bounds() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_start_bound();
-    let end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Inclusive,
-    )
-    .to_end_bound();
+fn new_from_same_times_exclusive_inclusive_bounds() {
+    let start =
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound();
+    let end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_end_bound();
 
     let abs_bounds = AbsBoundPair::new(start, end);
 
     assert_eq!(
         abs_bounds.abs_start(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_start_bound(),
     );
     assert_eq!(
         abs_bounds.abs_end(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_end_bound(),
     );
-    Ok(())
 }
 
 #[test]
-fn new_from_same_times_inclusive_bounds() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Inclusive,
-    )
-    .to_start_bound();
-    let end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Inclusive,
-    )
-    .to_end_bound();
+fn new_from_same_times_inclusive_bounds() {
+    let start =
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound();
+    let end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_end_bound();
 
     let abs_bounds = AbsBoundPair::new(start, end);
 
     assert_eq!(
         abs_bounds.abs_start(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_start_bound(),
     );
     assert_eq!(
         abs_bounds.abs_end(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive,).to_end_bound(),
     );
-    Ok(())
 }
 
 #[test]
-fn from_range() -> Result<(), Box<dyn Error>> {
-    let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+fn from_range() {
+    let start = date_timestamp(2026, 1, 1);
     let range = start..;
 
     let bound_pair = AbsBoundPair::from_range(range);
 
     assert_eq!(bound_pair.start(), AbsFiniteBoundPos::new(start).to_start_bound());
     assert_eq!(bound_pair.end(), AbsEndBound::InfiniteFuture);
-    Ok(())
 }
 
 #[test]
-fn start_end() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn start_end() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 8, 0, 0)).to_end_bound();
 
     let bound_pair = AbsBoundPair::new(start, end);
 
     assert_eq!(bound_pair.start(), start);
     assert_eq!(bound_pair.end(), end);
-
-    Ok(())
 }
 
 #[test]
-fn unchecked_set_start() -> Result<(), Box<dyn Error>> {
+fn unchecked_set_start() {
     let mut bounds = AbsBoundPair::new(
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-        AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
+        AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_end_bound(),
     );
 
-    let new_start = AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
+    let new_start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_start_bound();
 
     bounds.unchecked_set_start(new_start);
 
     assert_eq!(bounds.abs_start(), new_start);
-    Ok(())
 }
 
 #[test]
-fn unchecked_set_end() -> Result<(), Box<dyn Error>> {
+fn unchecked_set_end() {
     let mut bounds = AbsBoundPair::new(
-        AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-        AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+        AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound(),
+        AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_end_bound(),
     );
 
-    let new_end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+    let new_end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_end_bound();
 
     bounds.unchecked_set_end(new_end);
 
     assert_eq!(bounds.abs_end(), new_end);
-    Ok(())
 }
 
 #[test]
-fn set_start_chronological() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
-    let new_start = AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound();
+fn set_start_chronological() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_end_bound();
+    let new_start = AbsFiniteBoundPos::new(datetime_timestamp(2025, 1, 1, 8, 0, 0)).to_start_bound();
 
     let mut bounds = AbsBoundPair::new(start, end);
 
@@ -262,14 +193,13 @@ fn set_start_chronological() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(bounds.abs_start(), new_start);
     assert_eq!(bounds.abs_end(), end);
-    Ok(())
 }
 
 #[test]
-fn set_start_unchronological() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
-    let new_start = AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
+fn set_start_unchronological() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_end_bound();
+    let new_start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_start_bound();
 
     let mut bounds = AbsBoundPair::new(start, end);
 
@@ -278,14 +208,13 @@ fn set_start_unchronological() -> Result<(), Box<dyn Error>> {
     // Bounds should remain unchanged
     assert_eq!(bounds.abs_start(), start);
     assert_eq!(bounds.abs_end(), end);
-    Ok(())
 }
 
 #[test]
-fn set_end_chronological() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
-    let new_end = AbsFiniteBoundPos::new("2025-01-02 08:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn set_end_chronological() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_end_bound();
+    let new_end = AbsFiniteBoundPos::new(datetime_timestamp(2025, 1, 2, 8, 0, 0)).to_end_bound();
 
     let mut bounds = AbsBoundPair::new(start, end);
 
@@ -293,14 +222,13 @@ fn set_end_chronological() -> Result<(), Box<dyn Error>> {
 
     assert_eq!(bounds.abs_start(), start);
     assert_eq!(bounds.abs_end(), new_end);
-    Ok(())
 }
 
 #[test]
-fn set_end_unchronological() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
-    let new_end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn set_end_unchronological() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_end_bound();
+    let new_end = AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_end_bound();
 
     let mut bounds = AbsBoundPair::new(start, end);
 
@@ -309,229 +237,213 @@ fn set_end_unchronological() -> Result<(), Box<dyn Error>> {
     // Bounds should remain unchanged
     assert_eq!(bounds.abs_start(), start);
     assert_eq!(bounds.abs_end(), end);
-    Ok(())
 }
 
 mod ord_by_start_and_inv_length {
     use super::*;
 
     #[test]
-    fn less_start() -> Result<(), Box<dyn Error>> {
+    fn less_start() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn greater_start() -> Result<(), Box<dyn Error>> {
+    fn greater_start() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn less_start_inf() -> Result<(), Box<dyn Error>> {
+    fn less_start_inf() {
         let bound_pair1 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn greater_start_inf() -> Result<(), Box<dyn Error>> {
+    fn greater_start_inf() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_less_end() -> Result<(), Box<dyn Error>> {
+    fn equal_start_less_end() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_equal_end() -> Result<(), Box<dyn Error>> {
+    fn equal_start_equal_end() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_greater_end() -> Result<(), Box<dyn Error>> {
+    fn equal_start_greater_end() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_less_end_inf() -> Result<(), Box<dyn Error>> {
+    fn equal_start_less_end_inf() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_greater_end_inf() -> Result<(), Box<dyn Error>> {
+    fn equal_start_greater_end_inf() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_equal_end_inf() -> Result<(), Box<dyn Error>> {
+    fn equal_start_equal_end_inf() {
         let bound_pair1 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let bound_pair2 = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_inf_less_end() -> Result<(), Box<dyn Error>> {
+    fn equal_start_inf_less_end() {
         let bound_pair1 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_inf_greater_end() -> Result<(), Box<dyn Error>> {
+    fn equal_start_inf_greater_end() {
         let bound_pair1 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_inf_equal_end() -> Result<(), Box<dyn Error>> {
+    fn equal_start_inf_equal_end() {
         let bound_pair1 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_inf_less_end_inf() -> Result<(), Box<dyn Error>> {
+    fn equal_start_inf_less_end_inf() {
         let bound_pair1 = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
         let bound_pair2 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn equal_start_inf_greater_end_inf() -> Result<(), Box<dyn Error>> {
+    fn equal_start_inf_greater_end_inf() {
         let bound_pair1 = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
         );
         let bound_pair2 = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
@@ -544,9 +456,9 @@ mod ord_by_start_and_inv_length {
 }
 
 #[test]
-fn to_interval() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+fn to_interval() {
+    let start = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 8, 0, 0)).to_finite_start_bound();
+    let end = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 2, 8, 0, 0)).to_finite_end_bound();
 
     let bound_pair = AbsBoundPair::new(start.to_start_bound(), end.to_end_bound());
 
@@ -554,13 +466,12 @@ fn to_interval() -> Result<(), Box<dyn Error>> {
         bound_pair.to_interval(),
         AbsInterval::Bounded(BoundedAbsInterval::new(start, end))
     );
-    Ok(())
 }
 
 #[test]
-fn to_emptiable_interval() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-02 08:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+fn to_emptiable_interval() {
+    let start = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 8, 0, 0)).to_finite_start_bound();
+    let end = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 2, 8, 0, 0)).to_finite_end_bound();
 
     let bound_pair = AbsBoundPair::new(start.to_start_bound(), end.to_end_bound());
 
@@ -568,72 +479,58 @@ fn to_emptiable_interval() -> Result<(), Box<dyn Error>> {
         bound_pair.to_emptiable_interval(),
         EmptiableAbsInterval::Bound(AbsInterval::Bounded(BoundedAbsInterval::new(start, end)))
     );
-    Ok(())
 }
 
 #[test]
-fn to_emptiable() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn to_emptiable() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound();
 
     assert_eq!(
         AbsBoundPair::new(start, end).to_emptiable(),
         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(start, end)),
     );
-    Ok(())
 }
 
 #[test]
-fn abs_start() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn abs_start() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound();
 
     assert_eq!(AbsBoundPair::new(start, end).abs_start(), start);
-    Ok(())
 }
 
 #[test]
-fn abs_end() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn abs_end() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound();
 
     assert_eq!(AbsBoundPair::new(start, end).abs_end(), end);
-    Ok(())
 }
 
 #[test]
-fn abs_bound_pair() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+fn abs_bound_pair() {
+    let start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+    let end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound();
 
     assert_eq!(
         AbsBoundPair::new(start, end).abs_bound_pair(),
         AbsBoundPair::new(start, end)
     );
-    Ok(())
 }
 
 #[test]
-fn duration() -> Result<(), Box<dyn Error>> {
+fn duration() {
     let bounded = AbsBoundPair::new(
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Inclusive)
+            .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 16, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let half_bounded = AbsBoundPair::new(
         AbsStartBound::InfinitePast,
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
 
@@ -643,38 +540,24 @@ fn duration() -> Result<(), Box<dyn Error>> {
     );
     assert_eq!(half_bounded.duration(), IntervalDuration::Infinite);
     assert_eq!(unbounded.duration(), IntervalDuration::Infinite);
-
-    Ok(())
 }
 
 #[test]
-fn openness() -> Result<(), Box<dyn Error>> {
+fn openness() {
     let bounded = AbsBoundPair::new(
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Inclusive)
+            .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 16, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let half_bounded_to_past = AbsBoundPair::new(
         AbsStartBound::InfinitePast,
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let half_bounded_to_future = AbsBoundPair::new(
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Exclusive)
+            .to_start_bound(),
         AbsEndBound::InfiniteFuture,
     );
     let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
@@ -683,39 +566,26 @@ fn openness() -> Result<(), Box<dyn Error>> {
     assert_eq!(half_bounded_to_past.openness(), Openness::HalfBounded);
     assert_eq!(half_bounded_to_future.openness(), Openness::HalfBounded);
     assert_eq!(unbounded.openness(), Openness::Unbounded);
-
-    Ok(())
 }
 
 #[test]
-fn relativity() -> Result<(), Box<dyn Error>> {
+fn relativity() {
     let bounded = AbsBoundPair::new(
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Inclusive)
+            .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 16, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let half_bounded = AbsBoundPair::new(
         AbsStartBound::InfinitePast,
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
 
     assert_eq!(bounded.relativity(), Relativity::Absolute);
     assert_eq!(half_bounded.relativity(), Relativity::Absolute);
     assert_eq!(unbounded.relativity(), Relativity::Any);
-
-    Ok(())
 }
 
 mod ord {
@@ -730,362 +600,363 @@ mod ord {
     }
 
     #[test]
-    fn unbounded_half_bounded_to_future() -> Result<(), Box<dyn Error>> {
+    fn unbounded_half_bounded_to_future() {
         let a = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn unbounded_half_bounded_to_past() -> Result<(), Box<dyn Error>> {
+    fn unbounded_half_bounded_to_past() {
         let a = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Equal);
-        Ok(())
     }
 
     #[test]
-    fn unbounded_bounded() -> Result<(), Box<dyn Error>> {
+    fn unbounded_bounded() {
         let a = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_unbounded() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_unbounded() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_future_after_first() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_future_after_first() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_future_before_first() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_future_before_first() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_future_same_time_exclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_future_same_time_exclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Equal);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_future_same_time_exclusive_inclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_future_same_time_exclusive_inclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_future_same_time_inclusive_exclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_future_same_time_inclusive_exclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Less);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_future_same_time_inclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_future_same_time_inclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
 
         assert_eq!(a.cmp(&b), Ordering::Equal);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_past_before_first() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_past_before_first() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_past_after_first() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_past_after_first() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_past_same_time_exclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_past_same_time_exclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_end_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_past_same_time_exclusive_inclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_past_same_time_exclusive_inclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_end_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_past_same_time_inclusive_exclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_past_same_time_inclusive_exclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_end_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Exclusive).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_to_past_same_time_inclusive_bounds() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_to_past_same_time_inclusive_bounds() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_start_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
             AbsStartBound::InfinitePast,
-            AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Inclusive,
-            )
-            .to_end_bound(),
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2025, 1, 1), BoundInclusivity::Inclusive).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_bounded_starts_before_first() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_bounded_starts_before_first() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Greater);
-        Ok(())
     }
 
     #[test]
-    fn half_bounded_to_future_bounded_starts_after_first() -> Result<(), Box<dyn Error>> {
+    fn half_bounded_to_future_bounded_starts_after_first() {
         let a = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 2)).to_start_bound(),
             AbsEndBound::InfiniteFuture,
         );
         let b = AbsBoundPair::new(
-            AbsFiniteBoundPos::new("2025-01-03 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            AbsFiniteBoundPos::new("2025-01-04 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 3)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2025, 1, 4)).to_end_bound(),
         );
 
         assert_eq!(a.cmp(&b), Ordering::Less);
-        Ok(())
     }
 }
 
 #[test]
-fn is_empty() -> Result<(), Box<dyn Error>> {
+fn is_empty() {
     let bounded = AbsBoundPair::new(
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound(),
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Inclusive)
+            .to_start_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 16, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let half_bounded = AbsBoundPair::new(
         AbsStartBound::InfinitePast,
-        AbsFiniteBoundPos::new_with_incl(
-            "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound(),
+        AbsFiniteBoundPos::new_with_incl(datetime_timestamp(2026, 1, 1, 8, 0, 0), BoundInclusivity::Exclusive)
+            .to_end_bound(),
     );
     let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
 
     assert!(!bounded.is_empty());
     assert!(!half_bounded.is_empty());
     assert!(!unbounded.is_empty());
+}
 
-    Ok(())
+mod interval_type {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = AbsBoundPair::new(
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+        );
+
+        assert_eq!(bounded.interval_type(), IntervalType::Bounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded = AbsBoundPair::new(
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsEndBound::InfiniteFuture,
+        );
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = AbsBoundPair::new(
+            AbsStartBound::InfinitePast,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+        );
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
+
+        assert_eq!(unbounded.interval_type(), IntervalType::Unbounded);
+    }
+}
+
+mod interval_type_with_rel {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = AbsBoundPair::new(
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+        );
+
+        assert_eq!(bounded.interval_type_with_rel(), IntervalTypeWithRel::AbsBounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded = AbsBoundPair::new(
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+            AbsEndBound::InfiniteFuture,
+        );
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::AbsHalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = AbsBoundPair::new(
+            AbsStartBound::InfinitePast,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+        );
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::AbsHalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture);
+
+        assert_eq!(unbounded.interval_type_with_rel(), IntervalTypeWithRel::Unbounded);
+    }
 }
 
 #[test]
-fn from_opt_timestamp_pair() -> Result<(), Box<dyn Error>> {
-    let start = "2026-01-01 00:00:00Z".parse::<Timestamp>()?;
+fn from_opt_timestamp_pair() {
+    let start = date_timestamp(2026, 1, 1);
 
     assert_eq!(
         AbsBoundPair::from((Some(start), None)),
@@ -1094,13 +965,12 @@ fn from_opt_timestamp_pair() -> Result<(), Box<dyn Error>> {
             AbsEndBound::InfiniteFuture
         )
     );
-    Ok(())
 }
 
 #[test]
-fn from_opt_timestamp_inclusivity_pair() -> Result<(), Box<dyn Error>> {
-    let start = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
-    let end = "2026-01-01 16:00:00Z".parse::<Timestamp>()?;
+fn from_opt_timestamp_inclusivity_pair() {
+    let start = datetime_timestamp(2026, 1, 1, 8, 0, 0);
+    let end = datetime_timestamp(2026, 1, 1, 16, 0, 0);
 
     assert_eq!(
         AbsBoundPair::from((
@@ -1112,13 +982,12 @@ fn from_opt_timestamp_inclusivity_pair() -> Result<(), Box<dyn Error>> {
             AbsFiniteBoundPos::new_with_incl(end, BoundInclusivity::Exclusive).to_end_bound(),
         )
     );
-    Ok(())
 }
 
 #[test]
-fn from_bounded_absolute_interval() -> Result<(), Box<dyn Error>> {
-    let start = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
-    let end = AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+fn from_bounded_absolute_interval() {
+    let start = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 8, 0, 0)).to_finite_start_bound();
+    let end = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 16, 0, 0)).to_finite_end_bound();
 
     let bounded = BoundedAbsInterval::new(start, end);
 
@@ -1126,13 +995,11 @@ fn from_bounded_absolute_interval() -> Result<(), Box<dyn Error>> {
         AbsBoundPair::from(bounded),
         AbsBoundPair::new(start.to_start_bound(), end.to_end_bound(),),
     );
-
-    Ok(())
 }
 
 #[test]
-fn from_half_bounded_absolute_interval() -> Result<(), Box<dyn Error>> {
-    let reference = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+fn from_half_bounded_absolute_interval() {
+    let reference = datetime_timestamp(2026, 1, 1, 8, 0, 0);
 
     let half_bounded = HalfBoundedAbsInterval::from_time(reference, OpeningDirection::ToFuture);
 
@@ -1143,16 +1010,15 @@ fn from_half_bounded_absolute_interval() -> Result<(), Box<dyn Error>> {
             AbsEndBound::InfiniteFuture,
         )
     );
-    Ok(())
 }
 
 mod from_abs_interval {
     use super::*;
 
     #[test]
-    fn from_abs_interval_bounded() -> Result<(), Box<dyn Error>> {
-        let start = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
-        let end = AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+    fn from_abs_interval_bounded() {
+        let start = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 8, 0, 0)).to_finite_start_bound();
+        let end = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 16, 0, 0)).to_finite_end_bound();
 
         let interval = BoundedAbsInterval::new(start, end).to_interval();
 
@@ -1160,13 +1026,11 @@ mod from_abs_interval {
             AbsBoundPair::from(interval),
             AbsBoundPair::new(start.to_start_bound(), end.to_end_bound(),)
         );
-
-        Ok(())
     }
 
     #[test]
-    fn from_abs_interval_half_bounded() -> Result<(), Box<dyn Error>> {
-        let reference = "2026-01-01 08:00:00Z".parse::<Timestamp>()?;
+    fn from_abs_interval_half_bounded() {
+        let reference = datetime_timestamp(2026, 1, 1, 8, 0, 0);
 
         let interval = HalfBoundedAbsInterval::from_time(reference, OpeningDirection::ToFuture).to_interval();
 
@@ -1177,8 +1041,6 @@ mod from_abs_interval {
                 AbsEndBound::InfiniteFuture,
             )
         );
-
-        Ok(())
     }
 
     #[test]
@@ -1190,6 +1052,14 @@ mod from_abs_interval {
             AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture)
         );
     }
+}
+
+#[test]
+fn from_unbounded_interval() {
+    assert_eq!(
+        AbsBoundPair::from(UnboundedInterval),
+        AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture)
+    );
 }
 
 #[test]
@@ -1215,9 +1085,9 @@ mod try_from_emptiable_abs_interval {
     use crate::prelude::EmptyInterval;
 
     #[test]
-    fn not_empty() -> Result<(), Box<dyn Error>> {
-        let start = AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_finite_start_bound();
-        let end = AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_finite_end_bound();
+    fn not_empty() {
+        let start = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 8, 0, 0)).to_finite_start_bound();
+        let end = AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 16, 0, 0)).to_finite_end_bound();
 
         let interval = BoundedAbsInterval::new(start, end).to_emptiable_interval();
 
@@ -1225,8 +1095,6 @@ mod try_from_emptiable_abs_interval {
             AbsBoundPair::try_from(interval),
             Ok(AbsBoundPair::new(start.to_start_bound(), end.to_end_bound(),))
         );
-
-        Ok(())
     }
 
     #[test]
