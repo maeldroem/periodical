@@ -14,6 +14,7 @@ TODO: add missing conversions, rework conversions
 
 - Created `IntervalType` and `IntervalTypeWithRel` to identify the different interval types
 - Implemented `HasIntervalType` and `HasIntervalTypeWithRel` on every interval type to obtain their identifying type
+- Added `HasIntervalType` and `HasIntervalTypeWithRel` to prelude
 - Created `test_data` module with test utilities
 - Created test data for interval overlap and bound overlap
 - Mock value behind `cfg!` in `time::date_today` for testing purposes
