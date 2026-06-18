@@ -109,6 +109,8 @@ struct Cli {
 enum XTask {
     /// Generates code coverage artifact
     Coverage {
+        /// Test name pattern argument per `cargo test`
+        test_name_pat: Option<String>,
         /// Open the resulting code coverage report
         #[arg(long)]
         open: bool,
@@ -131,13 +133,14 @@ fn try_main() -> Result<(), Box<dyn Error>> {
 
     match cli.xtask {
         XTask::Coverage {
+            test_name_pat,
             open,
-        } => xtask_coverage(open).map_err(Box::<dyn Error>::from),
+        } => xtask_coverage(test_name_pat.unwrap_or_default(), open).map_err(Box::<dyn Error>::from),
         XTask::FmtCheck => xtask_fmtcheck().map_err(Box::<dyn Error>::from),
     }
 }
 
-fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
+fn xtask_coverage(test_name_pat: String, open: bool) -> Result<(), XtaskError> {
     let mut llvm_profile_file = PROFILING_DATA_FOLDER.to_path_buf();
     llvm_profile_file.push(PROFILING_DATA_NAME_TEMPLATE);
 
@@ -157,6 +160,7 @@ fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
         .arg("--tests") // Only tests, no doc tests
         .arg("--all-features")
         .arg("-q")
+        .arg(test_name_pat)
         .status()?
         .success();
 
