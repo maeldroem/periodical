@@ -9,8 +9,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalType,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
+    IntervalType,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -26,6 +30,7 @@ use crate::intervals::relative::{
     RelInterval,
     RelStartBound,
 };
+use crate::intervals::special::UnboundedInterval;
 
 #[test]
 fn unchecked_new() {
@@ -847,6 +852,100 @@ fn is_empty() {
     assert!(!unbounded.is_empty());
 }
 
+mod interval_type {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+        );
+
+        assert_eq!(bounded.interval_type(), IntervalType::Bounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelEndBound::InfiniteFuture,
+        );
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = RelBoundPair::new(
+            RelStartBound::InfinitePast,
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+        );
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture);
+
+        assert_eq!(unbounded.interval_type(), IntervalType::Unbounded);
+    }
+}
+
+mod interval_type_with_rel {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+        );
+
+        assert_eq!(bounded.interval_type_with_rel(), IntervalTypeWithRel::RelBounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelEndBound::InfiniteFuture,
+        );
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = RelBoundPair::new(
+            RelStartBound::InfinitePast,
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+        );
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture);
+
+        assert_eq!(unbounded.interval_type_with_rel(), IntervalTypeWithRel::Unbounded);
+    }
+}
+
 #[test]
 fn from_opt_signed_duration_pair() {
     let start = SignedDuration::ZERO;
@@ -946,6 +1045,14 @@ mod from_rel_interval {
             RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture)
         );
     }
+}
+
+#[test]
+fn from_unbounded_interval() {
+    assert_eq!(
+        RelBoundPair::from(UnboundedInterval),
+        RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture)
+    );
 }
 
 #[test]
