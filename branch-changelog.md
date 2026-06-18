@@ -30,11 +30,13 @@ TODO: add missing conversions, rework conversions
       - `bounded_interval`
       - `emptiable_bound_pair`
       - `emptiable_interval`
+      - `end_bound`
     - `relative`
       - `bound_pair`
       - `bounded_interval`
       - `emptiable_bound_pair`
       - `emptiable_interval`
+      - `end_bound`
     - `ops`
       - `bound_cmp`
         - `bound_eq`
