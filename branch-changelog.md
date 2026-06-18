@@ -25,7 +25,9 @@ TODO: add missing conversions, rework conversions
   - `intervals`
     - `meta`
     - `absolute`
+      - `bounded_interval`
     - `relative`
+      - `bounded_interval`
     - `ops`
       - `bound_cmp`
         - `bound_eq`
