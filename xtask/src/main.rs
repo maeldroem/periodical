@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
-use std::fs::DirBuilder;
+use std::fs::{self, DirBuilder};
 use std::io;
 use std::path::Path;
 use std::process::{Command, ExitCode};
@@ -147,6 +147,20 @@ fn xtask_coverage(test_name_pat: String, open: bool) -> Result<(), XtaskError> {
     eprintln!("Retrieving stable cargo…");
 
     let stable_cargo = get_rust_bin("cargo", RustToolchain::Stable)?;
+
+    eprintln!("Done.");
+
+    eprintln!("Deleting previous profiling data…");
+
+    // This is due to `grcov` compiling all profiling data that it finds instead of using a single one
+
+    if fs::remove_dir_all(*PROFILING_DATA_FOLDER).is_err() {
+        return Err("Failed to delete profiling data".into());
+    }
+
+    if fs::create_dir_all(*PROFILING_DATA_FOLDER).is_err() {
+        return Err("Failed to recreate profiling data folder".into());
+    }
 
     eprintln!("Done.");
 
