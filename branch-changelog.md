@@ -32,6 +32,7 @@ TODO: add missing conversions, rework conversions
       - `emptiable_bound_pair`
       - `emptiable_interval`
       - `end_bound`
+      - `finite_bound_position`
       - `start_bound`
     - `relative`
       - `bound_pair`
