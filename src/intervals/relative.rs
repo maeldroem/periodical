@@ -49,6 +49,8 @@ mod end_bound_tests;
 #[cfg(test)]
 mod finite_bound_position_tests;
 #[cfg(test)]
+mod finite_bound_tests;
+#[cfg(test)]
 mod half_bounded_interval_tests;
 #[cfg(test)]
 mod interval_tests;
