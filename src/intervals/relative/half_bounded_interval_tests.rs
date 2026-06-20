@@ -675,7 +675,7 @@ fn interval_type_with_rel() {
 }
 
 #[test]
-fn from_offsetstamp_opening_direction_pair() {
+fn from_offset_opening_direction_pair() {
     assert_eq!(
         HalfBoundedRelInterval::from((SignedDuration::from_hours(1), OpeningDirection::ToFuture)),
         HalfBoundedRelInterval::from_offset(SignedDuration::from_hours(1), OpeningDirection::ToFuture),
@@ -683,7 +683,7 @@ fn from_offsetstamp_opening_direction_pair() {
 }
 
 #[test]
-fn from_offsetstamp_inclusivity_opening_direction_triple() {
+fn from_offset_inclusivity_opening_direction_triple() {
     assert_eq!(
         HalfBoundedRelInterval::from((
             SignedDuration::from_hours(1),
