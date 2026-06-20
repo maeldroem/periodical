@@ -745,7 +745,7 @@ impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsInt
 
 impl From<(AbsFiniteBoundPos, OpeningDirection)> for HalfBoundedAbsInterval {
     fn from((reference, opening_direction): (AbsFiniteBoundPos, OpeningDirection)) -> Self {
-        Self::from_time_incl(reference.time(), reference.inclusivity(), opening_direction)
+        Self::new(reference, opening_direction)
     }
 }
 

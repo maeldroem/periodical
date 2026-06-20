@@ -715,7 +715,7 @@ impl From<(SignedDuration, BoundInclusivity, OpeningDirection)> for HalfBoundedR
 
 impl From<(RelFiniteBoundPos, OpeningDirection)> for HalfBoundedRelInterval {
     fn from((reference, opening_direction): (RelFiniteBoundPos, OpeningDirection)) -> Self {
-        Self::from_offset_incl(reference.offset(), reference.inclusivity(), opening_direction)
+        Self::new(reference, opening_direction)
     }
 }
 
