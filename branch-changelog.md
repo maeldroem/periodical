@@ -37,6 +37,7 @@ TODO: add missing conversions, rework conversions
       - `finite_end_bound`
       - `finite_start_bound`
       - `half_bounded_interval`
+      - `half_bounded_to_future_interval`
       - `start_bound`
     - `relative`
       - `bound_pair`
@@ -48,6 +49,7 @@ TODO: add missing conversions, rework conversions
       - `finite_end_bound`
       - `finite_start_bound`
       - `half_bounded_interval`
+      - `half_bounded_to_future_interval`
       - `start_bound`
     - `ops`
       - `bound_cmp`

@@ -57,6 +57,10 @@ mod finite_start_bound_tests;
 #[cfg(test)]
 mod half_bounded_interval_tests;
 #[cfg(test)]
+mod half_bounded_to_future_interval_tests;
+#[cfg(test)]
+mod half_bounded_to_past_interval_tests;
+#[cfg(test)]
 mod interval_tests;
 #[cfg(test)]
 mod start_bound_tests;
