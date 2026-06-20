@@ -1481,7 +1481,7 @@ mod from_finite_start_end_bounds {
     }
 }
 
-mod from_offsetstamp_pair {
+mod from_offset_pair {
     use super::*;
 
     #[test]
@@ -1505,7 +1505,7 @@ mod from_offsetstamp_pair {
     }
 }
 
-mod from_offsetstamp_incl_pair {
+mod from_offset_incl_pair {
     use super::*;
 
     #[test]
