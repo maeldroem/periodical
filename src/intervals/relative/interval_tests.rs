@@ -10,8 +10,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalType,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
+    IntervalType,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -22,6 +26,8 @@ use crate::intervals::relative::{
     EmptiableRelBoundPair,
     EmptiableRelInterval,
     HalfBoundedRelInterval,
+    HalfBoundedToFutureRelInterval,
+    HalfBoundedToPastRelInterval,
     HasEmptiableRelBoundPair,
     HasRelBoundPair,
     RelBoundPair,
@@ -1325,6 +1331,90 @@ mod is_empty {
     #[test]
     fn unbounded() {
         assert!(!RelInterval::Unbounded(UnboundedInterval).is_empty());
+    }
+}
+
+mod interval_type {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        assert_eq!(
+            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2))
+                .to_interval()
+                .interval_type(),
+            IntervalType::Bounded
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        assert_eq!(
+            HalfBoundedToFutureRelInterval::from_offset(SignedDuration::from_hours(1))
+                .to_interval()
+                .interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        assert_eq!(
+            HalfBoundedToPastRelInterval::from_offset(SignedDuration::from_hours(1))
+                .to_interval()
+                .interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        assert_eq!(
+            UnboundedInterval.to_rel_interval().interval_type(),
+            IntervalType::Unbounded
+        );
+    }
+}
+
+mod interval_type_with_rel {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        assert_eq!(
+            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2))
+                .to_interval()
+                .interval_type_with_rel(),
+            IntervalTypeWithRel::RelBounded
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        assert_eq!(
+            HalfBoundedToFutureRelInterval::from_offset(SignedDuration::from_hours(1))
+                .to_interval()
+                .interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        assert_eq!(
+            HalfBoundedToPastRelInterval::from_offset(SignedDuration::from_hours(1))
+                .to_interval()
+                .interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        assert_eq!(
+            UnboundedInterval.to_rel_interval().interval_type_with_rel(),
+            IntervalTypeWithRel::Unbounded
+        );
     }
 }
 
