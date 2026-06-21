@@ -60,7 +60,12 @@ TODO: add missing conversions, rework conversions
         - `bound_eq`
         - `bound_ord`
       - `precision`
-        - `bound`
+        - `absolute`
+          - `bound`
+          - `interval`
+        - `relative`
+          - `bound`
+          - `interval`
       - `abridge`
 - Improved coverage xtask to allow for a test pattern to be provided, like with `cargo test`,
   in order to isolate some files that may be partially covered by other tests' actions
