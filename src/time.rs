@@ -17,7 +17,7 @@ use jiff::civil::{Date, ISOWeekDate, Weekday};
 use jiff::tz::TimeZone;
 use jiff::{Error as JiffError, Span, Timestamp};
 
-use crate::test_utils::FAKE_TODAY_DATE;
+use crate::test_utils::MOCK_TODAY_DATE;
 
 /// Number of days in a week
 ///
@@ -53,6 +53,14 @@ pub const DAYS_IN_COMMON_YEAR: u16 = 365;
 /// Per Gregorian calendar.
 pub const DAYS_IN_LEAP_YEAR: u16 = 366;
 
+pub(crate) fn mockable_date_today(mock: bool, tz: TimeZone) -> Date {
+    if mock {
+        MOCK_TODAY_DATE
+    } else {
+        Timestamp::now().to_zoned(tz).date()
+    }
+}
+
 /// Gets today's [`Date`] in the given [`TimeZone`]
 ///
 /// # Panics
@@ -70,12 +78,7 @@ pub const DAYS_IN_LEAP_YEAR: u16 = 366;
 /// ```
 #[must_use]
 pub fn date_today(tz: TimeZone) -> Date {
-    if cfg!(test) {
-        FAKE_TODAY_DATE
-    } else {
-        // Since this not testable, this code has to be trusted.
-        Timestamp::now().to_zoned(tz).date()
-    }
+    mockable_date_today(cfg!(test), tz)
 }
 
 /// Returns the number of ISO weeks in a given year
