@@ -30,7 +30,7 @@ use crate::intervals::relative::{
     RelInterval,
     RelStartBound,
 };
-use crate::intervals::special::UnboundedInterval;
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 #[test]
 fn unchecked_new() {
@@ -1006,7 +1006,6 @@ fn from_half_bounded_relative_interval() {
 
 mod from_rel_interval {
     use super::*;
-    use crate::prelude::UnboundedInterval;
 
     #[test]
     fn from_rel_interval_bounded() {
@@ -1075,7 +1074,6 @@ fn try_from_emptiable_rel_bound_pair() {
 
 mod try_from_emptiable_rel_interval {
     use super::*;
-    use crate::prelude::EmptyInterval;
 
     #[test]
     fn not_empty() {

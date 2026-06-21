@@ -31,7 +31,7 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 #[test]
 fn new() {

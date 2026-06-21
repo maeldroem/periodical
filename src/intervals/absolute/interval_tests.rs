@@ -34,7 +34,7 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::special::UnboundedInterval;
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 mod from_range {
     use super::*;

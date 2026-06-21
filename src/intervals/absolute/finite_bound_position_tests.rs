@@ -3,7 +3,7 @@ use std::ops::Bound;
 use super::finite_bound_position::*;
 use crate::intervals::absolute::{AbsEndBound, AbsStartBound};
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 #[test]
 fn new() {

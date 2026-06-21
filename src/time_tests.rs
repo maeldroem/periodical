@@ -4,7 +4,7 @@ use jiff::civil::{Date, Weekday, date};
 use jiff::tz::TimeZone;
 
 use super::time::*;
-use crate::test_data::FAKE_TODAY_DATE;
+use crate::test_utils::FAKE_TODAY_DATE;
 
 #[test]
 fn date_today_matches_test_data_fake_date_today() {

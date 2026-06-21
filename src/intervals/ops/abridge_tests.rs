@@ -25,7 +25,6 @@ use crate::intervals::relative::{
     RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::test_data::date_timestamp;
 use crate::test_data::interval_overlap::{
     ABS_DATA,
     ABS_EMPTY_EMPTY_DATA,
@@ -36,6 +35,7 @@ use crate::test_data::interval_overlap::{
     REL_EMPTY_NONEMPTY_DATA,
     REL_NONEMPTY_EMPTY_DATA,
 };
+use crate::test_utils::date_timestamp;
 
 fn abs_assert(lhs: &AbsBoundPair, rhs: &EmptiableAbsBoundPair, expected: &EmptiableAbsBoundPair) {
     // Bound pair

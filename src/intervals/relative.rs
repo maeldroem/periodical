@@ -424,12 +424,12 @@ pub fn prepare_rel_finite_start_end_bounds_for_interval_creation(
 /// # use periodical::intervals::relative::{
 /// #     RelFiniteBoundPos,
 /// #     RelStartEndBoundsCheckForIntervalCreationError,
-/// #     prepare_rel_bound_pair_for_interval_creation,
+/// #     prepare_rel_start_end_bounds_for_interval_creation,
 /// # };
 /// let mut start = RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_start_bound();
 /// let mut end = RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_end_bound();
 ///
-/// prepare_rel_bound_pair_for_interval_creation(&mut start, &mut end);
+/// prepare_rel_start_end_bounds_for_interval_creation(&mut start, &mut end);
 ///
 /// assert_eq!(
 ///     start,

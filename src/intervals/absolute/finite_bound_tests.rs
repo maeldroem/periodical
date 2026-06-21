@@ -1,7 +1,7 @@
 use super::finite_bound::*;
 use crate::intervals::absolute::{AbsBound, AbsFiniteBoundPos};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality};
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 #[test]
 fn is_start() {
