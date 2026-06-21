@@ -69,6 +69,7 @@ TODO: add missing conversions, rework conversions
       - `abridge`
 - Improved coverage xtask to allow for a test pattern to be provided, like with `cargo test`,
   in order to isolate some files that may be partially covered by other tests' actions
+- Slightly reformatted some code in `intervals::ops::abridge`
 
 ## Deprecated
 
