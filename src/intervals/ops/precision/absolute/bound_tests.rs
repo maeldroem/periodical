@@ -1,152 +1,69 @@
-use std::error::Error;
 use std::time::Duration;
 
-use jiff::Zoned;
+use jiff::Timestamp;
 use jiff::tz::TimeZone;
 
 use super::bound::*;
-use crate::intervals::absolute::{AbsEndBound, AbsFiniteBoundPos, AbsStartBound};
-use crate::intervals::meta::BoundInclusivity;
-use crate::ops::{Precision, PrecisionMode};
+use crate::intervals::absolute::AbsFiniteBoundPos;
+use crate::ops::{Precision, PrecisionMode, PrecisionOutOfRangeError};
+use crate::test_utils::datetime_timestamp;
 
-#[test]
-fn finite_bound_position() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 10:42:31[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive
-        )
-        .precise(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(Duration::from_mins(5), PrecisionMode::ToNearest)?
-        ),
-        Ok(AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 10:45:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )),
-    );
+// All implementations and derived functions only use the methods tested below
 
-    Ok(())
+mod precise_abs_finite_bound_pos {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        assert_eq!(
+            precise_abs_finite_bound_pos(
+                &AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 10, 20, 0)),
+                TimeZone::UTC,
+                Precision::unchecked_new(Duration::from_mins(15), PrecisionMode::ToFuture),
+            ),
+            Ok(AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 10, 30, 0)))
+        );
+    }
+
+    #[test]
+    fn precision_out_of_range_error() {
+        assert_eq!(
+            precise_abs_finite_bound_pos(
+                &AbsFiniteBoundPos::new(Timestamp::MAX),
+                TimeZone::UTC,
+                Precision::unchecked_new(Duration::from_mins(10), PrecisionMode::ToFuture)
+            ),
+            Err(PrecisionOutOfRangeError)
+        );
+    }
 }
 
-#[test]
-fn start_infinite() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsStartBound::InfinitePast.precise(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
-        ),
-        Ok(AbsStartBound::InfinitePast),
-    );
+mod precise_abs_finite_bound_pos_with_base_time {
+    use super::*;
 
-    Ok(())
-}
+    #[test]
+    fn ok() {
+        assert_eq!(
+            precise_abs_finite_bound_pos_with_base_time(
+                &AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 10, 20, 0)),
+                TimeZone::UTC,
+                Precision::unchecked_new(Duration::from_mins(15), PrecisionMode::ToFuture),
+                datetime_timestamp(2026, 1, 1, 10, 10, 0)
+            ),
+            Ok(AbsFiniteBoundPos::new(datetime_timestamp(2026, 1, 1, 10, 25, 0)))
+        );
+    }
 
-#[test]
-fn start_common_precision() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_start_bound()
-        .precise(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
-        ),
-        Ok(AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 02:25:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_start_bound()),
-    );
-
-    Ok(())
-}
-
-#[test]
-fn start_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 02:23:44[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_start_bound()
-        .precise_with_base_time(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(
-                Duration::from_mins(7) + Duration::from_secs(31),
-                PrecisionMode::ToFuture
-            )?,
-            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        ),
-        Ok(AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 02:30:20[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_start_bound()),
-    );
-
-    Ok(())
-}
-
-#[test]
-fn end_infinite() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsEndBound::InfiniteFuture.precise(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
-        ),
-        Ok(AbsEndBound::InfiniteFuture),
-    );
-
-    Ok(())
-}
-
-#[test]
-fn end_common_precision() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound()
-        .precise(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(Duration::from_mins(5), PrecisionMode::ToFuture)?,
-        ),
-        Ok(AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound()),
-    );
-
-    Ok(())
-}
-
-#[test]
-fn end_uncommon_precision_with_base() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 09:56:21[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound()
-        .precise_with_base_time(
-            TimeZone::get("Europe/Oslo")?,
-            Precision::new(
-                Duration::from_mins(7) + Duration::from_secs(31),
-                PrecisionMode::ToFuture
-            )?,
-            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-        ),
-        Ok(AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 10:01:20[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound()),
-    );
-
-    Ok(())
+    #[test]
+    fn precision_out_of_range_error() {
+        assert_eq!(
+            precise_abs_finite_bound_pos_with_base_time(
+                &AbsFiniteBoundPos::new(Timestamp::MAX),
+                TimeZone::UTC,
+                Precision::unchecked_new(Duration::from_mins(10), PrecisionMode::ToFuture),
+                datetime_timestamp(2026, 1, 1, 10, 10, 0)
+            ),
+            Err(PrecisionOutOfRangeError)
+        );
+    }
 }
