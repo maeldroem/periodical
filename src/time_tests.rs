@@ -4,11 +4,23 @@ use jiff::civil::{Date, Weekday, date};
 use jiff::tz::TimeZone;
 
 use super::time::*;
-use crate::test_utils::FAKE_TODAY_DATE;
+use crate::test_utils::MOCK_TODAY_DATE;
 
 #[test]
-fn date_today_matches_test_data_fake_date_today() {
-    assert_eq!(date_today(TimeZone::UTC), FAKE_TODAY_DATE);
+fn mockable_date_today_mock() {
+    assert_eq!(mockable_date_today(true, TimeZone::UTC), MOCK_TODAY_DATE);
+    assert_eq!(mockable_date_today(true, TimeZone::unknown()), MOCK_TODAY_DATE);
+}
+
+#[test]
+fn mockable_date_today_no_mock() {
+    let _ = mockable_date_today(false, TimeZone::UTC);
+}
+
+#[test]
+fn date_today_returns_mock_date() {
+    assert_eq!(date_today(TimeZone::UTC), MOCK_TODAY_DATE);
+    assert_eq!(date_today(TimeZone::unknown()), MOCK_TODAY_DATE);
 }
 
 mod iso_weeks_in_year_fn {

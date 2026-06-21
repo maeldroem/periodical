@@ -28,7 +28,7 @@ macro_rules! bin_op_map {
 #[cfg(test)]
 pub(crate) use bin_op_map;
 
-pub const FAKE_TODAY_DATE: Date = date(2026, 1, 1);
+pub const MOCK_TODAY_DATE: Date = date(2026, 1, 1);
 
 /// Returns the [`Timestamp`] of a date in UTC
 ///
@@ -37,6 +37,7 @@ pub const FAKE_TODAY_DATE: Date = date(2026, 1, 1);
 /// Panics if the call to [`date`] panicked or if the datetime couldn't be associated with the UTC timezone.
 #[cfg(test)]
 #[must_use]
+#[track_caller]
 pub fn date_timestamp(year: i16, month: i8, day: i8) -> Timestamp {
     date(year, month, day)
         .to_datetime(Time::midnight())
@@ -52,6 +53,7 @@ pub fn date_timestamp(year: i16, month: i8, day: i8) -> Timestamp {
 /// Panics if the call to [`datetime`] panicked or if the datetime couldn't be associated with the UTC timezone.
 #[cfg(test)]
 #[must_use]
+#[track_caller]
 pub fn datetime_timestamp(year: i16, month: i8, day: i8, hour: i8, minute: i8, second: i8) -> Timestamp {
     datetime(year, month, day, hour, minute, second, 0)
         .to_zoned(TimeZone::UTC)
@@ -66,6 +68,7 @@ pub fn datetime_timestamp(year: i16, month: i8, day: i8, hour: i8, minute: i8, s
 /// Panics if the call to [`datetime`] panicked or if the datetime couldn't be associated with the UTC timezone.
 #[cfg(test)]
 #[must_use]
+#[track_caller]
 pub fn datetime_nanos_timestamp(
     year: i16,
     month: i8,
