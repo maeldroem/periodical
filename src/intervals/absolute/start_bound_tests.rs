@@ -6,7 +6,7 @@ use jiff::Timestamp;
 use super::start_bound::*;
 use crate::intervals::absolute::{AbsBound, AbsEndBound, AbsFiniteBoundPos};
 use crate::intervals::meta::{BoundExtremality, BoundInclusivity, HasBoundExtremality};
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 #[test]
 fn is_finite() {

@@ -13,9 +13,11 @@ use std::error::Error;
 use std::fmt::Display;
 use std::ops::{Neg, RangeInclusive};
 
-use jiff::civil::{Date, ISOWeekDate, Weekday, date};
+use jiff::civil::{Date, ISOWeekDate, Weekday};
 use jiff::tz::TimeZone;
 use jiff::{Error as JiffError, Span, Timestamp};
+
+use crate::test_utils::FAKE_TODAY_DATE;
 
 /// Number of days in a week
 ///
@@ -69,8 +71,9 @@ pub const DAYS_IN_LEAP_YEAR: u16 = 366;
 #[must_use]
 pub fn date_today(tz: TimeZone) -> Date {
     if cfg!(test) {
-        date(2026, 1, 1)
+        FAKE_TODAY_DATE
     } else {
+        // Since this not testable, this code has to be trusted.
         Timestamp::now().to_zoned(tz).date()
     }
 }

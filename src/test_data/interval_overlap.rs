@@ -8,7 +8,7 @@ use jiff::SignedDuration;
 use crate::intervals::absolute::{AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound, EmptiableAbsBoundPair};
 use crate::intervals::meta::{BoundInclusivity, IntervalType, OpeningDirection};
 use crate::intervals::relative::{EmptiableRelBoundPair, RelBoundPair, RelEndBound, RelFiniteBoundPos, RelStartBound};
-use crate::test_data::{BinOpMap, BinOpPair, bin_op_map, date_timestamp};
+use crate::test_utils::{BinOpMap, BinOpPair, bin_op_map, date_timestamp};
 
 type IntervalTypeToDataMap<T> = HashMap<(IntervalType, IntervalType), &'static BinOpMap<T, T>>;
 

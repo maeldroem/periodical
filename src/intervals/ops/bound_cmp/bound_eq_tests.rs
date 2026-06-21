@@ -1,7 +1,6 @@
 use crate::intervals::absolute::{AbsEndBound, AbsFiniteEndBound, AbsFiniteStartBound, AbsStartBound};
 use crate::intervals::ops::{BoundEq, BoundOverlapDisambiguationRuleSet};
 use crate::intervals::relative::{RelEndBound, RelFiniteEndBound, RelFiniteStartBound, RelStartBound};
-use crate::test_data::BinOpPair;
 use crate::test_data::bound_overlap::{
     FINITE_END_FINITE_END_ABS,
     FINITE_END_FINITE_END_REL,
@@ -36,6 +35,7 @@ use crate::test_data::bound_overlap::{
     INF_START_INF_START_ABS,
     INF_START_INF_START_REL,
 };
+use crate::test_utils::BinOpPair;
 
 type BodRuleSet = BoundOverlapDisambiguationRuleSet;
 

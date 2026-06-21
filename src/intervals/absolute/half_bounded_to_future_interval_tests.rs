@@ -6,6 +6,7 @@ use crate::intervals::absolute::{
     AbsEndBound,
     AbsFiniteBoundPos,
     AbsInterval,
+    AbsStartBound,
     BoundedAbsInterval,
     EmptiableAbsInterval,
     HalfBoundedAbsInterval,
@@ -30,7 +31,7 @@ use crate::intervals::meta::{
     Relativity,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 #[test]
 fn new() {
@@ -403,7 +404,6 @@ fn from_range_from() {
 
 mod try_from_bound_pair {
     use super::*;
-    use crate::intervals::absolute::AbsStartBound;
 
     #[test]
     fn inclusive_inclusive() {

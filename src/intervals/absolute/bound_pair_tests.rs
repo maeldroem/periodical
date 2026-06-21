@@ -28,8 +28,8 @@ use crate::intervals::meta::{
     Openness,
     Relativity,
 };
-use crate::intervals::special::UnboundedInterval;
-use crate::test_data::{date_timestamp, datetime_timestamp};
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::test_utils::{date_timestamp, datetime_timestamp};
 
 #[test]
 fn unchecked_new() {
@@ -1082,7 +1082,6 @@ fn try_from_emptiable_abs_bound_pair() {
 
 mod try_from_emptiable_abs_interval {
     use super::*;
-    use crate::prelude::EmptyInterval;
 
     #[test]
     fn not_empty() {

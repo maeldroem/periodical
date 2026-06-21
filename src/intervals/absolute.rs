@@ -457,14 +457,14 @@ pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
 /// # use periodical::intervals::absolute::{
 /// #     AbsFiniteBoundPos,
 /// #     AbsStartEndBoundsCheckForIntervalCreationError,
-/// #     prepare_abs_bound_pair_for_interval_creation,
+/// #     prepare_abs_start_end_bounds_for_interval_creation,
 /// # };
 /// let mut start =
 ///     AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_start_bound();
 /// let mut end =
 ///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_end_bound();
 ///
-/// prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+/// prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 ///
 /// assert_eq!(
 ///     start,

@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use super::finite_start_bound::*;
 use crate::intervals::absolute::{AbsBound, AbsFiniteBound, AbsFiniteBoundPos, AbsStartBound};
 use crate::intervals::meta::BoundInclusivity;
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 #[test]
 fn new() {

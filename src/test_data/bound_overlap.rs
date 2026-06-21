@@ -19,7 +19,7 @@ use crate::intervals::relative::{
     RelFiniteStartBound,
     RelStartBound,
 };
-use crate::test_data::{BinOpMap, BinOpPair, bin_op_map, date_timestamp};
+use crate::test_utils::{BinOpMap, BinOpPair, bin_op_map, date_timestamp};
 
 pub static FINITE_START_FINITE_START_ABS: LazyLock<BinOpMap<AbsFiniteStartBound, AbsFiniteStartBound>> =
     LazyLock::new(|| {

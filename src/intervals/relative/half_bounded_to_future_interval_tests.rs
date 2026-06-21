@@ -30,6 +30,7 @@ use crate::intervals::relative::{
     RelEndBound,
     RelFiniteBoundPos,
     RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
@@ -412,7 +413,6 @@ fn from_range_from() {
 
 mod try_from_bound_pair {
     use super::*;
-    use crate::intervals::relative::RelStartBound;
 
     #[test]
     fn inclusive_inclusive() {

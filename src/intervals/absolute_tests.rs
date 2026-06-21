@@ -1,6 +1,6 @@
 use super::absolute::*;
 use crate::intervals::meta::BoundInclusivity;
-use crate::test_data::date_timestamp;
+use crate::test_utils::date_timestamp;
 
 mod swap_abs_finite_start_end_bounds {
     use super::*;

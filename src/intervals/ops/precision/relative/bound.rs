@@ -4,6 +4,7 @@
 
 use jiff::SignedDuration;
 
+use crate::intervals::meta::HasBoundInclusivity;
 use crate::intervals::relative::{
     RelBound,
     RelEndBound,
@@ -14,7 +15,6 @@ use crate::intervals::relative::{
     RelStartBound,
 };
 use crate::ops::{Precision, PrecisionOutOfRangeError};
-use crate::prelude::HasBoundInclusivity;
 
 /// Ability to precise relative bounds
 ///
