@@ -405,15 +405,15 @@ abridgable_impl!(
 /// Abridges two [`AbsBoundPair`]s
 #[must_use]
 pub fn abridge_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &AbsBoundPair) -> EmptiableAbsBoundPair {
-    let mut highest_start = lhs_bound_pair
+    let mut max_start = lhs_bound_pair
         .start()
         .bound_max(rhs_bound_pair.start(), BoundOverlapDisambiguationRuleSet::Strict);
-    let mut lowest_end = lhs_bound_pair
+    let mut min_end = lhs_bound_pair
         .end()
         .bound_min(rhs_bound_pair.end(), BoundOverlapDisambiguationRuleSet::Strict);
 
-    match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable(),
+    match max_start.bound_cmp(&min_end) {
+        BoundOrdering::Less => AbsBoundPair::unchecked_new(max_start, min_end).to_emptiable(),
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
@@ -421,22 +421,22 @@ pub fn abridge_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &Ab
             if let BoundOverlapAmbiguity::StartEnd(start_inclusivity, end_inclusivity) = ambiguity {
                 match (start_inclusivity, end_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
-                        AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
+                        AbsBoundPair::unchecked_new(max_start, min_end).to_emptiable()
                     },
                     (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
                     | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableAbsBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
-                        if let AbsStartBound::Finite(ref mut finite_highest_start) = highest_start {
+                        if let AbsStartBound::Finite(ref mut finite_highest_start) = max_start {
                             finite_highest_start
                                 .pos_mut()
                                 .set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        if let AbsEndBound::Finite(ref mut finite_lowest_end) = lowest_end {
+                        if let AbsEndBound::Finite(ref mut finite_lowest_end) = min_end {
                             finite_lowest_end.pos_mut().set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
+                        AbsBoundPair::unchecked_new(max_start, min_end).to_emptiable()
                     },
                 }
             } else {
@@ -444,19 +444,19 @@ pub fn abridge_abs_bound_pair(lhs_bound_pair: &AbsBoundPair, rhs_bound_pair: &Ab
             }
         },
         BoundOrdering::Greater => {
-            swap_abs_start_end_bounds(&mut highest_start, &mut lowest_end);
+            swap_abs_start_end_bounds(&mut max_start, &mut min_end);
 
-            if let AbsStartBound::Finite(ref mut finite_start) = highest_start {
+            if let AbsStartBound::Finite(ref mut finite_start) = max_start {
                 let new_incl = finite_start.pos().inclusivity().opposite();
                 finite_start.pos_mut().set_inclusivity(new_incl);
             }
 
-            if let AbsEndBound::Finite(ref mut finite_end) = lowest_end {
+            if let AbsEndBound::Finite(ref mut finite_end) = min_end {
                 let new_incl = finite_end.pos().inclusivity().opposite();
                 finite_end.pos_mut().set_inclusivity(new_incl);
             }
 
-            AbsBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
+            AbsBoundPair::unchecked_new(max_start, min_end).to_emptiable()
         },
     }
 }
@@ -467,11 +467,11 @@ pub fn abridge_abs_bound_pair_with_emptiable_abs_bound_pair(
     lhs_bound_pair: &AbsBoundPair,
     rhs_bound_pair: &EmptiableAbsBoundPair,
 ) -> EmptiableAbsBoundPair {
-    let EmptiableAbsBoundPair::Bound(rhs_non_empty_bounds) = rhs_bound_pair else {
-        return EmptiableAbsBoundPair::Bound(lhs_bound_pair.clone());
-    };
-
-    abridge_abs_bound_pair(lhs_bound_pair, rhs_non_empty_bounds)
+    if let EmptiableAbsBoundPair::Bound(rhs_bound_pair) = rhs_bound_pair {
+        abridge_abs_bound_pair(lhs_bound_pair, rhs_bound_pair)
+    } else {
+        EmptiableAbsBoundPair::Bound(lhs_bound_pair.clone())
+    }
 }
 
 /// Abridges two [`EmptiableAbsBoundPair`]s
@@ -482,8 +482,8 @@ pub fn abridge_emptiable_abs_bound_pair(
 ) -> EmptiableAbsBoundPair {
     match (lhs_bound_pair, rhs_bound_pair) {
         (EmptiableAbsBoundPair::Empty, EmptiableAbsBoundPair::Empty) => EmptiableAbsBoundPair::Empty,
-        (EmptiableAbsBoundPair::Empty, bound @ EmptiableAbsBoundPair::Bound(..))
-        | (bound @ EmptiableAbsBoundPair::Bound(..), EmptiableAbsBoundPair::Empty) => bound.clone(),
+        (EmptiableAbsBoundPair::Empty, bound @ EmptiableAbsBoundPair::Bound(_))
+        | (bound @ EmptiableAbsBoundPair::Bound(_), EmptiableAbsBoundPair::Empty) => bound.clone(),
         (EmptiableAbsBoundPair::Bound(lhs_bound_pair), EmptiableAbsBoundPair::Bound(rhs_bound_pair)) => {
             abridge_abs_bound_pair(lhs_bound_pair, rhs_bound_pair)
         },
@@ -493,15 +493,15 @@ pub fn abridge_emptiable_abs_bound_pair(
 /// Abridges two [`RelBoundPair`]s
 #[must_use]
 pub fn abridge_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &RelBoundPair) -> EmptiableRelBoundPair {
-    let mut highest_start = lhs_bound_pair
+    let mut max_start = lhs_bound_pair
         .start()
         .bound_max(rhs_bound_pair.start(), BoundOverlapDisambiguationRuleSet::Strict);
-    let mut lowest_end = lhs_bound_pair
+    let mut min_end = lhs_bound_pair
         .end()
         .bound_min(rhs_bound_pair.end(), BoundOverlapDisambiguationRuleSet::Strict);
 
-    match highest_start.bound_cmp(&lowest_end) {
-        BoundOrdering::Less => RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable(),
+    match max_start.bound_cmp(&min_end) {
+        BoundOrdering::Less => RelBoundPair::unchecked_new(max_start, min_end).to_emptiable(),
         BoundOrdering::Equal(None) => {
             unreachable!("Comparing a start bound to an end bound can never result in the ambiguity being `None`");
         },
@@ -509,22 +509,22 @@ pub fn abridge_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &Re
             if let BoundOverlapAmbiguity::StartEnd(start_inclusivity, end_inclusivity) = ambiguity {
                 match (start_inclusivity, end_inclusivity) {
                     (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive) => {
-                        RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
+                        RelBoundPair::unchecked_new(max_start, min_end).to_emptiable()
                     },
                     (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive)
                     | (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => EmptiableRelBoundPair::Empty,
                     (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => {
-                        if let RelStartBound::Finite(ref mut finite_highest_start) = highest_start {
+                        if let RelStartBound::Finite(ref mut finite_highest_start) = max_start {
                             finite_highest_start
                                 .pos_mut()
                                 .set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        if let RelEndBound::Finite(ref mut finite_lowest_end) = lowest_end {
+                        if let RelEndBound::Finite(ref mut finite_lowest_end) = min_end {
                             finite_lowest_end.pos_mut().set_inclusivity(BoundInclusivity::Inclusive);
                         }
 
-                        RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
+                        RelBoundPair::unchecked_new(max_start, min_end).to_emptiable()
                     },
                 }
             } else {
@@ -532,19 +532,19 @@ pub fn abridge_rel_bound_pair(lhs_bound_pair: &RelBoundPair, rhs_bound_pair: &Re
             }
         },
         BoundOrdering::Greater => {
-            swap_rel_start_end_bounds(&mut highest_start, &mut lowest_end);
+            swap_rel_start_end_bounds(&mut max_start, &mut min_end);
 
-            if let RelStartBound::Finite(ref mut finite_start) = highest_start {
+            if let RelStartBound::Finite(ref mut finite_start) = max_start {
                 let new_incl = finite_start.pos().inclusivity().opposite();
                 finite_start.pos_mut().set_inclusivity(new_incl);
             }
 
-            if let RelEndBound::Finite(ref mut finite_end) = lowest_end {
+            if let RelEndBound::Finite(ref mut finite_end) = min_end {
                 let new_incl = finite_end.pos().inclusivity().opposite();
                 finite_end.pos_mut().set_inclusivity(new_incl);
             }
 
-            RelBoundPair::unchecked_new(highest_start, lowest_end).to_emptiable()
+            RelBoundPair::unchecked_new(max_start, min_end).to_emptiable()
         },
     }
 }
@@ -555,11 +555,11 @@ pub fn abridge_rel_bound_pair_with_emptiable_rel_bound_pair(
     lhs_bound_pair: &RelBoundPair,
     rhs_bound_pair: &EmptiableRelBoundPair,
 ) -> EmptiableRelBoundPair {
-    let EmptiableRelBoundPair::Bound(rhs_non_empty_bound_pair) = rhs_bound_pair else {
-        return EmptiableRelBoundPair::Bound(lhs_bound_pair.clone());
-    };
-
-    abridge_rel_bound_pair(lhs_bound_pair, rhs_non_empty_bound_pair)
+    if let EmptiableRelBoundPair::Bound(rhs_bound_pair) = rhs_bound_pair {
+        abridge_rel_bound_pair(lhs_bound_pair, rhs_bound_pair)
+    } else {
+        EmptiableRelBoundPair::Bound(lhs_bound_pair.clone())
+    }
 }
 
 /// Abridges two [`EmptiableRelBoundPair`]s
@@ -570,8 +570,8 @@ pub fn abridge_emptiable_rel_bound_pair(
 ) -> EmptiableRelBoundPair {
     match (lhs_bound_pair, rhs_bound_pair) {
         (EmptiableRelBoundPair::Empty, EmptiableRelBoundPair::Empty) => EmptiableRelBoundPair::Empty,
-        (EmptiableRelBoundPair::Empty, bound @ EmptiableRelBoundPair::Bound(..))
-        | (bound @ EmptiableRelBoundPair::Bound(..), EmptiableRelBoundPair::Empty) => bound.clone(),
+        (EmptiableRelBoundPair::Empty, bound @ EmptiableRelBoundPair::Bound(_))
+        | (bound @ EmptiableRelBoundPair::Bound(_), EmptiableRelBoundPair::Empty) => bound.clone(),
         (EmptiableRelBoundPair::Bound(lhs_bound_pair), EmptiableRelBoundPair::Bound(rhs_bound_pair)) => {
             abridge_rel_bound_pair(lhs_bound_pair, rhs_bound_pair)
         },
