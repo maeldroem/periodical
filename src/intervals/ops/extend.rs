@@ -9,6 +9,30 @@
 //! equal, we choose the most inclusive bound.
 //!
 //! # Examples
+//!
+//! ```
+//! # use std::error::Error;
+//! # use jiff::Timestamp;
+//! # use periodical::intervals::ops::Extensible;
+//! # use periodical::intervals::absolute::BoundedAbsInterval;
+//! let x = BoundedAbsInterval::from_times(
+//!     "2026-01-01 04:00:00Z".parse::<Timestamp>()?,
+//!     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
+//! );
+//! let y = BoundedAbsInterval::from_times(
+//!     "2026-01-01 12:00:00Z".parse::<Timestamp>()?,
+//!     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
+//! );
+//!
+//! assert_eq!(
+//!     x.extend(&y),
+//!     BoundedAbsInterval::from_times(
+//!         "2026-01-01 04:00:00Z".parse::<Timestamp>()?,
+//!         "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
+//!     )
+//! );
+//! # Ok::<(), Box<dyn Error>>(())
+//! ```
 
 use crate::intervals::absolute::{
     AbsBoundPair,
@@ -236,6 +260,30 @@ pub trait Extensible<Rhs = Self> {
     /// other non-empty interval.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
+    /// # use periodical::intervals::ops::Extensible;
+    /// # use periodical::intervals::absolute::BoundedAbsInterval;
+    /// let x = BoundedAbsInterval::from_times(
+    ///     "2026-01-01 04:00:00Z".parse::<Timestamp>()?,
+    ///     "2026-01-01 08:00:00Z".parse::<Timestamp>()?,
+    /// );
+    /// let y = BoundedAbsInterval::from_times(
+    ///     "2026-01-01 12:00:00Z".parse::<Timestamp>()?,
+    ///     "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
+    /// );
+    ///
+    /// assert_eq!(
+    ///     x.extend(&y),
+    ///     BoundedAbsInterval::from_times(
+    ///         "2026-01-01 04:00:00Z".parse::<Timestamp>()?,
+    ///         "2026-01-01 16:00:00Z".parse::<Timestamp>()?,
+    ///     )
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     #[must_use]
     fn extend(&self, rhs: &Rhs) -> Self::Output;
 }
