@@ -32,7 +32,7 @@ use crate::ops::UnionResult;
 ///
 /// ## Unitable intervals
 ///
-/// ```ignore
+/// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
 /// # use periodical::ops::UnionResult;
@@ -60,7 +60,7 @@ use crate::ops::UnionResult;
 ///
 /// ## Non-overlapping intervals
 ///
-/// ```ignore
+/// ```
 /// # use std::error::Error;
 /// # use jiff::Timestamp;
 /// # use periodical::ops::UnionResult;
@@ -90,7 +90,7 @@ pub trait Unitable<Rhs = Self> {
     ///
     /// # Examples
     ///
-    /// ```ignore
+    /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::ops::UnionResult;
@@ -122,7 +122,7 @@ pub trait Unitable<Rhs = Self> {
     ///
     /// # Examples
     ///
-    /// ```ignore
+    /// ```
     /// # use std::error::Error;
     /// # use jiff::Timestamp;
     /// # use periodical::ops::UnionResult;
@@ -334,8 +334,7 @@ pub fn unite_abs_bound_pair(a: &AbsBoundPair, b: &AbsBoundPair) -> UnionResult<A
         return UnionResult::Separate;
     }
 
-    todo!("wait for extend to be fixed before uncommenting");
-    // UnionResult::United(a.extend(b))
+    UnionResult::United(a.extend(b))
 }
 
 /// Unites an [`AbsBoundPair`] with an [`EmptiableAbsBoundPair`]
@@ -353,8 +352,7 @@ pub fn unite_abs_bound_pair_with_emptiable_abs_bound_pair(
         return UnionResult::Separate;
     }
 
-    todo!("wait for extend to be fixed before uncommenting");
-    // UnionResult::United(a.extend(b))
+    UnionResult::United(a.extend(b))
 }
 
 /// Unites two [`EmptiableAbsBoundPair`]
@@ -372,8 +370,7 @@ pub fn unite_emptiable_abs_bound_pair(
         return UnionResult::Separate;
     }
 
-    todo!("wait for extend to be fixed before uncommenting");
-    // UnionResult::United(a.extend(b))
+    UnionResult::United(a.extend(b))
 }
 
 /// Unites two [`RelBoundPair`]
@@ -385,8 +382,7 @@ pub fn unite_rel_bound_pair(a: &RelBoundPair, b: &RelBoundPair) -> UnionResult<R
         return UnionResult::Separate;
     }
 
-    todo!("wait for extend to be fixed before uncommenting");
-    // UnionResult::United(a.extend(b))
+    UnionResult::United(a.extend(b))
 }
 
 /// Unites an [`RelBoundPair`] with an [`EmptiableRelBoundPair`]
@@ -404,8 +400,7 @@ pub fn unite_rel_bound_pair_with_emptiable_rel_bound_pair(
         return UnionResult::Separate;
     }
 
-    todo!("wait for extend to be fixed before uncommenting");
-    // UnionResult::United(a.extend(b))
+    UnionResult::United(a.extend(b))
 }
 
 /// Unites two [`EmptiableRelBoundPair`]
@@ -423,6 +418,5 @@ pub fn unite_emptiable_rel_bound_pair(
         return UnionResult::Separate;
     }
 
-    todo!("wait for extend to be fixed before uncommenting");
-    // UnionResult::United(a.extend(b))
+    UnionResult::United(a.extend(b))
 }

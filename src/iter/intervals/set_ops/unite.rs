@@ -2,7 +2,7 @@
 //!
 //! # Examples
 //!
-//! ```ignore
+//! ```
 //! # use std::error::Error;
 //! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{AbsBoundPair, AbsEndBound, AbsFiniteBoundPos};
@@ -11,23 +11,35 @@
 //! let intervals = [
 //!     AbsBoundPair::new(
 //!         AbsFiniteBoundPos::new(
-//!             "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsEndBound::InfiniteFuture,
 //!     ),
 //!     AbsBoundPair::new(
 //!         AbsFiniteBoundPos::new(
-//!             "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 10:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsEndBound::InfiniteFuture,
 //!     ),
 //!     AbsBoundPair::new(
 //!         AbsFiniteBoundPos::new(
-//!             "2025-01-01 12:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_start_bound(),
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
 //!         AbsFiniteBoundPos::new(
-//!             "2025-01-01 14:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!         ).to_end_bound(),
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -36,14 +48,20 @@
 //!     vec![
 //!         AbsBoundPair::new(
 //!             AbsFiniteBoundPos::new(
-//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound(),
+//!                 "2025-01-01 08:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsEndBound::InfiniteFuture,
 //!         ),
 //!         AbsBoundPair::new(
 //!             AbsFiniteBoundPos::new(
-//!                 "2025-01-01 10:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
-//!             ).to_start_bound(),
+//!                 "2025-01-01 10:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
 //!             AbsEndBound::InfiniteFuture,
 //!         ),
 //!     ],

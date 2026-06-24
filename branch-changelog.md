@@ -71,6 +71,7 @@ TODO: add missing conversions, rework conversions
   in order to isolate some files that may be partially covered by other tests' actions
 - Slightly reformatted some code in `intervals::ops::abridge`
 - Refactored `intervals::ops::extend`
+- Reintegrated doc examples and code that was reliant on `intervals::ops::extend`
 
 ## Deprecated
 
@@ -84,7 +85,7 @@ TODO: add missing conversions, rework conversions
 
 ## Fixed
 
--
+- Fixed `intervals::ops::extend`'s doc examples
 
 ## Security
 
