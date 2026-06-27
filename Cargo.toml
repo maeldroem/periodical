@@ -16,8 +16,8 @@ members = ["fuzz", "xtask"]
 
 [dependencies]
 arbitrary = { version = "1.4.2", features = ["derive"], optional = true }
-jiff = "0.2.21"
-serde = { version = "1.0.225", features = ["derive"], optional = true }
+jiff = "0.2.29"
+serde = { version = "1.0.228", features = ["derive"], optional = true }
 
 [features]
 arbitrary = ["dep:arbitrary"]

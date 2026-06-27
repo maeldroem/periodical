@@ -43,7 +43,7 @@ path = "fuzz_targets/abridge_2nd_degree_complement_of_bounded_interval.rs"
 test = false
 
 [dependencies]
-jiff = "0.2.21"
+jiff = "0.2.29"
 libfuzzer-sys = "0.4"
 
 [dependencies.periodical]
