@@ -7,9 +7,6 @@
 <details>
 <summary><h1>Changelog</h1></summary>
 
-TODO: checks tests again after the refactoring
-TODO: add missing conversions, rework conversions
-
 ## Added
 
 - Created `IntervalType` and `IntervalTypeWithRel` to identify the different interval types
