@@ -318,6 +318,8 @@ extensible_impl!(
         HalfBoundedToPastAbsInterval => HalfBoundedToPastAbsInterval [via] (abs, bounded, hb_to_past);
     for BoundedAbsInterval [map rhs]
         HalfBoundedAbsInterval => HalfBoundedAbsInterval [via] (abs, bounded, half_bounded);
+    for BoundedAbsInterval [map rhs] UnboundedInterval => rhs.clone();
+    for BoundedAbsInterval [map rhs] EmptyInterval => lhs.clone();
 
     for HalfBoundedToFutureAbsInterval [map rhs]
         BoundedAbsInterval => HalfBoundedToFutureAbsInterval [via] (abs, hb_to_future, bounded);
@@ -327,6 +329,8 @@ extensible_impl!(
         HalfBoundedToPastAbsInterval => UnboundedInterval [always] UnboundedInterval;
     for HalfBoundedToFutureAbsInterval [map rhs]
         HalfBoundedAbsInterval => AbsInterval [via] (abs, hb_to_future, half_bounded);
+    for HalfBoundedToFutureAbsInterval [map rhs] UnboundedInterval => rhs.clone();
+    for HalfBoundedToFutureAbsInterval [map rhs] EmptyInterval => lhs.clone();
 
     for HalfBoundedToPastAbsInterval [map rhs]
         BoundedAbsInterval => HalfBoundedToPastAbsInterval [via] (abs, hb_to_past, bounded);
@@ -336,6 +340,8 @@ extensible_impl!(
         HalfBoundedToPastAbsInterval => HalfBoundedToPastAbsInterval [via] (abs, hb_to_past, hb_to_past);
     for HalfBoundedToPastAbsInterval [map rhs]
         HalfBoundedAbsInterval => AbsInterval [via] (abs, hb_to_past, half_bounded);
+    for HalfBoundedToPastAbsInterval [map rhs] UnboundedInterval => rhs.clone();
+    for HalfBoundedToPastAbsInterval [map rhs] EmptyInterval => lhs.clone();
 
     for HalfBoundedAbsInterval [map rhs]
         BoundedAbsInterval => HalfBoundedAbsInterval [via] (abs, half_bounded, bounded);
@@ -345,6 +351,8 @@ extensible_impl!(
         HalfBoundedToPastAbsInterval => AbsInterval [via] (abs, half_bounded, hb_to_past);
     for HalfBoundedAbsInterval [map rhs]
         HalfBoundedAbsInterval => AbsInterval [via] (abs, half_bounded, half_bounded);
+    for HalfBoundedAbsInterval [map rhs] UnboundedInterval => rhs.clone();
+    for HalfBoundedAbsInterval [map rhs] EmptyInterval => lhs.clone();
 
     // Relative
     for RelBoundPair [map rhs]
@@ -375,6 +383,8 @@ extensible_impl!(
         HalfBoundedToPastRelInterval => HalfBoundedToPastRelInterval [via] (rel, bounded, hb_to_past);
     for BoundedRelInterval [map rhs]
         HalfBoundedRelInterval => HalfBoundedRelInterval [via] (rel, bounded, half_bounded);
+    for BoundedRelInterval [map rhs] UnboundedInterval => rhs.clone();
+    for BoundedRelInterval [map rhs] EmptyInterval => lhs.clone();
 
     for HalfBoundedToFutureRelInterval [map rhs]
         BoundedRelInterval => HalfBoundedToFutureRelInterval [via] (rel, hb_to_future, bounded);
@@ -384,6 +394,8 @@ extensible_impl!(
         HalfBoundedToPastRelInterval => UnboundedInterval [always] UnboundedInterval;
     for HalfBoundedToFutureRelInterval [map rhs]
         HalfBoundedRelInterval => RelInterval [via] (rel, hb_to_future, half_bounded);
+    for HalfBoundedToFutureRelInterval [map rhs] UnboundedInterval => rhs.clone();
+    for HalfBoundedToFutureRelInterval [map rhs] EmptyInterval => lhs.clone();
 
     for HalfBoundedToPastRelInterval [map rhs]
         BoundedRelInterval => HalfBoundedToPastRelInterval [via] (rel, hb_to_past, bounded);
@@ -393,6 +405,8 @@ extensible_impl!(
         HalfBoundedToPastRelInterval => HalfBoundedToPastRelInterval [via] (rel, hb_to_past, hb_to_past);
     for HalfBoundedToPastRelInterval [map rhs]
         HalfBoundedRelInterval => RelInterval [via] (rel, hb_to_past, half_bounded);
+    for HalfBoundedToPastRelInterval [map rhs] UnboundedInterval => rhs.clone();
+    for HalfBoundedToPastRelInterval [map rhs] EmptyInterval => lhs.clone();
 
     for HalfBoundedRelInterval [map rhs]
         BoundedRelInterval => HalfBoundedRelInterval [via] (rel, half_bounded, bounded);
@@ -402,6 +416,8 @@ extensible_impl!(
         HalfBoundedToPastRelInterval => RelInterval [via] (rel, half_bounded, hb_to_past);
     for HalfBoundedRelInterval [map rhs]
         HalfBoundedRelInterval => RelInterval [via] (rel, half_bounded, half_bounded);
+    for HalfBoundedRelInterval [map rhs] UnboundedInterval => rhs.clone();
+    for HalfBoundedRelInterval [map rhs] EmptyInterval => lhs.clone();
 
     // Special
     for UnboundedInterval [map rhs]
