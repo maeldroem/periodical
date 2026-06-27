@@ -17,8 +17,10 @@ and more!
 Just add the following in your `Cargo.toml` to start using `periodical` in your project!
 
 ```toml
-periodical = "0.2"
+periodical = "0.3"
 ```
+
+<small>PS: The reason emojis are present is to better illustrate and add variety to the reading. It is not the result of an AI generation.</small>
 
 # Why should I use this crate?
 
@@ -127,24 +129,20 @@ And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [sug
 # MSRV policy 🦀
 
 The [MSRV, Minimum Supported Rust Version](https://doc.rust-lang.org/cargo/reference/rust-version.html),
-of this crate is currently set to Rust `1.87.0`, but is subject to change.
+of this crate is currently set to Rust `1.88.0`, but is subject to change.
 
 Since increasing the MSRV is a breaking change, the version number of this crate will increase in a similar manner
 when it is changed, as [SemVer](https://semver.org/) describes it.
 
 # Roadmap 🔜
 
-## 0.3
-
-- [ ] Convenience methods for creating common intervals with ease 📈
-- [ ] Interval periodicity 🔁
-- [ ] Methods to get overlap/gap durations ↔️
-- [ ] Interval formatting (standard and non-standard) ✒️
-
 ## Future
 
 (order doesn't represent priority)
 
+- [ ] Interval periodicity 🔁
+- [ ] Methods to get overlap/gap durations ↔️
+- [ ] Interval formatting (standard and non-standard) ✒️
 - [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants) 🧪
 - [ ] Precision change trait for relative intervals
 - [ ] Support for non-UTC timezones 🌐
@@ -164,6 +162,3 @@ when it is changed, as [SemVer](https://semver.org/) describes it.
     <img src="https://brainmade.org/black-logo.png" alt="BrainMade.org logo" width="300" />
 </a>
 </div>
-
-The reason emojis are present is to better illustrate and add variety to the reading.
-It is not the result of an AI generation.
