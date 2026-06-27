@@ -27,9 +27,11 @@ use crate::intervals::meta::{
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     Openness,
     Relativity,
@@ -1064,7 +1066,7 @@ impl BoundedRelInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the given length is zero and the start and end bounds are not
     /// both [`Inclusive`](BoundInclusivity::Inclusive).
     ///
@@ -1332,7 +1334,7 @@ impl HasOpenness for BoundedRelInterval {
 
 impl HasRelativity for BoundedRelInterval {
     fn relativity(&self) -> Relativity {
-        Relativity::Rel
+        Relativity::Relative
     }
 }
 
@@ -1362,6 +1364,12 @@ impl HasRelBoundPair for BoundedRelInterval {
 impl IsEmpty for BoundedRelInterval {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for BoundedRelInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        IntervalTypeWithRel::RelBounded
     }
 }
 

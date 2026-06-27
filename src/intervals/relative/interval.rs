@@ -32,9 +32,12 @@ use serde::{Deserialize, Serialize};
 use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasDuration,
+    HasIntervalTypeWithRel,
+    HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -289,6 +292,16 @@ impl Ord for RelInterval {
 impl IsEmpty for RelInterval {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for RelInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match self {
+            Self::Bounded(_) => IntervalTypeWithRel::RelBounded,
+            Self::HalfBounded(half_bounded) => IntervalTypeWithRel::RelHalfBounded(half_bounded.opening_direction()),
+            Self::Unbounded(_) => IntervalTypeWithRel::Unbounded,
+        }
     }
 }
 

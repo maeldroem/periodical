@@ -6,7 +6,7 @@
 //! - [how to check if a time is contained within an interval](point_containment)
 //! - [how to cut intervals](cut)
 //! - how to remove [gaps](fill_gap), [overlaps](remove_overlap), even [both](remove_overlap_or_gap)
-//! - [how to order bounds](bound_ord)
+//! - [how to compare and order bounds](bound_cmp)
 //! - [how to check if a bound is contained within an interval](bound_containment)
 //! - [how to get the complement of an interval](complement)
 //! - how to adjust intervals by [growing](grow) or [shrinking](shrink) their bounds
@@ -39,9 +39,6 @@ pub mod shrink;
 // pub mod split;
 
 #[cfg(test)]
-mod test_data;
-
-#[cfg(test)]
 mod abridge_tests;
 #[cfg(test)]
 mod bound_containment_tests;
@@ -53,8 +50,8 @@ mod complement_tests;
 mod continuation_tests;
 #[cfg(test)]
 mod cut_tests;
-// #[cfg(test)]
-// mod extend_tests;
+#[cfg(test)]
+mod extend_tests;
 // #[cfg(test)]
 // mod fill_gap_tests;
 #[cfg(test)]

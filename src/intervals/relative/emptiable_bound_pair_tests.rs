@@ -9,8 +9,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalType,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
+    IntervalType,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -255,8 +259,7 @@ mod ord_by_start_and_inv_length {
 
     #[test]
     fn bound_bound_equal_start_inf_less_end_inf() {
-        let bound_pair1 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair1 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
         let bound_pair2 = RelBoundPair::new(
             RelStartBound::InfinitePast,
             RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
@@ -273,18 +276,15 @@ mod ord_by_start_and_inv_length {
             RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
-        let bound_pair2 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair2 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Greater);
     }
 
     #[test]
     fn bound_bound_equal_start_inf_equal_end_inf() {
-        let bound_pair1 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
-        let bound_pair2 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair1 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair2 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
 
         assert_eq!(bound_pair1.ord_by_start_and_inv_length(&bound_pair2), Ordering::Equal);
     }
@@ -393,16 +393,14 @@ fn emptiable_rel_bound_pair() {
         RelBoundPair::new(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive).to_end_bound(),
         )
         .to_emptiable()
         .emptiable_rel_bound_pair(),
         RelBoundPair::new(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive).to_end_bound(),
         )
         .to_emptiable()
     );
@@ -414,8 +412,7 @@ fn partial_rel_start() {
         RelBoundPair::new(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive).to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_start(),
@@ -433,14 +430,12 @@ fn partial_rel_end() {
         RelBoundPair::new(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound(),
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive).to_end_bound(),
         )
         .to_emptiable()
         .partial_rel_end(),
         Some(
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound()
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive).to_end_bound()
         )
     );
     assert_eq!(EmptiableRelBoundPair::Empty.partial_rel_end(), None);
@@ -501,10 +496,124 @@ fn relativity() {
     .to_emptiable();
     let unbounded = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
 
-    assert_eq!(bounded.relativity(), Relativity::Rel);
-    assert_eq!(half_bounded.relativity(), Relativity::Rel);
+    assert_eq!(bounded.relativity(), Relativity::Relative);
+    assert_eq!(half_bounded.relativity(), Relativity::Relative);
     assert_eq!(unbounded.relativity(), Relativity::Any);
     assert_eq!(EmptiableRelBoundPair::Empty.relativity(), Relativity::Any);
+}
+
+mod interval_type {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+        )
+        .to_emptiable();
+
+        assert_eq!(bounded.interval_type(), IntervalType::Bounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelEndBound::InfiniteFuture,
+        )
+        .to_emptiable();
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = RelBoundPair::new(
+            RelStartBound::InfinitePast,
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+        )
+        .to_emptiable();
+
+        assert_eq!(
+            half_bounded.interval_type(),
+            IntervalType::HalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+
+        assert_eq!(unbounded.interval_type(), IntervalType::Unbounded);
+    }
+
+    #[test]
+    fn empty() {
+        let empty = EmptiableRelBoundPair::Empty;
+
+        assert_eq!(empty.interval_type(), IntervalType::Empty);
+    }
+}
+
+mod interval_type_with_rel {
+    use super::*;
+
+    #[test]
+    fn bounded() {
+        let bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+        )
+        .to_emptiable();
+
+        assert_eq!(bounded.interval_type_with_rel(), IntervalTypeWithRel::RelBounded);
+    }
+
+    #[test]
+    fn half_bounded_to_future() {
+        let half_bounded = RelBoundPair::new(
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+            RelEndBound::InfiniteFuture,
+        )
+        .to_emptiable();
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToFuture)
+        );
+    }
+
+    #[test]
+    fn half_bounded_to_past() {
+        let half_bounded = RelBoundPair::new(
+            RelStartBound::InfinitePast,
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+        )
+        .to_emptiable();
+
+        assert_eq!(
+            half_bounded.interval_type_with_rel(),
+            IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToPast)
+        );
+    }
+
+    #[test]
+    fn unbounded() {
+        let unbounded = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+
+        assert_eq!(unbounded.interval_type_with_rel(), IntervalTypeWithRel::Unbounded);
+    }
+
+    #[test]
+    fn empty() {
+        let empty = EmptiableRelBoundPair::Empty;
+
+        assert_eq!(empty.interval_type_with_rel(), IntervalTypeWithRel::Empty);
+    }
 }
 
 mod ord {
@@ -688,8 +797,7 @@ mod ord {
 
     #[test]
     fn bound_bound_equal_start_inf_greater_end_inf() {
-        let bound_pair1 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair1 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
         let bound_pair2 = RelBoundPair::new(
             RelStartBound::InfinitePast,
             RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
@@ -706,18 +814,15 @@ mod ord {
             RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
         )
         .to_emptiable();
-        let bound_pair2 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair2 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
 
         assert_eq!(bound_pair1.cmp(&bound_pair2), Ordering::Equal);
     }
 
     #[test]
     fn bound_bound_equal_start_inf_equal_end_inf() {
-        let bound_pair1 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
-        let bound_pair2 =
-            RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair1 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
+        let bound_pair2 = RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture).to_emptiable();
 
         assert_eq!(bound_pair1.cmp(&bound_pair2), Ordering::Equal);
     }
@@ -796,8 +901,7 @@ fn from_opt_start_incl_opt_end_incl_opt() {
         RelBoundPair::new(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_start_bound(),
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
-                .to_end_bound()
+            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive).to_end_bound()
         )
         .to_emptiable()
     );

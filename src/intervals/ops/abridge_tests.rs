@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use jiff::{SignedDuration, Timestamp};
+use jiff::SignedDuration;
 
 use super::abridge::*;
 use crate::intervals::absolute::{
@@ -11,32 +9,33 @@ use crate::intervals::absolute::{
     BoundedAbsInterval,
     EmptiableAbsBoundPair,
     HalfBoundedAbsInterval,
-    HasAbsBoundPair,
-    HasEmptiableAbsBoundPair,
+    HalfBoundedToFutureAbsInterval,
+    HalfBoundedToPastAbsInterval,
 };
-use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::ops::test_data::{
-    BOUNDED_BOUNDED_ABS,
-    BOUNDED_BOUNDED_REL,
-    BOUNDED_HALF_BOUNDED_ABS,
-    BOUNDED_HALF_BOUNDED_REL,
-    HALF_BOUNDED_BOUNDED_ABS,
-    HALF_BOUNDED_BOUNDED_REL,
-    HALF_BOUNDED_HALF_BOUNDED_ABS,
-    HALF_BOUNDED_HALF_BOUNDED_REL,
-};
+use crate::intervals::meta::{BoundInclusivity, IntervalType, OpeningDirection};
 use crate::intervals::relative::{
     BoundedRelInterval,
     EmptiableRelBoundPair,
     HalfBoundedRelInterval,
-    HasEmptiableRelBoundPair,
-    HasRelBoundPair,
+    HalfBoundedToFutureRelInterval,
+    HalfBoundedToPastRelInterval,
     RelBoundPair,
     RelEndBound,
     RelFiniteBoundPos,
     RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
+use crate::test_data::interval_overlap::{
+    ABS_DATA,
+    ABS_EMPTY_EMPTY_DATA,
+    ABS_EMPTY_NONEMPTY_DATA,
+    ABS_NONEMPTY_EMPTY_DATA,
+    REL_DATA,
+    REL_EMPTY_EMPTY_DATA,
+    REL_EMPTY_NONEMPTY_DATA,
+    REL_NONEMPTY_EMPTY_DATA,
+};
+use crate::test_utils::date_timestamp;
 
 fn abs_assert(lhs: &AbsBoundPair, rhs: &EmptiableAbsBoundPair, expected: &EmptiableAbsBoundPair) {
     // Bound pair
@@ -115,169 +114,153 @@ mod absolute {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn outside_before() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?.abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn outside_after() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?.abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         mod ends_on_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
 
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -285,299 +268,282 @@ mod absolute {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn crosses_start() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?.abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn crosses_end() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?.abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         #[test]
-        fn inside() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn inside() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("inside")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?.abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         mod inside_and_same_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -585,123 +551,110 @@ mod absolute {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -709,531 +662,443 @@ mod absolute {
             use super::*;
 
             #[test]
-            fn start_inclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_inclusive_end_inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_inclusive_end_inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_inclusive_end_exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_inclusive_end_exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_exclusive_end_inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_exclusive_end_inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_exclusive_end_exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_inclusive_exclusive_end_exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_inclusive_end_inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_inclusive_end_inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_inclusive_end_exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_inclusive_end_exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_exclusive_end_inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_exclusive_end_inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_exclusive_end_exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn start_exclusive_exclusive_end_exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -1241,123 +1106,110 @@ mod absolute {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -1365,779 +1217,912 @@ mod absolute {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn contains() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn contains() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("contains")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?.abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
     }
 
-    mod bounded_half_bounded {
+    mod bounded_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
+        fn outside_before() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
                 .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         mod ends_on_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod starts_on_end {
-            use super::*;
-
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableAbsBoundPair::Empty;
-
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableAbsBoundPair::Empty;
-
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
+        fn crosses_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
                 .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+        fn inside() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("inside")
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
-        }
-
-        mod inside {
-            use super::*;
-
-            #[test]
-            fn to_future() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("inside_to_future")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn to_past() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("inside_to_past")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod inside_and_same_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
+        }
+    }
+
+    mod bounded_half_bounded_to_past {
+        use super::*;
+
+        #[test]
+        fn outside_after() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("outside_after")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod starts_on_end {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_incl_incl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_incl_excl")
+                    .unwrap();
+
+                let expected = EmptiableAbsBoundPair::Empty;
+
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_excl_incl")
+                    .unwrap();
+
+                let expected = EmptiableAbsBoundPair::Empty;
+
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_excl_excl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn crosses_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("crosses_end")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        #[test]
+        fn inside() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("inside")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod inside_and_same_end {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
     }
@@ -2146,23 +2131,24 @@ mod absolute {
         use super::*;
 
         #[test]
-        fn inside() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn inside() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Unbounded))
+                .unwrap()
+                .get("inside")
+                .unwrap();
 
             abs_assert(
-                &bounded.clone(),
-                &UnboundedInterval.emptiable_abs_bound_pair(),
-                &bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedAbsInterval::try_from(bounded.clone())?.abridge(&UnboundedInterval),
-                BoundedAbsInterval::try_from(bounded.clone())?
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedAbsInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
@@ -2170,1425 +2156,2048 @@ mod absolute {
         use super::*;
 
         #[test]
-        fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn outside() {
+            let data = ABS_NONEMPTY_EMPTY_DATA.get("bounded_outside").unwrap();
 
-            abs_assert(
-                &bounded.clone(),
-                &EmptiableAbsBoundPair::Empty,
-                &bounded.clone().to_emptiable(),
-            );
+            abs_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
             assert_eq!(
-                BoundedAbsInterval::try_from(bounded.clone())?.abridge(&EmptyInterval),
-                BoundedAbsInterval::try_from(bounded.clone())?
+                BoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedAbsInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod half_bounded_bounded {
+    mod half_bounded_to_future_bounded {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_ABS
-                .as_ref()?
-                .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn outside_after() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
                 .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-03 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod starts_on_end {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod ends_on_start {
-            use super::*;
-
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableAbsBoundPair::Empty;
-
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableAbsBoundPair::Empty;
-
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_ABS
-                .as_ref()?
-                .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_ABS
-                .as_ref()?
+        fn crosses_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod contains_and_same_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
 
-        mod contains_and_same_end {
-            use super::*;
+        #[test]
+        fn contains() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("contains")
+                .unwrap();
 
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("contains_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 3)).to_end_bound(),
+            );
 
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("contains_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("contains_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("contains_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new_with_incl(
-                        "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod contains {
-            use super::*;
-
-            #[test]
-            fn to_future() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("contains_to_future")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-03 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn to_past() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_ABS
-                    .as_ref()?
-                    .get("contains_to_past")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                );
-
-                abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedAbsInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
     }
 
-    mod half_bounded_half_bounded {
+    mod half_bounded_to_future_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
+        fn inside_and_same_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("inside_and_same_end")
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                AbsFiniteBoundPos::new_with_incl(
-                    "2026-01-02 00:00:00Z".parse::<Timestamp>()?,
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
-        mod ends_on_start {
+        mod equal {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_incl")
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsEndBound::InfiniteFuture,
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableAbsBoundPair::Empty;
-
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableAbsBoundPair::Empty;
-
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
-                    .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_excl")
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsEndBound::InfiniteFuture,
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_incl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsEndBound::InfiniteFuture,
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_excl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    AbsEndBound::InfiniteFuture,
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn contains_and_same_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("contains_and_same_end")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                AbsEndBound::InfiniteFuture,
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
+
+    mod half_bounded_to_future_half_bounded_to_past {
+        use super::*;
+
+        #[test]
+        fn outside_after() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("outside_after")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod starts_on_end {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableAbsBoundPair::Empty;
 
-                abs_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                    .as_ref()?
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = AbsBoundPair::new(
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                    AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
                 );
 
                 abs_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedAbsInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
+        fn crosses_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
 
-            Ok(())
+    mod half_bounded_to_future_unbounded {
+        use super::*;
+
+        #[test]
+        fn inside_and_same_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Unbounded,
+                ))
+                .unwrap()
+                .get("inside_and_same_end")
+                .unwrap();
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone()).unwrap()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.lhs().clone()).unwrap()
+            );
+        }
+    }
+
+    mod half_bounded_to_future_empty {
+        use super::*;
+
+        #[test]
+        fn outside() {
+            let data = ABS_NONEMPTY_EMPTY_DATA.get("half_bounded_to_future_outside").unwrap();
+
+            abs_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
+            assert_eq!(
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureAbsInterval::try_from(data.lhs().clone()).unwrap()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.lhs().clone()).unwrap()
+            );
+        }
+    }
+
+    mod half_bounded_to_past_bounded {
+        use super::*;
+
+        #[test]
+        fn outside_before() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("outside_before")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod ends_on_start {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_incl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_excl")
+                    .unwrap();
+
+                let expected = EmptiableAbsBoundPair::Empty;
+
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_incl")
+                    .unwrap();
+
+                let expected = EmptiableAbsBoundPair::Empty;
+
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_excl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
         }
 
         #[test]
-        fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
+        fn crosses_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("crosses_start")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod contains_and_same_end {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_incl_incl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_incl_excl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_excl_incl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_excl_excl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn contains() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("contains")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
+
+    mod half_bounded_to_past_half_bounded_to_future {
+        use super::*;
+
+        #[test]
+        fn outside_before() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("outside_before")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod ends_on_start {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_incl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_excl")
+                    .unwrap();
+
+                let expected = EmptiableAbsBoundPair::Empty;
+
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected);
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_incl")
+                    .unwrap();
+
+                let expected = EmptiableAbsBoundPair::Empty;
+
+                abs_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected);
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_excl")
+                    .unwrap();
+
+                let expected = AbsBoundPair::new(
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
+
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn crosses_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("crosses_start")
+                .unwrap();
+
+            let expected = AbsBoundPair::new(
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+            );
+
+            abs_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
+
+    mod half_bounded_to_past_half_bounded_to_past {
+        use super::*;
+
+        #[test]
+        fn inside_and_same_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("inside_and_same_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
                 AbsStartBound::InfinitePast,
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("inside_and_same_end")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsEndBound::InfiniteFuture,
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod equal {
             use super::*;
 
-            mod to_future {
-                use super::*;
+            #[test]
+            fn inclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_incl")
+                    .unwrap();
 
-                #[test]
-                fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_future_incl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
+                let expected = AbsBoundPair::new(
+                    AbsStartBound::InfinitePast,
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                );
 
-                    let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                        AbsEndBound::InfiniteFuture,
-                    );
-
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_future_incl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new_with_incl(
-                            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                            BoundInclusivity::Exclusive,
-                        )
-                        .to_start_bound(),
-                        AbsEndBound::InfiniteFuture,
-                    );
-
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_future_excl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new_with_incl(
-                            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                            BoundInclusivity::Exclusive,
-                        )
-                        .to_start_bound(),
-                        AbsEndBound::InfiniteFuture,
-                    );
-
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_future_excl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsFiniteBoundPos::new_with_incl(
-                            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                            BoundInclusivity::Exclusive,
-                        )
-                        .to_start_bound(),
-                        AbsEndBound::InfiniteFuture,
-                    );
-
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
-            mod to_past {
-                use super::*;
+            #[test]
+            fn inclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_excl")
+                    .unwrap();
 
-                #[test]
-                fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_past_incl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-                    );
-
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_past_incl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new_with_incl(
-                            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                            BoundInclusivity::Exclusive,
-                        )
+                let expected = AbsBoundPair::new(
+                    AbsStartBound::InfinitePast,
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
                         .to_end_bound(),
-                    );
+                );
 
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
 
-                    Ok(())
-                }
+            #[test]
+            fn exclusive_inclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_incl")
+                    .unwrap();
 
-                #[test]
-                fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_past_excl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new_with_incl(
-                            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                            BoundInclusivity::Exclusive,
-                        )
+                let expected = AbsBoundPair::new(
+                    AbsStartBound::InfinitePast,
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
                         .to_end_bound(),
-                    );
+                );
 
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
 
-                    Ok(())
-                }
+            #[test]
+            fn exclusive_exclusive() {
+                let data = ABS_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_excl")
+                    .unwrap();
 
-                #[test]
-                fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                        .as_ref()?
-                        .get("equal_to_past_excl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = AbsBoundPair::new(
-                        AbsStartBound::InfinitePast,
-                        AbsFiniteBoundPos::new_with_incl(
-                            "2026-01-01 00:00:00Z".parse::<Timestamp>()?,
-                            BoundInclusivity::Exclusive,
-                        )
+                let expected = AbsBoundPair::new(
+                    AbsStartBound::InfinitePast,
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
                         .to_end_bound(),
-                    );
+                );
 
-                    abs_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedAbsInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
+                abs_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
 
         #[test]
-        fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
+        fn contains_and_same_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("contains_and_same_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = AbsBoundPair::new(
                 AbsStartBound::InfinitePast,
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
             );
 
             abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_ABS
-                .as_ref()?
-                .get("contains_and_same_end")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsEndBound::InfiniteFuture,
-            );
-
-            abs_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedAbsInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
     }
 
-    mod half_bounded_unbounded {
+    mod half_bounded_to_past_unbounded {
         use super::*;
 
         #[test]
-        fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsStartBound::InfinitePast,
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn inside_and_same_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Unbounded,
+                ))
+                .unwrap()
+                .get("inside_and_same_start")
+                .unwrap();
 
             abs_assert(
-                &half_bounded.clone(),
-                &UnboundedInterval.emptiable_abs_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.abridge(&UnboundedInterval),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsEndBound::InfiniteFuture,
-            );
-
-            abs_assert(
-                &half_bounded.clone(),
-                &UnboundedInterval.emptiable_abs_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone()).unwrap()
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.abridge(&UnboundedInterval),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod half_bounded_empty {
+    mod half_bounded_to_past_empty {
         use super::*;
 
         #[test]
-        fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsEndBound::InfiniteFuture,
-            );
+        fn outside() {
+            let data = ABS_NONEMPTY_EMPTY_DATA.get("half_bounded_to_past_outside").unwrap();
 
-            abs_assert(
-                &half_bounded.clone(),
-                &EmptiableAbsBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
+            abs_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
+            assert_eq!(
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastAbsInterval::try_from(data.lhs().clone()).unwrap()
             );
             assert_eq!(
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.abridge(&EmptyInterval),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
+                HalfBoundedAbsInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsStartBound::InfinitePast,
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
-
-            abs_assert(
-                &half_bounded.clone(),
-                &EmptiableAbsBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?.abridge(&EmptyInterval),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
-            );
-
-            Ok(())
         }
     }
 
@@ -3596,67 +4205,92 @@ mod absolute {
         use super::*;
 
         #[test]
-        fn contains() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn contains() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Unbounded, IntervalType::Bounded))
+                .unwrap()
+                .get("contains")
+                .unwrap();
 
             abs_assert(
-                &UnboundedInterval.abs_bound_pair(),
-                &bounded.clone().to_emptiable(),
-                &bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.abridge(&BoundedAbsInterval::try_from(bounded.clone())?),
-                BoundedAbsInterval::try_from(bounded.clone())?
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod unbounded_half_bounded {
+    mod unbounded_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsStartBound::InfinitePast,
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn contains_and_same_end() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Unbounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("contains_and_same_end")
+                .unwrap();
 
             abs_assert(
-                &UnboundedInterval.abs_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.abridge(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
+    }
+
+    mod unbounded_half_bounded_to_past {
+        use super::*;
 
         #[test]
-        fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsEndBound::InfiniteFuture,
-            );
+        fn contains_and_same_start() {
+            let data = ABS_DATA
+                .get(&(
+                    IntervalType::Unbounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("contains_and_same_start")
+                .unwrap();
 
             abs_assert(
-                &UnboundedInterval.abs_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.abridge(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
     }
 
@@ -3665,12 +4299,23 @@ mod absolute {
 
         #[test]
         fn equal() {
+            let data = ABS_DATA
+                .get(&(IntervalType::Unbounded, IntervalType::Unbounded))
+                .unwrap()
+                .get("equal")
+                .unwrap();
+
             abs_assert(
-                &UnboundedInterval.abs_bound_pair(),
-                &UnboundedInterval.emptiable_abs_bound_pair(),
-                &UnboundedInterval.emptiable_abs_bound_pair(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
             );
-            assert_eq!(UnboundedInterval.abridge(&UnboundedInterval), UnboundedInterval);
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                UnboundedInterval::try_from(data.lhs().clone()).unwrap()
+            );
         }
     }
 
@@ -3679,12 +4324,15 @@ mod absolute {
 
         #[test]
         fn outside() {
-            abs_assert(
-                &UnboundedInterval.abs_bound_pair(),
-                &EmptiableAbsBoundPair::Empty,
-                &UnboundedInterval.emptiable_abs_bound_pair(),
+            let data = ABS_NONEMPTY_EMPTY_DATA.get("unbounded_outside").unwrap();
+
+            abs_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                UnboundedInterval::try_from(data.lhs().clone()).unwrap()
             );
-            assert_eq!(UnboundedInterval.abridge(&EmptyInterval), UnboundedInterval);
         }
     }
 
@@ -3692,67 +4340,74 @@ mod absolute {
         use super::*;
 
         #[test]
-        fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsFiniteBoundPos::new("2026-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn outside() {
+            let data = ABS_EMPTY_NONEMPTY_DATA.get("bounded_outside").unwrap();
 
             abs_assert_empty(
-                &EmptiableAbsBoundPair::Empty,
-                &bounded.clone().to_emptiable(),
-                &bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.abridge(&BoundedAbsInterval::try_from(bounded.clone())?),
-                BoundedAbsInterval::try_from(bounded.clone())?
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedAbsInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod empty_half_bounded {
+    mod empty_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-                AbsEndBound::InfiniteFuture,
-            );
+        fn outside() {
+            let data = ABS_EMPTY_NONEMPTY_DATA.get("half_bounded_to_future_outside").unwrap();
 
             abs_assert_empty(
-                &EmptiableAbsBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.abridge(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureAbsInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
+    }
+
+    mod empty_half_bounded_to_past {
+        use super::*;
 
         #[test]
-        fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = AbsBoundPair::new(
-                AbsStartBound::InfinitePast,
-                AbsFiniteBoundPos::new("2026-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-            );
+        fn outside_to_past() {
+            let data = ABS_EMPTY_NONEMPTY_DATA.get("half_bounded_to_past_outside").unwrap();
 
             abs_assert_empty(
-                &EmptiableAbsBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.abridge(&HalfBoundedAbsInterval::try_from(half_bounded.clone())?),
-                HalfBoundedAbsInterval::try_from(half_bounded.clone())?
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastAbsInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedAbsInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
     }
 
@@ -3761,12 +4416,19 @@ mod absolute {
 
         #[test]
         fn outside() {
+            let data = ABS_EMPTY_NONEMPTY_DATA.get("unbounded_outside").unwrap();
+
             abs_assert_empty(
-                &EmptiableAbsBoundPair::Empty,
-                &UnboundedInterval.emptiable_abs_bound_pair(),
-                &UnboundedInterval.emptiable_abs_bound_pair(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
-            assert_eq!(EmptyInterval.abridge(&UnboundedInterval), UnboundedInterval);
+            assert_eq!(
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                UnboundedInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
     }
 
@@ -3776,11 +4438,16 @@ mod absolute {
         #[test]
         fn outside() {
             abs_assert_empty(
-                &EmptiableAbsBoundPair::Empty,
-                &EmptiableAbsBoundPair::Empty,
-                &EmptiableAbsBoundPair::Empty,
+                ABS_EMPTY_EMPTY_DATA.lhs(),
+                ABS_EMPTY_EMPTY_DATA.rhs(),
+                &ABS_EMPTY_EMPTY_DATA.lhs().clone(),
             );
-            assert_eq!(EmptyInterval.abridge(&EmptyInterval), EmptyInterval);
+            assert_eq!(
+                EmptyInterval::try_from(ABS_EMPTY_EMPTY_DATA.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(ABS_EMPTY_EMPTY_DATA.rhs().clone()).unwrap()),
+                EmptyInterval::try_from(ABS_EMPTY_EMPTY_DATA.lhs().clone()).unwrap()
+            );
         }
     }
 }
@@ -3792,80 +4459,71 @@ mod relative {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_REL
+        fn outside_before() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(3),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?.abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_REL
+        fn outside_after() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(3),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?.abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         mod ends_on_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -3873,64 +4531,64 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
 
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -3938,17 +4596,16 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -3956,11 +4613,12 @@ mod relative {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -3968,63 +4626,63 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(&data.lhs().clone(), &data.rhs().clone().to_emptiable(), &expected);
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -4032,26 +4690,26 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_REL
+        fn crosses_start() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -4059,24 +4717,25 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?.abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_REL
+        fn crosses_end() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -4084,21 +4743,25 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?.abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         #[test]
-        fn inside() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_REL.get("inside").cloned().ok_or("data not found")?;
+        fn inside() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
+                .get("inside")
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -4106,27 +4769,28 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?.abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         mod inside_and_same_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -4134,107 +4798,97 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -4242,11 +4896,12 @@ mod relative {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -4254,107 +4909,97 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(3),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(3),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("inside_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(3),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -4362,11 +5007,12 @@ mod relative {
             use super::*;
 
             #[test]
-            fn start_inclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_inclusive_end_inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -4374,503 +5020,430 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_inclusive_end_inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_inclusive_end_exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_inclusive_end_exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_incl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_exclusive_end_inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_exclusive_end_inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_exclusive_end_exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_inclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_inclusive_exclusive_end_exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_incl_excl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_inclusive_end_inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_inclusive_end_inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_inclusive_end_exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_inclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_inclusive_end_exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_incl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_exclusive_end_inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_exclusive_end_inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_exclusive_end_exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn start_exclusive_exclusive_end_exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn start_exclusive_exclusive_end_exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("equal_start_excl_excl_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -4878,11 +5451,12 @@ mod relative {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -4890,107 +5464,97 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
@@ -4998,11 +5562,12 @@ mod relative {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5010,113 +5575,107 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(3),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(3),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                    .unwrap()
                     .get("contains_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(3),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    &data.lhs().clone(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn contains() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_BOUNDED_REL.get("contains").cloned().ok_or("data not found")?;
+        fn contains() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Bounded))
+                .unwrap()
+                .get("contains")
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5124,99 +5683,72 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                &data.lhs().clone(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?.abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
     }
 
-    mod bounded_half_bounded {
+    mod bounded_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_REL
+        fn outside_before() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
                 .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(3),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_REL
-                .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
         }
 
         mod ends_on_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5224,63 +5756,90 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
                     .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5288,120 +5847,35 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod starts_on_end {
-            use super::*;
-
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableRelBoundPair::Empty;
-
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableRelBoundPair::Empty;
-
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_REL
+        fn crosses_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
                 .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5409,25 +5883,387 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = BOUNDED_HALF_BOUNDED_REL
+        fn inside() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("inside")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod inside_and_same_start {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("inside_and_same_start_incl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("inside_and_same_start_incl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("inside_and_same_start_excl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("inside_and_same_start_excl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+    }
+
+    mod bounded_half_bounded_to_past {
+        use super::*;
+
+        #[test]
+        fn outside_after() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("outside_after")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod starts_on_end {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_incl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_incl_excl")
+                    .unwrap();
+
+                let expected = EmptiableRelBoundPair::Empty;
+
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_excl_incl")
+                    .unwrap();
+
+                let expected = EmptiableRelBoundPair::Empty;
+
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("starts_on_end_excl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn crosses_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -5435,204 +6271,72 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
-        mod inside {
-            use super::*;
+        #[test]
+        fn inside() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Bounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("inside")
+                .unwrap();
 
-            #[test]
-            fn to_future() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("inside_to_future")
-                    .cloned()
-                    .ok_or("data not found")?;
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+            );
 
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn to_past() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("inside_to_past")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod inside_and_same_start {
-            use super::*;
-
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("inside_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("inside_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("inside_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
-                    .get("inside_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod inside_and_same_end {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -5640,107 +6344,130 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = BOUNDED_HALF_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::Bounded,
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("inside_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    BoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    BoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
     }
@@ -5749,23 +6476,24 @@ mod relative {
         use super::*;
 
         #[test]
-        fn inside() -> Result<(), Box<dyn Error>> {
-            let bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-            );
+        fn inside() {
+            let data = REL_DATA
+                .get(&(IntervalType::Bounded, IntervalType::Unbounded))
+                .unwrap()
+                .get("inside")
+                .unwrap();
 
             rel_assert(
-                &bounded.clone(),
-                &UnboundedInterval.emptiable_rel_bound_pair(),
-                &bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
             );
             assert_eq!(
-                BoundedRelInterval::try_from(bounded.clone())?.abridge(&UnboundedInterval),
-                BoundedRelInterval::try_from(bounded.clone())?
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedRelInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
@@ -5773,106 +6501,72 @@ mod relative {
         use super::*;
 
         #[test]
-        fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-            );
+        fn outside() {
+            let data = REL_NONEMPTY_EMPTY_DATA.get("bounded_outside").unwrap();
 
-            rel_assert(
-                &bounded.clone(),
-                &EmptiableRelBoundPair::Empty,
-                &bounded.clone().to_emptiable(),
-            );
+            rel_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
             assert_eq!(
-                BoundedRelInterval::try_from(bounded.clone())?.abridge(&EmptyInterval),
-                BoundedRelInterval::try_from(bounded.clone())?
+                BoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedRelInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod half_bounded_bounded {
+    mod half_bounded_to_future_bounded {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_REL
-                .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_REL
+        fn outside_after() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
                 .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(3),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(3), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod starts_on_end {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5880,63 +6574,90 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -5944,146 +6665,35 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod ends_on_start {
-            use super::*;
-
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableRelBoundPair::Empty;
-
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableRelBoundPair::Empty;
-
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_REL
-                .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_BOUNDED_REL
+        fn crosses_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
@@ -6091,28 +6701,37 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod contains_and_same_start {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -6120,461 +6739,527 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
                     .get("contains_and_same_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(1),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
                     RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
 
-        mod contains_and_same_end {
-            use super::*;
+        #[test]
+        fn contains() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("contains")
+                .unwrap();
 
-            #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("contains_and_same_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
+            );
 
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("contains_and_same_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("contains_and_same_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("contains_and_same_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new_with_incl(
-                        SignedDuration::from_hours(2),
-                        BoundInclusivity::Exclusive,
-                    )
-                    .to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-        }
-
-        mod contains {
-            use super::*;
-
-            #[test]
-            fn to_future() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("contains_to_future")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
-
-            #[test]
-            fn to_past() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_BOUNDED_REL
-                    .get("contains_to_past")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-                );
-
-                rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
-                    &expected.clone().to_emptiable(),
-                );
-                assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&BoundedRelInterval::try_from(data.1.clone())?),
-                    expected.clone().to_emptiable_interval()
-                );
-
-                Ok(())
-            }
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
     }
 
-    mod half_bounded_half_bounded {
+    mod half_bounded_to_future_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn outside_before() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                .get("outside_before")
-                .cloned()
-                .ok_or("data not found")?;
+        fn inside_and_same_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("inside_and_same_end")
+                .unwrap();
 
             let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_after() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                .get("outside_after")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_start_bound(),
-                RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(2),
-                    BoundInclusivity::Exclusive,
-                )
-                .to_end_bound(),
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
-        mod ends_on_start {
+        mod equal {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                    .get("ends_on_start_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_incl")
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelEndBound::InfiniteFuture,
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                    .get("ends_on_start_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableRelBoundPair::Empty;
-
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
-            }
-
-            #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                    .get("ends_on_start_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
-
-                let expected = EmptiableRelBoundPair::Empty;
-
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                    .get("ends_on_start_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_excl")
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelEndBound::InfiniteFuture,
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelEndBound::InfiniteFuture,
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                        .to_start_bound(),
+                    RelEndBound::InfiniteFuture,
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn contains_and_same_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("contains_and_same_end")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
+                RelEndBound::InfiniteFuture,
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
+
+    mod half_bounded_to_future_half_bounded_to_past {
+        use super::*;
+
+        #[test]
+        fn outside_after() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("outside_after")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod starts_on_end {
             use super::*;
 
             #[test]
-            fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -6582,63 +7267,126 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_incl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_incl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = EmptiableRelBoundPair::Empty;
 
-                rel_assert(&data.0.clone(), &data.1.clone().to_emptiable(), &expected.clone());
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
             #[test]
-            fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                let data = HALF_BOUNDED_HALF_BOUNDED_REL
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
                     .get("starts_on_end_excl_excl")
-                    .cloned()
-                    .ok_or("data not found")?;
+                    .unwrap();
 
                 let expected = RelBoundPair::new(
                     RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -6646,52 +7394,47 @@ mod relative {
                 );
 
                 rel_assert(
-                    &data.0.clone(),
-                    &data.1.clone().to_emptiable(),
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
                     &expected.clone().to_emptiable(),
                 );
                 assert_eq!(
-                    HalfBoundedRelInterval::try_from(data.0.clone())?
-                        .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                     expected.clone().to_emptiable_interval()
                 );
-
-                Ok(())
+                assert_eq!(
+                    HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
 
         #[test]
-        fn crosses_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                .get("crosses_start")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn crosses_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
+        fn crosses_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("crosses_end")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
@@ -6699,25 +7442,773 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
 
-            Ok(())
+    mod half_bounded_to_future_unbounded {
+        use super::*;
+
+        #[test]
+        fn inside_and_same_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    IntervalType::Unbounded,
+                ))
+                .unwrap()
+                .get("inside_and_same_end")
+                .unwrap();
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone()).unwrap()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.lhs().clone()).unwrap()
+            );
+        }
+    }
+
+    mod half_bounded_to_future_empty {
+        use super::*;
+
+        #[test]
+        fn outside() {
+            let data = REL_NONEMPTY_EMPTY_DATA.get("half_bounded_to_future_outside").unwrap();
+
+            rel_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
+            assert_eq!(
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureRelInterval::try_from(data.lhs().clone()).unwrap()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.lhs().clone()).unwrap()
+            );
+        }
+    }
+
+    mod half_bounded_to_past_bounded {
+        use super::*;
+
+        #[test]
+        fn outside_before() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("outside_before")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod ends_on_start {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_excl")
+                    .unwrap();
+
+                let expected = EmptiableRelBoundPair::Empty;
+
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_incl")
+                    .unwrap();
+
+                let expected = EmptiableRelBoundPair::Empty;
+
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected.clone());
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
         }
 
         #[test]
-        fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
+        fn crosses_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("crosses_start")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod contains_and_same_end {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_incl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_incl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_excl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::Bounded,
+                    ))
+                    .unwrap()
+                    .get("contains_and_same_end_excl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                        .to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn contains() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Bounded,
+                ))
+                .unwrap()
+                .get("contains")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
+
+    mod half_bounded_to_past_half_bounded_to_future {
+        use super::*;
+
+        #[test]
+        fn outside_before() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("outside_before")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+                    .to_start_bound(),
+                RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+                    .to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+
+        mod ends_on_start {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_incl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_incl_excl")
+                    .unwrap();
+
+                let expected = EmptiableRelBoundPair::Empty;
+
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected);
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_incl")
+                    .unwrap();
+
+                let expected = EmptiableRelBoundPair::Empty;
+
+                rel_assert(data.lhs(), &data.rhs().clone().to_emptiable(), &expected);
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                    ))
+                    .unwrap()
+                    .get("ends_on_start_excl_excl")
+                    .unwrap();
+
+                let expected = RelBoundPair::new(
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
+
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
+        }
+
+        #[test]
+        fn crosses_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("crosses_start")
+                .unwrap();
+
+            let expected = RelBoundPair::new(
+                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
+                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
+            );
+
+            rel_assert(
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &expected.clone().to_emptiable(),
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+        }
+    }
+
+    mod half_bounded_to_past_half_bounded_to_past {
+        use super::*;
+
+        #[test]
+        fn inside_and_same_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("inside_and_same_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelStartBound::InfinitePast,
@@ -6725,295 +8216,241 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                .get("inside_and_same_end")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelEndBound::InfiniteFuture,
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
 
         mod equal {
             use super::*;
 
-            mod to_future {
-                use super::*;
+            #[test]
+            fn inclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_incl")
+                    .unwrap();
 
-                #[test]
-                fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_future_incl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
+                let expected = RelBoundPair::new(
+                    RelStartBound::InfinitePast,
+                    RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
+                );
 
-                    let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                        RelEndBound::InfiniteFuture,
-                    );
-
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_future_incl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new_with_incl(
-                            SignedDuration::from_hours(1),
-                            BoundInclusivity::Exclusive,
-                        )
-                        .to_start_bound(),
-                        RelEndBound::InfiniteFuture,
-                    );
-
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_future_excl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new_with_incl(
-                            SignedDuration::from_hours(1),
-                            BoundInclusivity::Exclusive,
-                        )
-                        .to_start_bound(),
-                        RelEndBound::InfiniteFuture,
-                    );
-
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_future_excl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelFiniteBoundPos::new_with_incl(
-                            SignedDuration::from_hours(1),
-                            BoundInclusivity::Exclusive,
-                        )
-                        .to_start_bound(),
-                        RelEndBound::InfiniteFuture,
-                    );
-
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
 
-            mod to_past {
-                use super::*;
+            #[test]
+            fn inclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_incl_excl")
+                    .unwrap();
 
-                #[test]
-                fn inclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_past_incl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-                    );
-
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
-
-                #[test]
-                fn inclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_past_incl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new_with_incl(
-                            SignedDuration::from_hours(1),
-                            BoundInclusivity::Exclusive,
-                        )
+                let expected = RelBoundPair::new(
+                    RelStartBound::InfinitePast,
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                         .to_end_bound(),
-                    );
+                );
 
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
 
-                    Ok(())
-                }
+            #[test]
+            fn exclusive_inclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_incl")
+                    .unwrap();
 
-                #[test]
-                fn exclusive_inclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_past_excl_incl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new_with_incl(
-                            SignedDuration::from_hours(1),
-                            BoundInclusivity::Exclusive,
-                        )
+                let expected = RelBoundPair::new(
+                    RelStartBound::InfinitePast,
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                         .to_end_bound(),
-                    );
+                );
 
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+            }
 
-                    Ok(())
-                }
+            #[test]
+            fn exclusive_exclusive() {
+                let data = REL_DATA
+                    .get(&(
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                        IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    ))
+                    .unwrap()
+                    .get("equal_excl_excl")
+                    .unwrap();
 
-                #[test]
-                fn exclusive_exclusive() -> Result<(), Box<dyn Error>> {
-                    let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                        .get("equal_to_past_excl_excl")
-                        .cloned()
-                        .ok_or("data not found")?;
-
-                    let expected = RelBoundPair::new(
-                        RelStartBound::InfinitePast,
-                        RelFiniteBoundPos::new_with_incl(
-                            SignedDuration::from_hours(1),
-                            BoundInclusivity::Exclusive,
-                        )
+                let expected = RelBoundPair::new(
+                    RelStartBound::InfinitePast,
+                    RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                         .to_end_bound(),
-                    );
+                );
 
-                    rel_assert(
-                        &data.0.clone(),
-                        &data.1.clone().to_emptiable(),
-                        &expected.clone().to_emptiable(),
-                    );
-                    assert_eq!(
-                        HalfBoundedRelInterval::try_from(data.0.clone())?
-                            .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
-                        expected.clone().to_emptiable_interval()
-                    );
-
-                    Ok(())
-                }
+                rel_assert(
+                    data.lhs(),
+                    &data.rhs().clone().to_emptiable(),
+                    &expected.clone().to_emptiable(),
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
+                assert_eq!(
+                    HalfBoundedRelInterval::try_from(data.lhs().clone())
+                        .unwrap()
+                        .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                    expected.clone().to_emptiable_interval()
+                );
             }
         }
 
         #[test]
-        fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
+        fn contains_and_same_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
                 .get("contains_and_same_start")
-                .cloned()
-                .ok_or("data not found")?;
+                .unwrap();
 
             let expected = RelBoundPair::new(
                 RelStartBound::InfinitePast,
@@ -7021,131 +8458,91 @@ mod relative {
             );
 
             rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
                 &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
-            let data = HALF_BOUNDED_HALF_BOUNDED_REL
-                .get("contains_and_same_end")
-                .cloned()
-                .ok_or("data not found")?;
-
-            let expected = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_start_bound(),
-                RelEndBound::InfiniteFuture,
-            );
-
-            rel_assert(
-                &data.0.clone(),
-                &data.1.clone().to_emptiable(),
-                &expected.clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(data.0.clone())?
-                    .abridge(&HalfBoundedRelInterval::try_from(data.1.clone())?),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
                 expected.clone().to_emptiable_interval()
             );
-
-            Ok(())
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
+            assert_eq!(
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                expected.clone().to_emptiable_interval()
+            );
         }
     }
 
-    mod half_bounded_unbounded {
+    mod half_bounded_to_past_unbounded {
         use super::*;
 
         #[test]
-        fn inside_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelStartBound::InfinitePast,
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-            );
+        fn inside_and_same_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                    IntervalType::Unbounded,
+                ))
+                .unwrap()
+                .get("inside_and_same_start")
+                .unwrap();
 
             rel_assert(
-                &half_bounded.clone(),
-                &UnboundedInterval.emptiable_rel_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?.abridge(&UnboundedInterval),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn inside_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelEndBound::InfiniteFuture,
-            );
-
-            rel_assert(
-                &half_bounded.clone(),
-                &UnboundedInterval.emptiable_rel_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone()).unwrap()
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?.abridge(&UnboundedInterval),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod half_bounded_empty {
+    mod half_bounded_to_past_empty {
         use super::*;
 
         #[test]
-        fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelEndBound::InfiniteFuture,
-            );
+        fn outside() {
+            let data = REL_NONEMPTY_EMPTY_DATA.get("half_bounded_to_past_outside").unwrap();
 
-            rel_assert(
-                &half_bounded.clone(),
-                &EmptiableRelBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
+            rel_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
+            assert_eq!(
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastRelInterval::try_from(data.lhs().clone()).unwrap()
             );
             assert_eq!(
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?.abridge(&EmptyInterval),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
+                HalfBoundedRelInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.lhs().clone()).unwrap()
             );
-
-            Ok(())
-        }
-
-        #[test]
-        fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelStartBound::InfinitePast,
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-            );
-
-            rel_assert(
-                &half_bounded.clone(),
-                &EmptiableRelBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
-            );
-            assert_eq!(
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?.abridge(&EmptyInterval),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
-            );
-
-            Ok(())
         }
     }
 
@@ -7153,67 +8550,92 @@ mod relative {
         use super::*;
 
         #[test]
-        fn contains() -> Result<(), Box<dyn Error>> {
-            let bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-            );
+        fn contains() {
+            let data = REL_DATA
+                .get(&(IntervalType::Unbounded, IntervalType::Bounded))
+                .unwrap()
+                .get("contains")
+                .unwrap();
 
             rel_assert(
-                &UnboundedInterval.rel_bound_pair(),
-                &bounded.clone().to_emptiable(),
-                &bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.abridge(&BoundedRelInterval::try_from(bounded.clone())?),
-                BoundedRelInterval::try_from(bounded.clone())?
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedRelInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod unbounded_half_bounded {
+    mod unbounded_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn contains_and_same_start() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelStartBound::InfinitePast,
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-            );
+        fn contains_and_same_end() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Unbounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToFuture),
+                ))
+                .unwrap()
+                .get("contains_and_same_end")
+                .unwrap();
 
             rel_assert(
-                &UnboundedInterval.rel_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.abridge(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
+    }
+
+    mod unbounded_half_bounded_to_past {
+        use super::*;
 
         #[test]
-        fn contains_and_same_end() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelEndBound::InfiniteFuture,
-            );
+        fn contains_and_same_start() {
+            let data = REL_DATA
+                .get(&(
+                    IntervalType::Unbounded,
+                    IntervalType::HalfBounded(OpeningDirection::ToPast),
+                ))
+                .unwrap()
+                .get("contains_and_same_start")
+                .unwrap();
 
             rel_assert(
-                &UnboundedInterval.rel_bound_pair(),
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                UnboundedInterval.abridge(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
     }
 
@@ -7222,10 +8644,22 @@ mod relative {
 
         #[test]
         fn equal() {
+            let data = REL_DATA
+                .get(&(IntervalType::Unbounded, IntervalType::Unbounded))
+                .unwrap()
+                .get("equal")
+                .unwrap();
+
             rel_assert(
-                &UnboundedInterval.rel_bound_pair(),
-                &UnboundedInterval.emptiable_rel_bound_pair(),
-                &UnboundedInterval.emptiable_rel_bound_pair(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.lhs().clone().to_emptiable(),
+            );
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                UnboundedInterval::try_from(data.lhs().clone()).unwrap()
             );
         }
     }
@@ -7235,10 +8669,14 @@ mod relative {
 
         #[test]
         fn outside() {
-            rel_assert(
-                &UnboundedInterval.rel_bound_pair(),
-                &EmptiableRelBoundPair::Empty,
-                &UnboundedInterval.emptiable_rel_bound_pair(),
+            let data = REL_NONEMPTY_EMPTY_DATA.get("unbounded_outside").unwrap();
+
+            rel_assert(data.lhs(), data.rhs(), &data.lhs().clone().to_emptiable());
+            assert_eq!(
+                UnboundedInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(data.rhs().clone()).unwrap()),
+                UnboundedInterval::try_from(data.lhs().clone()).unwrap()
             );
         }
     }
@@ -7247,67 +8685,74 @@ mod relative {
         use super::*;
 
         #[test]
-        fn outside() -> Result<(), Box<dyn Error>> {
-            let bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_end_bound(),
-            );
+        fn outside() {
+            let data = REL_EMPTY_NONEMPTY_DATA.get("bounded_outside").unwrap();
 
             rel_assert_empty(
-                &EmptiableRelBoundPair::Empty,
-                &bounded.clone().to_emptiable(),
-                &bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.abridge(&BoundedRelInterval::try_from(bounded.clone())?),
-                BoundedRelInterval::try_from(bounded.clone())?
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&BoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                BoundedRelInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
         }
     }
 
-    mod empty_half_bounded {
+    mod empty_half_bounded_to_future {
         use super::*;
 
         #[test]
-        fn outside_to_future() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_start_bound(),
-                RelEndBound::InfiniteFuture,
-            );
+        fn outside() {
+            let data = REL_EMPTY_NONEMPTY_DATA.get("half_bounded_to_future_outside").unwrap();
 
             rel_assert_empty(
-                &EmptiableRelBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.abridge(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToFutureRelInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
+    }
+
+    mod empty_half_bounded_to_past {
+        use super::*;
 
         #[test]
-        fn outside_to_past() -> Result<(), Box<dyn Error>> {
-            let half_bounded = RelBoundPair::new(
-                RelStartBound::InfinitePast,
-                RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_end_bound(),
-            );
+        fn outside_to_past() {
+            let data = REL_EMPTY_NONEMPTY_DATA.get("half_bounded_to_past_outside").unwrap();
 
             rel_assert_empty(
-                &EmptiableRelBoundPair::Empty,
-                &half_bounded.clone().to_emptiable(),
-                &half_bounded.clone().to_emptiable(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
             );
             assert_eq!(
-                EmptyInterval.abridge(&HalfBoundedRelInterval::try_from(half_bounded.clone())?),
-                HalfBoundedRelInterval::try_from(half_bounded.clone())?
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedToPastRelInterval::try_from(data.rhs().clone()).unwrap()
             );
-
-            Ok(())
+            assert_eq!(
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()),
+                HalfBoundedRelInterval::try_from(data.rhs().clone()).unwrap()
+            );
         }
     }
 
@@ -7316,10 +8761,18 @@ mod relative {
 
         #[test]
         fn outside() {
+            let data = REL_EMPTY_NONEMPTY_DATA.get("unbounded_outside").unwrap();
+
             rel_assert_empty(
-                &EmptiableRelBoundPair::Empty,
-                &UnboundedInterval.emptiable_rel_bound_pair(),
-                &UnboundedInterval.emptiable_rel_bound_pair(),
+                data.lhs(),
+                &data.rhs().clone().to_emptiable(),
+                &data.rhs().clone().to_emptiable(),
+            );
+            assert_eq!(
+                EmptyInterval::try_from(data.lhs().clone())
+                    .unwrap()
+                    .abridge(&UnboundedInterval::try_from(data.rhs().clone()).unwrap()),
+                UnboundedInterval::try_from(data.rhs().clone()).unwrap()
             );
         }
     }
@@ -7330,9 +8783,15 @@ mod relative {
         #[test]
         fn outside() {
             rel_assert_empty(
-                &EmptiableRelBoundPair::Empty,
-                &EmptiableRelBoundPair::Empty,
-                &EmptiableRelBoundPair::Empty,
+                REL_EMPTY_EMPTY_DATA.lhs(),
+                REL_EMPTY_EMPTY_DATA.rhs(),
+                &REL_EMPTY_EMPTY_DATA.lhs().clone(),
+            );
+            assert_eq!(
+                EmptyInterval::try_from(REL_EMPTY_EMPTY_DATA.lhs().clone())
+                    .unwrap()
+                    .abridge(&EmptyInterval::try_from(REL_EMPTY_EMPTY_DATA.rhs().clone()).unwrap()),
+                EmptyInterval::try_from(REL_EMPTY_EMPTY_DATA.lhs().clone()).unwrap()
             );
         }
     }

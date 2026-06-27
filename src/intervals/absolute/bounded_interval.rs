@@ -42,9 +42,11 @@ use crate::intervals::meta::{
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     Openness,
     Relativity,
@@ -1356,7 +1358,7 @@ impl HasOpenness for BoundedAbsInterval {
 
 impl HasRelativity for BoundedAbsInterval {
     fn relativity(&self) -> Relativity {
-        Relativity::Abs
+        Relativity::Absolute
     }
 }
 
@@ -1390,6 +1392,12 @@ impl HasAbsBoundPair for BoundedAbsInterval {
 impl IsEmpty for BoundedAbsInterval {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for BoundedAbsInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        IntervalTypeWithRel::AbsBounded
     }
 }
 

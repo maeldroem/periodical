@@ -1,328 +1,552 @@
-use std::error::Error;
-
-use jiff::Timestamp;
-
 use super::absolute::*;
 use crate::intervals::meta::BoundInclusivity;
+use crate::test_utils::date_timestamp;
 
-#[test]
-fn absolute_start_bound_inf_absolute_end_bound_inf_swap() {
-    let mut start = AbsStartBound::InfinitePast;
-    let mut end = AbsEndBound::InfiniteFuture;
+mod swap_abs_finite_start_end_bounds {
+    use super::*;
 
-    swap_abs_start_end_bounds(&mut start, &mut end);
+    #[test]
+    fn ok() {
+        let mut start = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+            .to_finite_start_bound();
+        let mut end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Inclusive)
+            .to_finite_end_bound();
 
-    assert_eq!(start, AbsStartBound::InfinitePast);
-    assert_eq!(end, AbsEndBound::InfiniteFuture);
+        swap_abs_finite_start_end_bounds(&mut start, &mut end);
+
+        assert_eq!(
+            start,
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Inclusive)
+                .to_finite_start_bound()
+        );
+        assert_eq!(
+            end,
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                .to_finite_end_bound()
+        );
+    }
 }
 
-#[test]
-fn absolute_start_bound_inf_absolute_end_bound_finite_swap() -> Result<(), Box<dyn Error>> {
-    let mut start = AbsStartBound::InfinitePast;
-    let mut end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_end_bound();
+mod swap_abs_start_end_bounds {
+    use super::*;
 
-    swap_abs_start_end_bounds(&mut start, &mut end);
+    #[test]
+    fn finite_finite() {
+        let mut start =
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive).to_start_bound();
+        let mut end =
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Inclusive).to_end_bound();
 
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_start_bound()
-    );
-    assert_eq!(end, AbsEndBound::InfiniteFuture);
+        swap_abs_start_end_bounds(&mut start, &mut end);
 
-    Ok(())
+        assert_eq!(
+            start,
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 2), BoundInclusivity::Inclusive).to_start_bound()
+        );
+        assert_eq!(
+            end,
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive).to_end_bound()
+        );
+    }
+
+    #[test]
+    fn finite_infinite() {
+        let mut start =
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive).to_start_bound();
+        let mut end = AbsEndBound::InfiniteFuture;
+
+        swap_abs_start_end_bounds(&mut start, &mut end);
+
+        assert_eq!(start, AbsStartBound::InfinitePast);
+        assert_eq!(
+            end,
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive).to_end_bound()
+        );
+    }
+
+    #[test]
+    fn infinite_finite() {
+        let mut start = AbsStartBound::InfinitePast;
+        let mut end =
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive).to_end_bound();
+
+        swap_abs_start_end_bounds(&mut start, &mut end);
+
+        assert_eq!(
+            start,
+            AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive).to_start_bound()
+        );
+        assert_eq!(end, AbsEndBound::InfiniteFuture);
+    }
+
+    #[test]
+    fn infinite_infinite() {
+        let mut start = AbsStartBound::InfinitePast;
+        let mut end = AbsEndBound::InfiniteFuture;
+
+        swap_abs_start_end_bounds(&mut start, &mut end);
+
+        assert_eq!(start, AbsStartBound::InfinitePast);
+        assert_eq!(end, AbsEndBound::InfiniteFuture);
+    }
 }
 
-#[test]
-fn absolute_start_bound_finite_absolute_end_bound_inf_swap() -> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_start_bound();
-    let mut end = AbsEndBound::InfiniteFuture;
+mod check_abs_finite_start_end_bounds_for_interval_creation {
+    use super::*;
 
-    swap_abs_start_end_bounds(&mut start, &mut end);
+    #[test]
+    fn ok() {
+        assert_eq!(
+            check_abs_finite_start_end_bounds_for_interval_creation(
+                &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound(),
+                &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_finite_end_bound(),
+            ),
+            Ok(()),
+        );
+    }
 
-    assert_eq!(start, AbsStartBound::InfinitePast);
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound()
-    );
+    #[test]
+    fn wrong_order() {
+        assert_eq!(
+            check_abs_finite_start_end_bounds_for_interval_creation(
+                &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_finite_start_bound(),
+                &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound(),
+            ),
+            Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd),
+        );
+    }
 
-    Ok(())
+    mod same_position {
+        use super::*;
+
+        #[test]
+        fn inclusive_inclusive() {
+            assert_eq!(
+                check_abs_finite_start_end_bounds_for_interval_creation(
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound(),
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound(),
+                ),
+                Ok(()),
+            );
+        }
+
+        #[test]
+        fn inclusive_exclusive() {
+            assert_eq!(
+                check_abs_finite_start_end_bounds_for_interval_creation(
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound(),
+                    &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_finite_end_bound(),
+                ),
+                Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+            );
+        }
+
+        #[test]
+        fn exclusive_inclusive() {
+            assert_eq!(
+                check_abs_finite_start_end_bounds_for_interval_creation(
+                    &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_finite_start_bound(),
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound(),
+                ),
+                Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+            );
+        }
+
+        #[test]
+        fn exclusive_exclusive() {
+            assert_eq!(
+                check_abs_finite_start_end_bounds_for_interval_creation(
+                    &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_finite_start_bound(),
+                    &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_finite_end_bound(),
+                ),
+                Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+            );
+        }
+    }
 }
 
-#[test]
-fn absolute_start_bound_finite_absolute_end_bound_finite_swap() -> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_start_bound();
-    let mut end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Inclusive,
-    )
-    .to_end_bound();
+mod check_abs_start_end_bounds_for_interval_creation {
+    use super::*;
 
-    swap_abs_start_end_bounds(&mut start, &mut end);
+    mod finite_finite {
+        use super::*;
 
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-02 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Inclusive,
-        )
-        .to_start_bound()
-    );
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new_with_incl(
-            "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-            BoundInclusivity::Exclusive,
-        )
-        .to_end_bound()
-    );
+        #[test]
+        fn ok() {
+            assert_eq!(
+                check_abs_start_end_bounds_for_interval_creation(
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound(),
+                ),
+                Ok(()),
+            );
+        }
 
-    Ok(())
+        #[test]
+        fn wrong_order() {
+            assert_eq!(
+                check_abs_start_end_bounds_for_interval_creation(
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound(),
+                    &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                ),
+                Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd),
+            );
+        }
+
+        mod same_position {
+            use super::*;
+
+            #[test]
+            fn inclusive_inclusive() {
+                assert_eq!(
+                    check_abs_start_end_bounds_for_interval_creation(
+                        &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                        &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                    ),
+                    Ok(()),
+                );
+            }
+
+            #[test]
+            fn inclusive_exclusive() {
+                assert_eq!(
+                    check_abs_start_end_bounds_for_interval_creation(
+                        &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                        &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                            .to_end_bound(),
+                    ),
+                    Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+                );
+            }
+
+            #[test]
+            fn exclusive_inclusive() {
+                assert_eq!(
+                    check_abs_start_end_bounds_for_interval_creation(
+                        &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                            .to_start_bound(),
+                        &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+                    ),
+                    Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+                );
+            }
+
+            #[test]
+            fn exclusive_exclusive() {
+                assert_eq!(
+                    check_abs_start_end_bounds_for_interval_creation(
+                        &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                            .to_start_bound(),
+                        &AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                            .to_end_bound(),
+                    ),
+                    Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn finite_infinite() {
+        assert_eq!(
+            check_abs_start_end_bounds_for_interval_creation(
+                &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound(),
+                &AbsEndBound::InfiniteFuture,
+            ),
+            Ok(()),
+        );
+    }
+
+    #[test]
+    fn infinite_finite() {
+        assert_eq!(
+            check_abs_start_end_bounds_for_interval_creation(
+                &AbsStartBound::InfinitePast,
+                &AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound(),
+            ),
+            Ok(()),
+        );
+    }
+
+    #[test]
+    fn infinite_infinite() {
+        assert_eq!(
+            check_abs_start_end_bounds_for_interval_creation(
+                &AbsStartBound::InfinitePast,
+                &AbsEndBound::InfiniteFuture,
+            ),
+            Ok(()),
+        );
+    }
 }
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(&AbsStartBound::InfinitePast, &AbsEndBound::InfiniteFuture,),
-        Ok(()),
-    );
+mod prepare_abs_finite_start_end_bounds_for_interval_creation {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound();
+        let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_finite_end_bound();
+
+        let has_changed = prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+
+        assert!(!has_changed);
+        assert_eq!(
+            start,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound()
+        );
+        assert_eq!(
+            end,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_finite_end_bound()
+        );
+    }
+
+    #[test]
+    fn wrong_order() {
+        let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_finite_start_bound();
+        let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound();
+
+        let has_changed = prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+
+        assert!(has_changed);
+        assert_eq!(
+            start,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound()
+        );
+        assert_eq!(
+            end,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_finite_end_bound()
+        );
+    }
+
+    mod same_position {
+        use super::*;
+
+        #[test]
+        fn inclusive_inclusive() {
+            let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound();
+            let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound();
+
+            let has_changed = prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+
+            assert!(!has_changed);
+            assert_eq!(
+                start,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound()
+            );
+            assert_eq!(
+                end,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound()
+            );
+        }
+
+        #[test]
+        fn inclusive_exclusive() {
+            let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound();
+            let mut end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                .to_finite_end_bound();
+
+            let has_changed = prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+
+            assert!(has_changed);
+            assert_eq!(
+                start,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound()
+            );
+            assert_eq!(
+                end,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound()
+            );
+        }
+
+        #[test]
+        fn exclusive_inclusive() {
+            let mut start = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                .to_finite_start_bound();
+            let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound();
+
+            let has_changed = prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+
+            assert!(has_changed);
+            assert_eq!(
+                start,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound()
+            );
+            assert_eq!(
+                end,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound()
+            );
+        }
+
+        #[test]
+        fn exclusive_exclusive() {
+            let mut start = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                .to_finite_start_bound();
+            let mut end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                .to_finite_end_bound();
+
+            let has_changed = prepare_abs_finite_start_end_bounds_for_interval_creation(&mut start, &mut end);
+
+            assert!(has_changed);
+            assert_eq!(
+                start,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_start_bound()
+            );
+            assert_eq!(
+                end,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_finite_end_bound()
+            );
+        }
+    }
 }
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(
-            &AbsStartBound::InfinitePast,
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        ),
-        Ok(()),
-    );
+mod prepare_abs_start_end_bounds_for_interval_creation {
+    use super::*;
 
-    Ok(())
-}
+    mod finite_finite {
+        use super::*;
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            &AbsEndBound::InfiniteFuture,
-        ),
-        Ok(()),
-    );
+        #[test]
+        fn ok() {
+            let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+            let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound();
 
-    Ok(())
-}
+            let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times_correct_order()
--> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            &AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        ),
-        Ok(()),
-    );
+            assert!(!has_changed);
+            assert_eq!(
+                start,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+            );
+            assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound());
+        }
 
-    Ok(())
-}
+        #[test]
+        fn wrong_order() {
+            let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_start_bound();
+            let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound();
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_finite_finite_different_times_wrong_order()
--> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(
-            &AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        ),
-        Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd),
-    );
+            let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    Ok(())
-}
+            assert!(has_changed);
+            assert_eq!(
+                start,
+                AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+            );
+            assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 2)).to_end_bound());
+        }
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_inclusive()
--> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound(),
-        ),
-        Ok(()),
-    );
+        mod same_position {
+            use super::*;
 
-    Ok(())
-}
+            #[test]
+            fn inclusive_inclusive() {
+                let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+                let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound();
 
-#[test]
-fn check_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_exclusive()
--> Result<(), Box<dyn Error>> {
-    assert_eq!(
-        check_abs_start_end_bounds_for_interval_creation(
-            &AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound(),
-            &AbsFiniteBoundPos::new_with_incl(
-                "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-                BoundInclusivity::Exclusive,
-            )
-            .to_end_bound(),
-        ),
-        Err(AbsStartEndBoundsCheckForIntervalCreationError::SameTimeButNotDoublyInclusive),
-    );
+                let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    Ok(())
-}
+                assert!(!has_changed);
+                assert_eq!(
+                    start,
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+                );
+                assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound());
+            }
 
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_inf_past_inf_future() {
-    let mut start = AbsStartBound::InfinitePast;
-    let mut end = AbsEndBound::InfiniteFuture;
+            #[test]
+            fn inclusive_exclusive() {
+                let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+                let mut end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                    .to_end_bound();
 
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+                let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    assert!(!was_changed);
-    assert_eq!(start, AbsStartBound::InfinitePast);
-    assert_eq!(end, AbsEndBound::InfiniteFuture);
-}
+                assert!(has_changed);
+                assert_eq!(
+                    start,
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+                );
+                assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound());
+            }
 
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_inf_past_finite() -> Result<(), Box<dyn Error>> {
-    let mut start = AbsStartBound::InfinitePast;
-    let mut end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+            #[test]
+            fn exclusive_inclusive() {
+                let mut start =
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound();
+                let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound();
 
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+                let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    assert!(!was_changed);
-    assert_eq!(start, AbsStartBound::InfinitePast);
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-    );
+                assert!(has_changed);
+                assert_eq!(
+                    start,
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+                );
+                assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound());
+            }
 
-    Ok(())
-}
+            #[test]
+            fn exclusive_exclusive() {
+                let mut start =
+                    AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                        .to_start_bound();
+                let mut end = AbsFiniteBoundPos::new_with_incl(date_timestamp(2026, 1, 1), BoundInclusivity::Exclusive)
+                    .to_end_bound();
 
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_finite_inf_future() -> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let mut end = AbsEndBound::InfiniteFuture;
+                let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+                assert!(has_changed);
+                assert_eq!(
+                    start,
+                    AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+                );
+                assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound());
+            }
+        }
+    }
 
-    assert!(!was_changed);
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
-    );
-    assert_eq!(end, AbsEndBound::InfiniteFuture);
+    #[test]
+    fn finite_infinite() {
+        let mut start = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound();
+        let mut end = AbsEndBound::InfiniteFuture;
 
-    Ok(())
-}
+        let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_different_times_correct_order()
--> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let mut end = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+        assert!(!has_changed);
+        assert_eq!(
+            start,
+            AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_start_bound()
+        );
+        assert_eq!(end, AbsEndBound::InfiniteFuture);
+    }
 
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+    #[test]
+    fn infinite_finite() {
+        let mut start = AbsStartBound::InfinitePast;
+        let mut end = AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound();
 
-    assert!(!was_changed);
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
-    );
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-    );
+        let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    Ok(())
-}
+        assert!(!has_changed);
+        assert_eq!(start, AbsStartBound::InfinitePast);
+        assert_eq!(end, AbsFiniteBoundPos::new(date_timestamp(2026, 1, 1)).to_end_bound());
+    }
 
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_different_times_wrong_order()
--> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let mut end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
+    #[test]
+    fn infinite_infinite() {
+        let mut start = AbsStartBound::InfinitePast;
+        let mut end = AbsEndBound::InfiniteFuture;
 
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+        let has_changed = prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 
-    assert!(was_changed);
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
-    );
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new("2025-01-02 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-    );
-
-    Ok(())
-}
-
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_inclusive()
--> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let mut end = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound();
-
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
-
-    assert!(!was_changed);
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
-    );
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-    );
-
-    Ok(())
-}
-
-#[test]
-fn prepare_absolute_bound_pair_for_interval_creation_finite_finite_same_time_inclusive_exclusive()
--> Result<(), Box<dyn Error>> {
-    let mut start = AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound();
-    let mut end = AbsFiniteBoundPos::new_with_incl(
-        "2025-01-01 00:00:00Z".parse::<Timestamp>()?,
-        BoundInclusivity::Exclusive,
-    )
-    .to_end_bound();
-
-    let was_changed = prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
-
-    assert!(was_changed);
-    assert_eq!(
-        start,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_start_bound()
-    );
-    assert_eq!(
-        end,
-        AbsFiniteBoundPos::new("2025-01-01 00:00:00Z".parse::<Timestamp>()?).to_end_bound()
-    );
-
-    Ok(())
+        assert!(!has_changed);
+        assert_eq!(start, AbsStartBound::InfinitePast);
+        assert_eq!(end, AbsEndBound::InfiniteFuture);
+    }
 }

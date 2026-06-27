@@ -1,11 +1,10 @@
-use std::cmp::Ordering;
 use std::ops::Bound;
 
 use jiff::SignedDuration;
 
 use super::finite_bound_position::*;
 use crate::intervals::meta::{BoundInclusivity, HasBoundInclusivity};
-use crate::intervals::relative::{RelStartBound, RelEndBound};
+use crate::intervals::relative::{RelEndBound, RelStartBound};
 
 #[test]
 fn new() {
@@ -55,8 +54,7 @@ fn set_inclusivity() {
 #[test]
 fn to_start_bound() {
     assert_eq!(
-        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-            .to_start_bound(),
+        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive).to_start_bound(),
         RelStartBound::Finite(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_finite_start_bound()
@@ -67,8 +65,7 @@ fn to_start_bound() {
 #[test]
 fn to_end_bound() {
     assert_eq!(
-        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-            .to_end_bound(),
+        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive).to_end_bound(),
         RelEndBound::Finite(
             RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
                 .to_finite_end_bound()
@@ -78,83 +75,11 @@ fn to_end_bound() {
 
 #[test]
 fn inclusivity() {
-    let inclusive =
-        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Inclusive);
-    let exclusive =
-        RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
+    let inclusive = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Inclusive);
+    let exclusive = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
 
     assert_eq!(inclusive.inclusivity(), BoundInclusivity::Inclusive);
     assert_eq!(exclusive.inclusivity(), BoundInclusivity::Exclusive);
-}
-
-mod ord {
-    use super::*;
-
-    #[test]
-    fn greater_times() {
-        assert_eq!(
-            RelFiniteBoundPos::new(SignedDuration::from_hours(2))
-                .cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(1))),
-            Ordering::Greater
-        );
-    }
-
-    #[test]
-    fn less_times() {
-        assert_eq!(
-            RelFiniteBoundPos::new(SignedDuration::from_hours(1))
-                .cmp(&RelFiniteBoundPos::new(SignedDuration::from_hours(2))),
-            Ordering::Less
-        );
-    }
-
-    #[test]
-    fn equal_times_inclusive_inclusive() {
-        assert_eq!(
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
-                .cmp(&RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Inclusive
-                )),
-            Ordering::Equal
-        );
-    }
-
-    #[test]
-    fn equal_times_exclusive_exclusive() {
-        assert_eq!(
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .cmp(&RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Exclusive
-                )),
-            Ordering::Equal
-        );
-    }
-
-    #[test]
-    fn equal_times_inclusive_exclusive() {
-        assert_eq!(
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
-                .cmp(&RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Exclusive
-                )),
-            Ordering::Equal
-        );
-    }
-
-    #[test]
-    fn equal_times_exclusive_inclusive() {
-        assert_eq!(
-            RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
-                .cmp(&RelFiniteBoundPos::new_with_incl(
-                    SignedDuration::from_hours(1),
-                    BoundInclusivity::Inclusive
-                )),
-            Ordering::Equal
-        );
-    }
 }
 
 #[test]

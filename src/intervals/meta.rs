@@ -80,7 +80,7 @@ pub enum Relativity {
     /// Interval lives in absolute time
     ///
     /// This means that it uses an absolute [`Zoned`](jiff::Zoned).
-    Abs,
+    Absolute,
     /// Interval lives in relative time
     ///
     /// This means that it uses [`SignedDuration`](jiff::SignedDuration)s, also
@@ -89,7 +89,7 @@ pub enum Relativity {
     /// For example, if you compare and absolute interval to a point in time,
     /// e.g. this day compared to this year's 1st of January at midnight,
     /// you will end up with a relative interval.
-    Rel,
+    Relative,
     /// Interval isn't bound to relativity
     ///
     /// This means the interval uses a concept rather than representing itself
@@ -107,8 +107,8 @@ pub enum Relativity {
 impl Display for Relativity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Abs => write!(f, "Abs"),
-            Self::Rel => write!(f, "Rel"),
+            Self::Absolute => write!(f, "Absolute"),
+            Self::Relative => write!(f, "Relative"),
             Self::Any => write!(f, "Any relativity"),
         }
     }
@@ -640,4 +640,198 @@ pub trait HasBoundExtremality {
     /// Returns the associated [`BoundExtremality`]
     #[must_use]
     fn bound_extremality(&self) -> BoundExtremality;
+}
+
+/// Type of interval
+///
+/// Represents the different kinds of intervals that exist, not only
+/// the openness of a given interval.
+///
+/// This type is particularly useful as an identifier.
+///
+/// If you need to associate a [`Relativity`] to it, see [`IntervalTypeWithRel`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IntervalType {
+    /// An [empty interval](crate::intervals::special::EmptyInterval)
+    Empty,
+    /// A bounded interval
+    Bounded,
+    /// A half-bounded interval with its [opening direction](OpeningDirection)
+    HalfBounded(OpeningDirection),
+    /// An [unbounded interval](crate::intervals::special::UnboundedInterval)
+    Unbounded,
+}
+
+impl IntervalType {
+    /// Attempts to associate the interval type with the given [`Relativity`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntervalTypeWithRelTryFromIntervalTypeAndRel`] if the given [`Relativity`]
+    /// is not associable with the [`IntervalType`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use periodical::intervals::meta::{IntervalType, IntervalTypeWithRel, Relativity};
+    /// assert_eq!(
+    ///     IntervalType::Bounded.try_with_rel(Relativity::Absolute)?,
+    ///     IntervalTypeWithRel::AbsBounded,
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn try_with_rel(
+        self,
+        relativity: Relativity,
+    ) -> Result<IntervalTypeWithRel, IntervalTypeWithRelTryFromIntervalTypeAndRel> {
+        IntervalTypeWithRel::try_from((self, relativity))
+    }
+}
+
+impl IsEmpty for IntervalType {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
+impl HasOpenness for IntervalType {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Empty => Openness::Empty,
+            Self::Bounded => Openness::Bounded,
+            Self::HalfBounded(_) => Openness::HalfBounded,
+            Self::Unbounded => Openness::Unbounded,
+        }
+    }
+}
+
+impl From<IntervalTypeWithRel> for IntervalType {
+    fn from(value: IntervalTypeWithRel) -> Self {
+        match value {
+            IntervalTypeWithRel::Empty => Self::Empty,
+            IntervalTypeWithRel::AbsBounded | IntervalTypeWithRel::RelBounded => Self::Bounded,
+            IntervalTypeWithRel::AbsHalfBounded(opening_direction)
+            | IntervalTypeWithRel::RelHalfBounded(opening_direction) => Self::HalfBounded(opening_direction),
+            IntervalTypeWithRel::Unbounded => Self::Unbounded,
+        }
+    }
+}
+
+/// Capacity of an interval to have an associated [`IntervalType`]
+pub trait HasIntervalType {
+    /// Returns the corresponding [`IntervalType`] of the interval type
+    #[must_use]
+    fn interval_type(&self) -> IntervalType;
+}
+
+/// Type of interval with relativity included
+///
+/// Represents the different kinds of intervals that exist, similarly to [`IntervalType`],
+/// but with their respective [`Relativity`] included.
+///
+/// This type is particularly useful as an identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IntervalTypeWithRel {
+    /// An [empty interval](crate::intervals::special::EmptyInterval)
+    Empty,
+    /// A [bounded absolute interval](crate::intervals::absolute::BoundedAbsInterval)
+    AbsBounded,
+    /// A [bounded relative interval](crate::intervals::relative::BoundedRelInterval)
+    RelBounded,
+    /// A [half-bounded absolute interval](crate::intervals::absolute::HalfBoundedAbsInterval)
+    /// with its [opening direction](OpeningDirection)
+    AbsHalfBounded(OpeningDirection),
+    /// A [half-bounded relative interval](crate::intervals::relative::HalfBoundedRelInterval)
+    /// with its [opening direction](OpeningDirection)
+    RelHalfBounded(OpeningDirection),
+    /// An [unbounded interval](crate::intervals::special::UnboundedInterval)
+    Unbounded,
+}
+
+impl IsEmpty for IntervalTypeWithRel {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
+impl HasRelativity for IntervalTypeWithRel {
+    fn relativity(&self) -> Relativity {
+        match self {
+            Self::Empty | Self::Unbounded => Relativity::Any,
+            Self::AbsBounded | Self::AbsHalfBounded(_) => Relativity::Absolute,
+            Self::RelBounded | Self::RelHalfBounded(_) => Relativity::Relative,
+        }
+    }
+}
+
+impl HasOpenness for IntervalTypeWithRel {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Empty => Openness::Empty,
+            Self::AbsBounded | Self::RelBounded => Openness::Bounded,
+            Self::AbsHalfBounded(_) | Self::RelHalfBounded(_) => Openness::HalfBounded,
+            Self::Unbounded => Openness::Unbounded,
+        }
+    }
+}
+
+impl HasIntervalType for IntervalTypeWithRel {
+    fn interval_type(&self) -> IntervalType {
+        match self {
+            Self::Empty => IntervalType::Empty,
+            Self::AbsBounded | Self::RelBounded => IntervalType::Bounded,
+            Self::AbsHalfBounded(opening_direction) | Self::RelHalfBounded(opening_direction) => {
+                IntervalType::HalfBounded(*opening_direction)
+            },
+            Self::Unbounded => IntervalType::Unbounded,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IntervalTypeWithRelTryFromIntervalTypeAndRel;
+
+impl Display for IntervalTypeWithRelTryFromIntervalTypeAndRel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `(IntervalType, Relativity)` into `IntervalTypeWithRel`"
+        )
+    }
+}
+
+impl Error for IntervalTypeWithRelTryFromIntervalTypeAndRel {}
+
+impl TryFrom<(IntervalType, Relativity)> for IntervalTypeWithRel {
+    type Error = IntervalTypeWithRelTryFromIntervalTypeAndRel;
+
+    fn try_from(interval_type_and_rel: (IntervalType, Relativity)) -> Result<Self, Self::Error> {
+        match interval_type_and_rel {
+            (IntervalType::Empty, Relativity::Any) => Ok(Self::Empty),
+            (IntervalType::Bounded, Relativity::Absolute) => Ok(Self::AbsBounded),
+            (IntervalType::Bounded, Relativity::Relative) => Ok(Self::RelBounded),
+            (IntervalType::HalfBounded(opening_direction), Relativity::Absolute) => {
+                Ok(Self::AbsHalfBounded(opening_direction))
+            },
+            (IntervalType::HalfBounded(opening_direction), Relativity::Relative) => {
+                Ok(Self::RelHalfBounded(opening_direction))
+            },
+            (IntervalType::Unbounded, Relativity::Any) => Ok(Self::Unbounded),
+            _ => Err(IntervalTypeWithRelTryFromIntervalTypeAndRel),
+        }
+    }
+}
+
+/// Capacity of an interval to have an associated [`IntervalTypeWithRel`]
+pub trait HasIntervalTypeWithRel: HasIntervalType {
+    /// Returns the corresponding [`IntervalTypeWithRel`] of the interval type
+    #[must_use]
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel;
+}
+
+impl<T: HasIntervalTypeWithRel> HasIntervalType for T {
+    fn interval_type(&self) -> IntervalType {
+        self.interval_type_with_rel().interval_type()
+    }
 }

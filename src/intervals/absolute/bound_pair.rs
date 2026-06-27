@@ -31,7 +31,7 @@ use crate::intervals::absolute::{
     HalfBoundedAbsInterval,
     HasEmptiableAbsBoundPair,
     check_abs_start_end_bounds_for_interval_creation,
-    prepare_abs_bound_pair_for_interval_creation,
+    prepare_abs_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::meta::{
     BoundInclusivity,
@@ -39,10 +39,13 @@ use crate::intervals::meta::{
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
+    OpeningDirection,
     Openness,
     Relativity,
 };
@@ -113,7 +116,7 @@ impl AbsBoundPair {
 
     /// Creates a new [`AbsBoundPair`]
     ///
-    /// Uses [`prepare_absolute_bound_pair_for_interval_creation`] under the
+    /// Uses [`prepare_abs_start_end_bounds_for_interval_creation`] under the
     /// hood for making sure the bounds respect the invariants.
     ///
     /// # Examples
@@ -144,7 +147,7 @@ impl AbsBoundPair {
     /// ```
     #[must_use]
     pub fn new(mut start: AbsStartBound, mut end: AbsEndBound) -> Self {
-        prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+        prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
     }
 
@@ -471,7 +474,7 @@ impl HasRelativity for AbsBoundPair {
     fn relativity(&self) -> Relativity {
         match (self.start(), self.end()) {
             (AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture) => Relativity::Any,
-            _ => Relativity::Abs,
+            _ => Relativity::Absolute,
         }
     }
 }
@@ -497,6 +500,21 @@ impl Ord for AbsBoundPair {
 impl IsEmpty for AbsBoundPair {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for AbsBoundPair {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match (self.start(), self.end()) {
+            (AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture) => IntervalTypeWithRel::Unbounded,
+            (AbsStartBound::InfinitePast, AbsEndBound::Finite(_)) => {
+                IntervalTypeWithRel::AbsHalfBounded(OpeningDirection::ToPast)
+            },
+            (AbsStartBound::Finite(_), AbsEndBound::InfiniteFuture) => {
+                IntervalTypeWithRel::AbsHalfBounded(OpeningDirection::ToFuture)
+            },
+            (AbsStartBound::Finite(_), AbsEndBound::Finite(_)) => IntervalTypeWithRel::AbsBounded,
+        }
     }
 }
 

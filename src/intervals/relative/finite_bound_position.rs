@@ -8,12 +8,10 @@
 //! represent their position.
 //!
 //! Therefore, since no extremality is indicated, the contained bound inclusivity is ambiguous.
-//! This is why comparison of two finite bound positions only compare their offsets.
 //! If you need to take into account the bound inclusivity, you need the extra extremality information,
 //! therefore you need to convert the [`RelFiniteBoundPos`] into a bound that can then be compared
 //! using dedicated [bound comparison operations](crate::intervals::ops::bound_cmp).
 
-use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::Display;
 use std::ops::Bound;
@@ -166,18 +164,6 @@ impl RelFiniteBoundPos {
 impl HasBoundInclusivity for RelFiniteBoundPos {
     fn inclusivity(&self) -> BoundInclusivity {
         self.inclusivity
-    }
-}
-
-impl PartialOrd for RelFiniteBoundPos {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for RelFiniteBoundPos {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.offset.cmp(&other.offset)
     }
 }
 

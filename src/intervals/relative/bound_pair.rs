@@ -27,10 +27,13 @@ use crate::intervals::meta::{
     Epsilon,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
+    OpeningDirection,
     Openness,
     Relativity,
 };
@@ -45,7 +48,7 @@ use crate::intervals::relative::{
     RelInterval,
     RelStartBound,
     check_rel_start_end_bounds_for_interval_creation,
-    prepare_rel_bound_pair_for_interval_creation,
+    prepare_rel_start_end_bounds_for_interval_creation,
 };
 use crate::intervals::special::UnboundedInterval;
 
@@ -112,7 +115,7 @@ impl RelBoundPair {
 
     /// Creates a new [`RelBoundPair`]
     ///
-    /// Uses [`prepare_relative_bound_pair_for_interval_creation`] under the
+    /// Uses [`prepare_rel_start_end_bounds_for_interval_creation`] under the
     /// hood for making sure the bounds respect the invariants.
     ///
     /// # Examples
@@ -141,7 +144,7 @@ impl RelBoundPair {
     /// ```
     #[must_use]
     pub fn new(mut start: RelStartBound, mut end: RelEndBound) -> Self {
-        prepare_rel_bound_pair_for_interval_creation(&mut start, &mut end);
+        prepare_rel_start_end_bounds_for_interval_creation(&mut start, &mut end);
         Self::unchecked_new(start, end)
     }
 
@@ -454,7 +457,7 @@ impl HasRelativity for RelBoundPair {
     fn relativity(&self) -> Relativity {
         match (self.start(), self.end()) {
             (RelStartBound::InfinitePast, RelEndBound::InfiniteFuture) => Relativity::Any,
-            _ => Relativity::Rel,
+            _ => Relativity::Relative,
         }
     }
 }
@@ -480,6 +483,21 @@ impl Ord for RelBoundPair {
 impl IsEmpty for RelBoundPair {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl HasIntervalTypeWithRel for RelBoundPair {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        match (self.start(), self.end()) {
+            (RelStartBound::InfinitePast, RelEndBound::InfiniteFuture) => IntervalTypeWithRel::Unbounded,
+            (RelStartBound::InfinitePast, RelEndBound::Finite(_)) => {
+                IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToPast)
+            },
+            (RelStartBound::Finite(_), RelEndBound::InfiniteFuture) => {
+                IntervalTypeWithRel::RelHalfBounded(OpeningDirection::ToFuture)
+            },
+            (RelStartBound::Finite(_), RelEndBound::Finite(_)) => IntervalTypeWithRel::RelBounded,
+        }
     }
 }
 

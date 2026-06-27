@@ -9,8 +9,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     Epsilon,
     HasDuration,
+    HasIntervalType,
+    HasIntervalTypeWithRel,
     HasOpenness,
     HasRelativity,
+    IntervalType,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -30,163 +34,498 @@ use crate::intervals::relative::{
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
-#[test]
-fn unchecked_new() {
-    let interval =
-        BoundedRelInterval::unchecked_from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+mod unchecked_new {
+    use super::*;
 
-    assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-    assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
-    assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    #[test]
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+        let interval = BoundedRelInterval::unchecked_new(start, end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        let interval = BoundedRelInterval::unchecked_new(start, end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Inclusive)
+            .to_finite_start_bound();
+        let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        let interval = BoundedRelInterval::unchecked_new(start, end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), end);
+    }
 }
 
 mod new {
     use super::*;
 
     #[test]
-    fn no_swap() {
-        let interval = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+        let interval = BoundedRelInterval::new(start, end);
 
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
-        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
-        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), end);
     }
 
     #[test]
-    fn swap() {
-        let interval = BoundedRelInterval::from_offsets(SignedDuration::from_hours(2), SignedDuration::from_hours(1));
+    fn chronological_order_violation() {
+        let start_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(2));
+        let end_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
+        let interval = BoundedRelInterval::new(start_pos.to_finite_start_bound(), end_pos.to_finite_end_bound());
 
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
-        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
-        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.start(), end_pos.to_finite_start_bound());
+        assert_eq!(interval.end(), start_pos.to_finite_end_bound());
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        let interval = BoundedRelInterval::new(start, end);
+
+        assert_eq!(
+            interval.start(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound()
+        );
+        assert_eq!(
+            interval.end(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound()
+        );
     }
 }
 
-mod new_with_length {
+mod unchecked_from_offsets {
     use super::*;
 
     #[test]
     fn ok() {
-        assert_eq!(
-            BoundedRelInterval::from_start_len(SignedDuration::from_hours(1), Duration::from_hours(5)),
-            Ok(BoundedRelInterval::from_offsets(
-                SignedDuration::from_hours(1),
-                SignedDuration::from_hours(6)
-            ))
-        );
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::unchecked_from_offsets(start, end);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
     }
 
     #[test]
-    fn out_of_range_length() {
-        assert_eq!(
-            BoundedRelInterval::from_start_len(SignedDuration::from_hours(1), Duration::MAX),
-            Err(BoundedRelIntervalCreationError::OutOfRangeEnd)
-        );
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_offsets(start, end);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
     }
 }
 
-#[test]
-fn unchecked_new_with_inclusivity() {
-    let interval = BoundedRelInterval::unchecked_from_offsets_incl(
-        SignedDuration::from_hours(2),
-        BoundInclusivity::Exclusive,
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Inclusive,
-    );
-
-    assert_eq!(interval.start_offset(), SignedDuration::from_hours(2));
-    assert_eq!(interval.end_offset(), SignedDuration::from_hours(1));
-    assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
-}
-
-mod new_with_inclusivity {
+mod from_offsets {
     use super::*;
 
     #[test]
-    fn no_swap() {
-        let interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-            SignedDuration::from_hours(2),
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::from_offsets(start, end);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_offsets(start, end);
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), start);
+    }
+}
+
+mod unchecked_from_offsets_incl {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::unchecked_from_offsets_incl(
+            start,
             BoundInclusivity::Inclusive,
+            end,
+            BoundInclusivity::Exclusive,
         );
 
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_offsets_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            end,
+            BoundInclusivity::Exclusive,
+        );
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_offsets_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            end,
+            BoundInclusivity::Exclusive,
+        );
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+}
+
+mod from_offsets_incl {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(1);
+        let interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), start);
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
 
     #[test]
-    fn swap() {
-        let interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Exclusive,
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-        );
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(1);
+        let interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
 
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+}
+
+mod from_start_len {
+    use super::*;
+
+    #[test]
+    fn zero_length() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_start_len(start, Duration::ZERO).unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn some_length() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_start_len(start, Duration::from_hours(1)).unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+}
+
+mod unchecked_from_start_len_incl {
+    use super::*;
+
+    #[test]
+    fn zero_length() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_start_len_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Inclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn zero_length_breaks_doubly_inclusive() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_start_len_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+
+    #[test]
+    fn some_length() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_start_len_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            Duration::from_hours(1),
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), start);
         assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     }
 }
 
-mod new_with_length_and_inclusivity {
+mod from_start_len_incl {
     use super::*;
 
     #[test]
-    fn normal() {
-        assert_eq!(
-            BoundedRelInterval::from_start_len_incl(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-                Duration::from_hours(5),
-                BoundInclusivity::Exclusive
-            ),
-            Ok(BoundedRelInterval::from_offsets_incl(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-                SignedDuration::from_hours(6),
-                BoundInclusivity::Exclusive
-            ))
-        );
+    fn zero_length() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_start_len_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Inclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
+
+    #[test]
+    fn zero_length_breaks_doubly_inclusive() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_start_len_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn some_length() {
+        let start = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_start_len_incl(
+            start,
+            BoundInclusivity::Inclusive,
+            Duration::from_hours(1),
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+}
+
+mod from_end_len {
+    use super::*;
 
     #[test]
     fn zero_length() {
-        assert_eq!(
-            BoundedRelInterval::from_start_len_incl(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-                Duration::ZERO,
-                BoundInclusivity::Exclusive,
-            ),
-            Ok(BoundedRelInterval::from_offsets_incl(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive
-            ))
-        );
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_end_len(end, Duration::ZERO).unwrap();
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
 
     #[test]
-    fn out_of_range_length() {
-        assert_eq!(
-            BoundedRelInterval::from_start_len_incl(
-                SignedDuration::from_hours(1),
-                BoundInclusivity::Inclusive,
-                Duration::MAX,
-                BoundInclusivity::Exclusive
-            ),
-            Err(BoundedRelIntervalCreationError::OutOfRangeEnd)
-        );
+    fn some_length() {
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::from_end_len(end, Duration::from_hours(1)).unwrap();
+
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+}
+
+mod unchecked_from_end_len_incl {
+    use super::*;
+
+    #[test]
+    fn zero_length() {
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_end_len_incl(
+            end,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Inclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn zero_length_breaks_doubly_inclusive() {
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::unchecked_from_end_len_incl(
+            end,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn some_length() {
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::unchecked_from_end_len_incl(
+            end,
+            BoundInclusivity::Inclusive,
+            Duration::from_hours(1),
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+}
+
+mod from_end_len_incl {
+    use super::*;
+
+    #[test]
+    fn zero_length() {
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_end_len_incl(
+            end,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Inclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn zero_length_breaks_doubly_inclusive() {
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from_end_len_incl(
+            end,
+            BoundInclusivity::Inclusive,
+            Duration::ZERO,
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn some_length() {
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::from_end_len_incl(
+            end,
+            BoundInclusivity::Inclusive,
+            Duration::from_hours(1),
+            BoundInclusivity::Exclusive,
+        )
+        .unwrap();
+
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
 }
 
@@ -303,169 +642,231 @@ mod try_from_range {
 
 #[test]
 fn start() {
+    let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+    let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+    assert_eq!(BoundedRelInterval::new(start, end).start(), start);
+}
+
+#[test]
+fn end() {
+    let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+    let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+    assert_eq!(BoundedRelInterval::new(start, end).end(), end);
+}
+
+#[test]
+fn start_offset() {
+    let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+    let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
     assert_eq!(
-        BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).start_offset(),
+        BoundedRelInterval::new(start, end).start_offset(),
         SignedDuration::from_hours(1)
     );
 }
 
 #[test]
-fn end() {
+fn end_offset() {
+    let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+    let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
     assert_eq!(
-        BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).end_offset(),
-        SignedDuration::from_hours(2),
+        BoundedRelInterval::new(start, end).end_offset(),
+        SignedDuration::from_hours(2)
     );
 }
 
 #[test]
 fn start_inclusivity() {
+    let start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+        .to_finite_start_bound();
+    let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
     assert_eq!(
-        BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Inclusive,
-        )
-        .start_inclusivity(),
+        BoundedRelInterval::new(start, end).start_inclusivity(),
         BoundInclusivity::Exclusive
     );
 }
 
 #[test]
 fn end_inclusivity() {
+    let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+    let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+        .to_finite_end_bound();
     assert_eq!(
-        BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Exclusive,
-        )
-        .end_inclusivity(),
+        BoundedRelInterval::new(start, end).end_inclusivity(),
         BoundInclusivity::Exclusive
     );
 }
 
-#[test]
-fn unchecked_set_start() {
-    let mut interval = BoundedRelInterval::from_offsets_incl(
-        SignedDuration::from_hours(1),
-        BoundInclusivity::Exclusive,
-        SignedDuration::from_hours(2),
-        BoundInclusivity::Inclusive,
-    );
+mod unchecked_set_start {
+    use super::*;
 
-    interval.unchecked_set_start_offset(SignedDuration::from_hours(3));
+    #[test]
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
 
-    assert_eq!(interval.start_offset(), SignedDuration::from_hours(3));
-    assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
-    assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
-}
+        let new_start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        interval.unchecked_set_start(new_start);
 
-#[test]
-fn unchecked_set_end() {
-    let mut interval = BoundedRelInterval::from_offsets_incl(
-        SignedDuration::from_hours(2),
-        BoundInclusivity::Exclusive,
-        SignedDuration::from_hours(3),
-        BoundInclusivity::Inclusive,
-    );
+        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.end(), end);
+    }
 
-    interval.unchecked_set_end_offset(SignedDuration::from_hours(1));
+    #[test]
+    fn chronological_order_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
 
-    assert_eq!(interval.start_offset(), SignedDuration::from_hours(2));
-    assert_eq!(interval.end_offset(), SignedDuration::from_hours(1));
-    assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+        let new_start = RelFiniteBoundPos::new(SignedDuration::from_hours(4)).to_finite_start_bound();
+        interval.unchecked_set_start(new_start);
+
+        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.end(), end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_input() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_start_bound();
+        interval.unchecked_set_start(new_start);
+
+        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.end(), end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_state() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        interval.unchecked_set_start(new_start);
+
+        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.end(), end);
+    }
 }
 
 mod set_start {
     use super::*;
 
     #[test]
-    fn set_start_less() {
-        let new_start = SignedDuration::from_hours(1);
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
 
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(2), SignedDuration::from_hours(3));
+        let new_start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        assert_eq!(interval.set_start(new_start), Ok(()));
 
-        assert_eq!(interval.set_start_offset(new_start), Ok(()));
-        assert_eq!(interval.start_offset(), new_start);
+        assert_eq!(interval.start(), new_start);
+        assert_eq!(interval.end(), end);
     }
 
     #[test]
-    fn set_start_equal_breaks_doubly_inclusive() {
-        let new_start = SignedDuration::from_hours(2);
+    fn chronological_order_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
 
-        let mut interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Exclusive,
-        );
-
+        let new_start = RelFiniteBoundPos::new(SignedDuration::from_hours(4)).to_finite_start_bound();
         assert_eq!(
-            interval.set_start_offset(new_start),
-            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
-        );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    }
-
-    #[test]
-    fn set_start_equal_breaks_doubly_inclusive_by_moving_start_incl() {
-        let new_start = SignedDuration::from_hours(2);
-
-        let mut interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Inclusive,
-        );
-
-        assert_eq!(
-            interval.set_start_offset(new_start),
-            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
-        );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    }
-
-    #[test]
-    fn set_start_equal_makes_doubly_inclusive() {
-        let new_start = SignedDuration::from_hours(2);
-
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
-
-        assert_eq!(interval.set_start_offset(new_start), Ok(()));
-        assert_eq!(interval.start_offset(), new_start);
-        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    }
-
-    #[test]
-    fn set_start_greater_middle() {
-        let new_start = SignedDuration::from_hours(2);
-
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(3));
-
-        assert_eq!(interval.set_start_offset(new_start), Ok(()));
-        assert_eq!(interval.start_offset(), new_start);
-    }
-
-    #[test]
-    fn set_start_greater_after() {
-        let new_start = SignedDuration::from_hours(3);
-
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
-
-        assert_eq!(
-            interval.set_start_offset(new_start),
+            interval.set_start(new_start),
             Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_input() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_start_bound();
+        assert_eq!(
+            interval.set_start(new_start),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+        );
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_state() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(2), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        assert_eq!(
+            interval.set_start(new_start),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+        );
+    }
+}
+
+mod unchecked_set_end {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_end = RelFiniteBoundPos::new(SignedDuration::from_hours(4)).to_finite_end_bound();
+        interval.unchecked_set_end(new_end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), new_end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        interval.unchecked_set_end(new_end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), new_end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_input() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        interval.unchecked_set_end(new_end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), new_end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_state() {
+        let start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        interval.unchecked_set_end(new_end);
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), new_end);
     }
 }
 
@@ -473,92 +874,263 @@ mod set_end {
     use super::*;
 
     #[test]
-    fn set_end_less_before() {
-        let new_end = SignedDuration::from_hours(1);
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
 
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(2), SignedDuration::from_hours(3));
+        let new_end = RelFiniteBoundPos::new(SignedDuration::from_hours(4)).to_finite_end_bound();
+        assert_eq!(interval.set_end(new_end), Ok(()));
 
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), new_end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(3)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
         assert_eq!(
-            interval.set_end_offset(new_end),
+            interval.set_end(new_end),
             Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(3));
     }
 
     #[test]
-    fn set_end_less_middle() {
-        let new_end = SignedDuration::from_hours(2);
+    fn same_pos_doubly_inclusive_violation_coming_from_input() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
 
+        let new_end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        assert_eq!(
+            interval.set_end(new_end),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+        );
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation_coming_from_state() {
+        let start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+        let mut interval = BoundedRelInterval::new(start, end);
+
+        let new_end = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound();
+        assert_eq!(
+            interval.set_end(new_end),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+        );
+    }
+}
+
+mod unchecked_set_start_offset {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_start = SignedDuration::from_hours(1);
+        interval.unchecked_set_start_offset(new_start);
+
+        assert_eq!(interval.start_offset(), new_start);
+        assert_eq!(interval.end_offset(), end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_start = SignedDuration::from_hours(4);
+        interval.unchecked_set_start_offset(new_start);
+
+        assert_eq!(interval.start_offset(), new_start);
+        assert_eq!(interval.end_offset(), end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
         let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(3));
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
 
-        assert_eq!(interval.set_end_offset(new_end), Ok(()));
-        assert_eq!(interval.end_offset(), new_end);
-    }
+        let new_start = SignedDuration::from_hours(2);
+        interval.unchecked_set_start_offset(new_start);
 
-    #[test]
-    fn set_end_equal_breaks_doubly_inclusive() {
-        let new_end = SignedDuration::from_hours(1);
-
-        let mut interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Exclusive,
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Inclusive,
-        );
-
-        assert_eq!(
-            interval.set_end_offset(new_end),
-            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
-        );
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
-        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
-    }
-
-    #[test]
-    fn set_end_equal_breaks_doubly_inclusive_by_moving_end_incl() {
-        let new_end = SignedDuration::from_hours(1);
-
-        let mut interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-            SignedDuration::from_hours(2),
-            BoundInclusivity::Exclusive,
-        );
-
-        assert_eq!(
-            interval.set_end_offset(new_end),
-            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
-        );
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
+        assert_eq!(interval.start_offset(), new_start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_offset(), end);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     }
+}
+
+mod set_start_offset {
+    use super::*;
 
     #[test]
-    fn set_end_equal_makes_doubly_inclusive() {
-        let new_end = SignedDuration::from_hours(1);
+    fn ok() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
 
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+        let new_start = SignedDuration::from_hours(1);
+        assert_eq!(interval.set_start_offset(new_start), Ok(()));
 
-        assert_eq!(interval.set_end_offset(new_end), Ok(()));
-        assert_eq!(interval.end_offset(), new_end);
-        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.start_offset(), new_start);
+        assert_eq!(interval.end_offset(), end);
     }
 
     #[test]
-    fn set_end_greater() {
-        let new_start = SignedDuration::from_hours(3);
+    fn ok_same_pos() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
 
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+        let new_start = end;
+        assert_eq!(interval.set_start_offset(new_start), Ok(()));
 
+        assert_eq!(interval.start_offset(), new_start);
+        assert_eq!(interval.end_offset(), end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_start = SignedDuration::from_hours(4);
         assert_eq!(
             interval.set_start_offset(new_start),
             Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
         );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let mut interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
+
+        let new_start = SignedDuration::from_hours(2);
+        assert_eq!(
+            interval.set_start_offset(new_start),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+        );
+    }
+}
+
+mod unchecked_set_end_offset {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_end = SignedDuration::from_hours(4);
+        interval.unchecked_set_end_offset(new_end);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), new_end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_end = SignedDuration::from_hours(1);
+        interval.unchecked_set_end_offset(new_end);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), new_end);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let mut interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
+
+        let new_end = SignedDuration::from_hours(1);
+        interval.unchecked_set_end_offset(new_end);
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_offset(), new_end);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+}
+
+mod set_end_offset {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_end = SignedDuration::from_hours(4);
+        assert_eq!(interval.set_end_offset(new_end), Ok(()));
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), new_end);
+    }
+
+    #[test]
+    fn ok_same_pos() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_end = start;
+        assert_eq!(interval.set_end_offset(new_end), Ok(()));
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), new_end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
+
+        let new_end = SignedDuration::from_hours(1);
+        assert_eq!(
+            interval.set_end_offset(new_end),
+            Err(BoundedRelIntervalUpdateError::ChronologicalOrderViolation)
+        );
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let mut interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
+
+        let new_end = SignedDuration::from_hours(1);
+        assert_eq!(
+            interval.set_end_offset(new_end),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
+        );
     }
 }
 
@@ -566,53 +1138,41 @@ mod set_length_from_start {
     use super::*;
 
     #[test]
-    fn zero_length() {
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
 
-        assert_eq!(interval.set_length_from_start(Duration::ZERO), Ok(()));
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(1));
+        assert_eq!(interval.set_length_from_start(Duration::from_hours(1)), Ok(()));
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), SignedDuration::from_hours(2));
     }
 
     #[test]
-    fn zero_length_breaks_doubly_inclusive() {
-        let mut interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-            SignedDuration::from_hours(6),
-            BoundInclusivity::Exclusive,
-        );
+    fn same_pos_doubly_inclusive_violation_incl_excl() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let mut interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
 
         assert_eq!(
             interval.set_length_from_start(Duration::ZERO),
             Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
         );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 
     #[test]
-    fn normal_length() {
+    fn same_pos_doubly_inclusive_violation_excl_incl() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
         let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
-
-        assert_eq!(interval.set_length_from_start(Duration::from_hours(2)), Ok(()));
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(3));
-    }
-
-    #[test]
-    fn out_of_range_length() {
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Exclusive, end, BoundInclusivity::Inclusive);
 
         assert_eq!(
-            interval.set_length_from_start(Duration::MAX),
-            Err(BoundedRelIntervalUpdateError::OutOfRange)
+            interval.set_length_from_start(Duration::ZERO),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
         );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 }
 
@@ -620,76 +1180,67 @@ mod set_length_from_end {
     use super::*;
 
     #[test]
-    fn zero_length() {
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(3);
+        let mut interval = BoundedRelInterval::from_offsets(start, end);
 
-        assert_eq!(interval.set_length_from_end(Duration::ZERO), Ok(()));
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(6));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
+        assert_eq!(interval.set_length_from_end(Duration::from_hours(1)), Ok(()));
+
+        assert_eq!(interval.start_offset(), SignedDuration::from_hours(2));
+        assert_eq!(interval.end_offset(), end);
     }
 
     #[test]
-    fn zero_length_breaks_doubly_inclusive() {
-        let mut interval = BoundedRelInterval::from_offsets_incl(
-            SignedDuration::from_hours(1),
-            BoundInclusivity::Inclusive,
-            SignedDuration::from_hours(6),
-            BoundInclusivity::Exclusive,
-        );
+    fn same_pos_doubly_inclusive_violation_incl_excl() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let mut interval =
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive);
 
         assert_eq!(
             interval.set_length_from_end(Duration::ZERO),
             Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
         );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 
     #[test]
-    fn normal_length() {
+    fn same_pos_doubly_inclusive_violation_excl_incl() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
         let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
-
-        assert_eq!(interval.set_length_from_end(Duration::from_hours(2)), Ok(()));
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(4));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
-    }
-
-    #[test]
-    fn out_of_range_length() {
-        let mut interval =
-            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(6));
+            BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Exclusive, end, BoundInclusivity::Inclusive);
 
         assert_eq!(
-            interval.set_length_from_end(Duration::MAX),
-            Err(BoundedRelIntervalUpdateError::OutOfRange)
+            interval.set_length_from_end(Duration::ZERO),
+            Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
         );
-        assert_eq!(interval.start_offset(), SignedDuration::from_hours(1));
-        assert_eq!(interval.end_offset(), SignedDuration::from_hours(6));
     }
 }
 
-#[test]
-fn unchecked_set_start_inclusivity() {
-    let mut interval = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1));
+mod unchecked_set_start_inclusivity {
+    use super::*;
 
-    interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
+    #[test]
+    fn ok() {
+        let mut interval =
+            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+        interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
 
-    assert_eq!(interval.start_offset(), interval.end_offset());
-    assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
-    assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
-}
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
 
-#[test]
-fn unchecked_set_end_inclusivity() {
-    let mut interval = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1));
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let mut interval =
+            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1));
+        interval.unchecked_set_start_inclusivity(BoundInclusivity::Exclusive);
 
-    interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
-
-    assert_eq!(interval.start_offset(), interval.end_offset());
-    assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
-    assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.start_offset(), interval.end_offset());
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
 }
 
 mod set_start_inclusivity {
@@ -699,21 +1250,45 @@ mod set_start_inclusivity {
     fn ok() {
         let mut interval =
             BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
-
         assert_eq!(interval.set_start_inclusivity(BoundInclusivity::Exclusive), Ok(()));
+
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
 
     #[test]
-    fn breaks_doubly_inclusive() {
+    fn set_start_inclusivity() {
         let mut interval =
             BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1));
-
         assert_eq!(
             interval.set_start_inclusivity(BoundInclusivity::Exclusive),
             Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
         );
+    }
+}
+
+mod unchecked_set_end_inclusivity {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let mut interval =
+            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+        interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
+
         assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let mut interval =
+            BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1));
+        interval.unchecked_set_end_inclusivity(BoundInclusivity::Exclusive);
+
+        assert_eq!(interval.start_offset(), interval.end_offset());
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     }
 }
 
@@ -724,21 +1299,20 @@ mod set_end_inclusivity {
     fn ok() {
         let mut interval =
             BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
-
         assert_eq!(interval.set_end_inclusivity(BoundInclusivity::Exclusive), Ok(()));
+
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
         assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
     }
 
     #[test]
-    fn breaks_doubly_inclusive() {
+    fn set_start_inclusivity() {
         let mut interval =
             BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(1));
-
         assert_eq!(
             interval.set_end_inclusivity(BoundInclusivity::Exclusive),
             Err(BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
         );
-        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
     }
 }
 
@@ -771,7 +1345,7 @@ fn openness() {
 fn relativity() {
     assert_eq!(
         BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2)).relativity(),
-        Relativity::Rel
+        Relativity::Relative
     );
 }
 
@@ -855,25 +1429,163 @@ fn is_empty() {
 }
 
 #[test]
-fn from_timestamp_pair() {
-    let start = SignedDuration::from_hours(1);
-    let end = SignedDuration::from_hours(2);
-
-    assert_eq!(
-        BoundedRelInterval::from((start, end)),
-        BoundedRelInterval::from_offsets(start, end)
-    );
+fn interval_type() {
+    let interval = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+    assert_eq!(interval.interval_type(), IntervalType::Bounded);
 }
 
 #[test]
-fn from_timestamp_incl_pair() {
-    let start = SignedDuration::from_hours(1);
-    let end = SignedDuration::from_hours(2);
+fn interval_type_with_rel() {
+    let interval = BoundedRelInterval::from_offsets(SignedDuration::from_hours(1), SignedDuration::from_hours(2));
+    assert_eq!(interval.interval_type_with_rel(), IntervalTypeWithRel::RelBounded);
+}
 
-    assert_eq!(
-        BoundedRelInterval::from(((start, BoundInclusivity::Inclusive), (end, BoundInclusivity::Exclusive))),
-        BoundedRelInterval::from_offsets_incl(start, BoundInclusivity::Inclusive, end, BoundInclusivity::Exclusive)
-    );
+mod from_finite_start_end_bounds {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2)).to_finite_end_bound();
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(interval.start(), start);
+        assert_eq!(interval.end(), end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(2));
+        let end_pos = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
+        let interval = BoundedRelInterval::from((start_pos.to_finite_start_bound(), end_pos.to_finite_end_bound()));
+
+        assert_eq!(interval.start(), end_pos.to_finite_start_bound());
+        assert_eq!(interval.end(), start_pos.to_finite_end_bound());
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound();
+        let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive)
+            .to_finite_end_bound();
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(
+            interval.start(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound()
+        );
+        assert_eq!(
+            interval.end(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound()
+        );
+    }
+}
+
+mod from_offset_pair {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(1);
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), start);
+    }
+}
+
+mod from_offset_incl_pair {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(2);
+        let interval =
+            BoundedRelInterval::from(((start, BoundInclusivity::Inclusive), (end, BoundInclusivity::Exclusive)));
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Exclusive);
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = SignedDuration::from_hours(2);
+        let end = SignedDuration::from_hours(1);
+        let interval =
+            BoundedRelInterval::from(((start, BoundInclusivity::Inclusive), (end, BoundInclusivity::Exclusive)));
+
+        assert_eq!(interval.start_offset(), end);
+        assert_eq!(interval.end_offset(), start);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Exclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = SignedDuration::from_hours(1);
+        let end = SignedDuration::from_hours(1);
+        let interval =
+            BoundedRelInterval::from(((start, BoundInclusivity::Inclusive), (end, BoundInclusivity::Exclusive)));
+
+        assert_eq!(interval.start_offset(), start);
+        assert_eq!(interval.end_offset(), end);
+        assert_eq!(interval.start_inclusivity(), BoundInclusivity::Inclusive);
+        assert_eq!(interval.end_inclusivity(), BoundInclusivity::Inclusive);
+    }
+}
+
+mod from_finite_bound_pos_pair {
+    use super::*;
+
+    #[test]
+    fn ok() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(2));
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(interval.start(), start.to_finite_start_bound());
+        assert_eq!(interval.end(), end.to_finite_end_bound());
+    }
+
+    #[test]
+    fn chronological_order_violation() {
+        let start = RelFiniteBoundPos::new(SignedDuration::from_hours(2));
+        let end = RelFiniteBoundPos::new(SignedDuration::from_hours(1));
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(interval.start(), end.to_finite_start_bound());
+        assert_eq!(interval.end(), start.to_finite_end_bound());
+    }
+
+    #[test]
+    fn same_pos_doubly_inclusive_violation() {
+        let start = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
+        let end = RelFiniteBoundPos::new_with_incl(SignedDuration::from_hours(1), BoundInclusivity::Exclusive);
+        let interval = BoundedRelInterval::from((start, end));
+
+        assert_eq!(
+            interval.start(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_start_bound()
+        );
+        assert_eq!(
+            interval.end(),
+            RelFiniteBoundPos::new(SignedDuration::from_hours(1)).to_finite_end_bound()
+        );
+    }
 }
 
 #[test]

@@ -441,9 +441,8 @@ impl Precision {
         &self,
         signed_duration: SignedDuration,
     ) -> Result<SignedDuration, PrecisionOutOfRangeError> {
-        Ok(SignedDuration::from_nanos_i128(
-            self.precise_signed_nanos(signed_duration.as_nanos()),
-        ))
+        SignedDuration::try_from_nanos_i128(self.precise_signed_nanos(signed_duration.as_nanos()))
+            .ok_or(PrecisionOutOfRangeError)
     }
 
     /// Applies the precision to a given [`SignedDuration`] based on a given offset

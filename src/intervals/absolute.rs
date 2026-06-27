@@ -49,42 +49,52 @@ mod end_bound_tests;
 #[cfg(test)]
 mod finite_bound_position_tests;
 #[cfg(test)]
+mod finite_bound_tests;
+#[cfg(test)]
+mod finite_end_bound_tests;
+#[cfg(test)]
+mod finite_start_bound_tests;
+#[cfg(test)]
 mod half_bounded_interval_tests;
+#[cfg(test)]
+mod half_bounded_to_future_interval_tests;
+#[cfg(test)]
+mod half_bounded_to_past_interval_tests;
 #[cfg(test)]
 mod interval_tests;
 #[cfg(test)]
 mod start_bound_tests;
 
 #[doc(inline)]
-pub use bound::*;
+pub use bound::AbsBound;
 #[doc(inline)]
-pub use bound_pair::*;
+pub use bound_pair::{AbsBoundPair, HasAbsBoundPair};
 #[doc(inline)]
-pub use bounded_interval::*;
+pub use bounded_interval::BoundedAbsInterval;
 #[doc(inline)]
-pub use emptiable_bound_pair::*;
+pub use emptiable_bound_pair::{EmptiableAbsBoundPair, HasEmptiableAbsBoundPair};
 #[doc(inline)]
-pub use emptiable_interval::*;
+pub use emptiable_interval::EmptiableAbsInterval;
 #[doc(inline)]
-pub use end_bound::*;
+pub use end_bound::AbsEndBound;
 #[doc(inline)]
-pub use finite_bound::*;
+pub use finite_bound::AbsFiniteBound;
 #[doc(inline)]
-pub use finite_bound_position::*;
+pub use finite_bound_position::AbsFiniteBoundPos;
 #[doc(inline)]
-pub use finite_end_bound::*;
+pub use finite_end_bound::AbsFiniteEndBound;
 #[doc(inline)]
-pub use finite_start_bound::*;
+pub use finite_start_bound::AbsFiniteStartBound;
 #[doc(inline)]
-pub use half_bounded_interval::*;
+pub use half_bounded_interval::HalfBoundedAbsInterval;
 #[doc(inline)]
-pub use half_bounded_to_future_interval::*;
+pub use half_bounded_to_future_interval::HalfBoundedToFutureAbsInterval;
 #[doc(inline)]
-pub use half_bounded_to_past_interval::*;
+pub use half_bounded_to_past_interval::HalfBoundedToPastAbsInterval;
 #[doc(inline)]
-pub use interval::*;
+pub use interval::AbsInterval;
 #[doc(inline)]
-pub use start_bound::*;
+pub use start_bound::AbsStartBound;
 
 /// Swaps an absolute finite start bound with an absolute finite end bound
 ///
@@ -377,6 +387,8 @@ pub fn check_abs_start_end_bounds_for_interval_creation(
 /// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
 /// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
+/// Returns whether a change has occurred.
+///
 /// # Examples
 ///
 /// ```
@@ -435,6 +447,8 @@ pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
 /// If the bounds are positioned on the same time but are not doubly inclusive, their bound inclusivities
 /// are set to [`Inclusive`](BoundInclusivity::Inclusive).
 ///
+/// Returns whether a change has occurred.
+///
 /// # Examples
 ///
 /// ```
@@ -443,14 +457,14 @@ pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
 /// # use periodical::intervals::absolute::{
 /// #     AbsFiniteBoundPos,
 /// #     AbsStartEndBoundsCheckForIntervalCreationError,
-/// #     prepare_abs_bound_pair_for_interval_creation,
+/// #     prepare_abs_start_end_bounds_for_interval_creation,
 /// # };
 /// let mut start =
 ///     AbsFiniteBoundPos::new("2026-01-01 16:00:00Z".parse::<Timestamp>()?).to_start_bound();
 /// let mut end =
 ///     AbsFiniteBoundPos::new("2026-01-01 08:00:00Z".parse::<Timestamp>()?).to_end_bound();
 ///
-/// prepare_abs_bound_pair_for_interval_creation(&mut start, &mut end);
+/// prepare_abs_start_end_bounds_for_interval_creation(&mut start, &mut end);
 ///
 /// assert_eq!(
 ///     start,
@@ -462,7 +476,7 @@ pub fn prepare_abs_finite_start_end_bounds_for_interval_creation(
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
-pub fn prepare_abs_bound_pair_for_interval_creation(start: &mut AbsStartBound, end: &mut AbsEndBound) -> bool {
+pub fn prepare_abs_start_end_bounds_for_interval_creation(start: &mut AbsStartBound, end: &mut AbsEndBound) -> bool {
     match check_abs_start_end_bounds_for_interval_creation(start, end) {
         Ok(()) => false,
         Err(AbsStartEndBoundsCheckForIntervalCreationError::StartPastEnd) => {

@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::ffi::OsStr;
 use std::fmt::Display;
-use std::fs::DirBuilder;
+use std::fs::{self, DirBuilder};
 use std::io;
 use std::path::Path;
 use std::process::{Command, ExitCode};
@@ -109,6 +109,8 @@ struct Cli {
 enum XTask {
     /// Generates code coverage artifact
     Coverage {
+        /// Test name pattern argument per `cargo test`
+        test_name_pat: Option<String>,
         /// Open the resulting code coverage report
         #[arg(long)]
         open: bool,
@@ -131,19 +133,34 @@ fn try_main() -> Result<(), Box<dyn Error>> {
 
     match cli.xtask {
         XTask::Coverage {
+            test_name_pat,
             open,
-        } => xtask_coverage(open).map_err(Box::<dyn Error>::from),
+        } => xtask_coverage(test_name_pat.unwrap_or_default(), open).map_err(Box::<dyn Error>::from),
         XTask::FmtCheck => xtask_fmtcheck().map_err(Box::<dyn Error>::from),
     }
 }
 
-fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
+fn xtask_coverage(test_name_pat: String, open: bool) -> Result<(), XtaskError> {
     let mut llvm_profile_file = PROFILING_DATA_FOLDER.to_path_buf();
     llvm_profile_file.push(PROFILING_DATA_NAME_TEMPLATE);
 
     eprintln!("Retrieving stable cargo…");
 
     let stable_cargo = get_rust_bin("cargo", RustToolchain::Stable)?;
+
+    eprintln!("Done.");
+
+    eprintln!("Deleting previous profiling data…");
+
+    // This is due to `grcov` compiling all profiling data that it finds instead of using a single instance's data
+
+    if PROFILING_DATA_FOLDER.exists() && fs::remove_dir_all(*PROFILING_DATA_FOLDER).is_err() {
+        return Err("Failed to delete profiling data".into());
+    }
+
+    if fs::create_dir_all(*PROFILING_DATA_FOLDER).is_err() {
+        return Err("Failed to recreate profiling data folder".into());
+    }
 
     eprintln!("Done.");
 
@@ -157,6 +174,7 @@ fn xtask_coverage(open: bool) -> Result<(), XtaskError> {
         .arg("--tests") // Only tests, no doc tests
         .arg("--all-features")
         .arg("-q")
+        .arg(test_name_pat)
         .status()?
         .success();
 

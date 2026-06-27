@@ -41,10 +41,12 @@ use crate::intervals::meta::{
     Duration as IntervalDuration,
     HasBoundInclusivity,
     HasDuration,
+    HasIntervalTypeWithRel,
     HasOpeningDirection,
     HasOpenness,
     HasRelativity,
     Interval,
+    IntervalTypeWithRel,
     IsEmpty,
     OpeningDirection,
     Openness,
@@ -678,7 +680,7 @@ impl HasOpenness for HalfBoundedAbsInterval {
 
 impl HasRelativity for HalfBoundedAbsInterval {
     fn relativity(&self) -> Relativity {
-        Relativity::Abs
+        Relativity::Absolute
     }
 }
 
@@ -723,6 +725,12 @@ impl IsEmpty for HalfBoundedAbsInterval {
     }
 }
 
+impl HasIntervalTypeWithRel for HalfBoundedAbsInterval {
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel {
+        IntervalTypeWithRel::AbsHalfBounded(self.opening_direction())
+    }
+}
+
 impl From<(Timestamp, OpeningDirection)> for HalfBoundedAbsInterval {
     fn from((time, direction): (Timestamp, OpeningDirection)) -> Self {
         HalfBoundedAbsInterval::from_time(time, direction)
@@ -737,7 +745,7 @@ impl From<(Timestamp, BoundInclusivity, OpeningDirection)> for HalfBoundedAbsInt
 
 impl From<(AbsFiniteBoundPos, OpeningDirection)> for HalfBoundedAbsInterval {
     fn from((reference, opening_direction): (AbsFiniteBoundPos, OpeningDirection)) -> Self {
-        Self::from_time_incl(reference.time(), reference.inclusivity(), opening_direction)
+        Self::new(reference, opening_direction)
     }
 }
 

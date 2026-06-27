@@ -112,20 +112,20 @@ impl PartialOrd for RelFiniteStartBound {
 
 impl Ord for RelFiniteStartBound {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.pos()
-            .cmp(&other.pos())
-            .then_with(|| match (self.pos().inclusivity(), other.pos().inclusivity()) {
+        self.pos().offset().cmp(&other.pos().offset()).then_with(|| {
+            match (self.pos().inclusivity(), other.pos().inclusivity()) {
                 (BoundInclusivity::Inclusive, BoundInclusivity::Inclusive)
                 | (BoundInclusivity::Exclusive, BoundInclusivity::Exclusive) => Ordering::Equal,
                 (BoundInclusivity::Inclusive, BoundInclusivity::Exclusive) => Ordering::Less,
                 (BoundInclusivity::Exclusive, BoundInclusivity::Inclusive) => Ordering::Greater,
-            })
+            }
+        })
     }
 }
 
 impl BoundEq for RelFiniteStartBound {
     fn bound_eq(&self, other: &Self, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.eq(other)
+        self.pos().offset().eq(&other.pos().offset())
             && BoundOverlapAmbiguity::BothStarts(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
                 .is_equal()
@@ -142,7 +142,7 @@ impl BoundEq<RelStartBound> for RelFiniteStartBound {
 
 impl BoundEq<RelFiniteEndBound> for RelFiniteStartBound {
     fn bound_eq(&self, other: &RelFiniteEndBound, rule_set: BoundOverlapDisambiguationRuleSet) -> bool {
-        self.pos().eq(&other.pos())
+        self.pos().offset().eq(&other.pos().offset())
             && BoundOverlapAmbiguity::StartEnd(self.pos().inclusivity(), other.pos().inclusivity())
                 .disambiguate(rule_set)
                 .is_equal()
