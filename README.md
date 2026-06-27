@@ -17,8 +17,10 @@ and more!
 Just add the following in your `Cargo.toml` to start using `periodical` in your project!
 
 ```toml
-periodical = "0.2"
+periodical = "0.3"
 ```
+
+<small>PS: The reason emojis are present is to better illustrate and add variety to the reading. It is not the result of an AI generation.</small>
 
 # Why should I use this crate?
 
@@ -127,46 +129,32 @@ And if it doesn't, feel absolutely free to [contribute](CONTRIBUTING.md) or [sug
 # MSRV policy 🦀
 
 The [MSRV, Minimum Supported Rust Version](https://doc.rust-lang.org/cargo/reference/rust-version.html),
-of this crate is currently set to Rust `1.87.0`, but is subject to change.
+of this crate is currently set to Rust `1.88.0`, but is subject to change.
 
 Since increasing the MSRV is a breaking change, the version number of this crate will increase in a similar manner
 when it is changed, as [SemVer](https://semver.org/) describes it.
 
 # Roadmap 🔜
 
-## 0.2
-
-- [x] [`serde`](https://lib.rs/serde) support 🔢
-- [x] Epsilon support for interval durations 🤏
-- [x] Added [MSRV](https://doc.rust-lang.org/cargo/reference/rust-version.html)
-
 ## Future
 
 (order doesn't represent priority)
 
-- [ ] Convenience methods for creating common intervals with ease 📈
 - [ ] Interval periodicity 🔁
-- [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants) 🧪
 - [ ] Methods to get overlap/gap durations ↔️
 - [ ] Interval formatting (standard and non-standard) ✒️
+- [ ] [Cargo mutants](https://lib.rs/crates/cargo-mutants) 🧪
 - [ ] Precision change trait for relative intervals
 - [ ] Support for non-UTC timezones 🌐
 - [ ] Crate usage examples for practical solutions 🔧
-- [ ] Implementation of [`rayon`](https://lib.rs/rayon) for lightning-fast iterators ⚡[^1]
+- [ ] Implementation of [`orx-parallel`](https://lib.rs/crates/orx-parallel) for lightning-fast iterators ⚡
 
-[^1]: Delayed until [`rayon`](https://lib.rs/rayon) describes its trait implementations on
-      foreign types better, see
-      [GitHub Discussion "Understanding rayon workflow and trait implementations"][gh_discussion_rayon]
+More details can be found in [the tracking issue for future version(s)](https://github.com/maeldroem/periodical/issues/44).
 
-[gh_discussion_rayon]: https://github.com/rayon-rs/rayon/discussions/1272
-
----------------------
+---
 
 <div align="center">
 <a href="https://brainmade.org/">
     <img src="https://brainmade.org/black-logo.png" alt="BrainMade.org logo" width="300" />
 </a>
 </div>
-
-The reason emojis are present is to better illustrate and add variety to the reading.
-It is not the result of an AI generation.

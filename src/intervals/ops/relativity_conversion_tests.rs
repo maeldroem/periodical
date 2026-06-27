@@ -1,84 +1,92 @@
-use chrono::{Duration, Utc};
+use std::error::Error;
 
-use crate::intervals::absolute::BoundedAbsoluteInterval;
-use crate::intervals::meta::BoundInclusivity;
-use crate::intervals::relative::BoundedRelativeInterval;
-use crate::test_utils::date;
+use jiff::{SignedDuration, Zoned};
 
 use super::relativity_conversion::*;
+use crate::intervals::absolute::BoundedAbsInterval;
+use crate::intervals::meta::BoundInclusivity;
+use crate::intervals::relative::BoundedRelInterval;
 
 #[test]
-fn no_op_absolute_to_absolute() {
+fn no_op_absolute_to_absolute() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        BoundedAbsInterval::from_times_incl(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 2),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
-        .to_absolute(date(&Utc, 2000, 1, 1)),
-        BoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        .to_absolute("2000-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+        BoundedAbsInterval::from_times_incl(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 2),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         ),
     );
+
+    Ok(())
 }
 
 #[test]
-fn no_op_relative_to_relative() {
+fn no_op_relative_to_relative() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedRelativeInterval::new_with_inclusivity(
-            Duration::zero(),
+        BoundedRelInterval::from_offsets_incl(
+            SignedDuration::ZERO,
             BoundInclusivity::Inclusive,
-            Duration::days(1),
+            SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
         )
-        .to_relative(date(&Utc, 2000, 1, 1)),
-        BoundedRelativeInterval::new_with_inclusivity(
-            Duration::zero(),
+        .to_relative("2000-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+        BoundedRelInterval::from_offsets_incl(
+            SignedDuration::ZERO,
             BoundInclusivity::Inclusive,
-            Duration::days(1),
+            SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
         ),
     );
+
+    Ok(())
 }
 
 #[test]
-fn from_absolute_to_relative() {
+fn from_absolute_to_relative() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        BoundedAbsInterval::from_times_incl(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 2),
+            "2025-01-01 01:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         )
-        .to_relative(date(&Utc, 2025, 1, 1)),
-        BoundedRelativeInterval::new_with_inclusivity(
-            Duration::zero(),
+        .to_relative("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+        BoundedRelInterval::from_offsets_incl(
+            SignedDuration::ZERO,
             BoundInclusivity::Inclusive,
-            Duration::days(1),
+            SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
         ),
     );
+
+    Ok(())
 }
 
 #[test]
-fn from_relative_to_absolute() {
+fn from_relative_to_absolute() -> Result<(), Box<dyn Error>> {
     assert_eq!(
-        BoundedRelativeInterval::new_with_inclusivity(
-            Duration::zero(),
+        BoundedRelInterval::from_offsets_incl(
+            SignedDuration::ZERO,
             BoundInclusivity::Inclusive,
-            Duration::days(1),
+            SignedDuration::from_hours(1),
             BoundInclusivity::Exclusive,
         )
-        .to_absolute(date(&Utc, 2025, 1, 1)),
-        BoundedAbsoluteInterval::new_with_inclusivity(
-            date(&Utc, 2025, 1, 1),
+        .to_absolute("2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()),
+        BoundedAbsInterval::from_times_incl(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Inclusive,
-            date(&Utc, 2025, 1, 2),
+            "2025-01-01 01:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             BoundInclusivity::Exclusive,
         ),
     );
+
+    Ok(())
 }

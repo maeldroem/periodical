@@ -3,7 +3,7 @@
 use libfuzzer_sys::fuzz_target;
 use periodical::prelude::*;
 
-fuzz_target!(|bounded_interval: BoundedAbsoluteInterval| {
+fuzz_target!(|bounded_interval: BoundedAbsInterval| {
     let (left_complement, right_complement) = bounded_interval
         .complement()
         .split()
@@ -23,6 +23,6 @@ fuzz_target!(|bounded_interval: BoundedAbsoluteInterval| {
 
     assert_eq!(
         abridgment_2nd_degree_complements,
-        AbsoluteInterval::from(bounded_interval)
+        bounded_interval.to_emptiable_interval()
     );
 });

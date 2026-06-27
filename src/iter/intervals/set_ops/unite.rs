@@ -3,58 +3,75 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsEndBound, AbsFiniteBoundPos};
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::set_ops::unite::PeerUnionIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsEndBound::InfiniteFuture,
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 10:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsEndBound::InfiniteFuture,
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
 //! assert_eq!(
 //!     intervals.peer_union().collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::InfiniteFuture,
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 08:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
+//!             AbsEndBound::InfiniteFuture,
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::InfiniteFuture,
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 10:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
+//!             AbsEndBound::InfiniteFuture,
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Unitable;
 use crate::ops::UnionResult;
 
 /// Accumulative union iterator using the predefined rules
@@ -121,8 +138,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for AccumulativeUnion
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for AccumulativeUnion
 
 impl<'a, I, T, A> FusedIterator for AccumulativeUnion<Peekable<I>>
 where
@@ -142,7 +159,8 @@ where
     for<'x> &'x T: Into<&'x A>,
     A: Unitable<Output = A>,
 {
-    /// Accumulatively unites intervals of the iterator using the default overlap rules
+    /// Accumulatively unites intervals of the iterator using the default
+    /// overlap rules
     #[must_use]
     fn acc_union(self) -> AccumulativeUnion<Peekable<Self::IntoIter>> {
         AccumulativeUnion::new(self.into_iter())
@@ -221,8 +239,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for AccumulativeUnionWith
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for AccumulativeUnionWith
 
 impl<'a, I, T, F> FusedIterator for AccumulativeUnionWith<Peekable<I>, F>
 where
@@ -256,7 +274,8 @@ where
 
 /// Peer union iterator for intervals using predefined rules
 ///
-/// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+/// Operates a [union] on peers, that is to say, we operate the union on every
+/// pair of intervals.
 ///
 /// Uses [`Unitable`] under the hood.
 ///
@@ -318,8 +337,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerUnion
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerUnion
 
 impl<'a, I, T, A> FusedIterator for PeerUnion<Peekable<I>>
 where
@@ -337,7 +356,8 @@ where
 {
     /// Unites peer intervals of the iterator using the default overlap rules
     ///
-    /// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+    /// Operates a [union] on peers, that is to say, we operate the union on
+    /// every pair of intervals.
     ///
     /// Uses [`Unitable`] under the hood.
     ///
@@ -356,7 +376,8 @@ where
 
 /// Peer union iterator for intervals using the given closure
 ///
-/// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+/// Operates a [union] on peers, that is to say, we operate the union on every
+/// pair of intervals.
 ///
 /// Uses [`Unitable`] under the hood.
 ///
@@ -422,8 +443,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerUnionWith
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerUnionWith
 
 impl<'a, I, T, A, F> FusedIterator for PeerUnionWith<Peekable<I>, F>
 where
@@ -443,7 +464,8 @@ where
 {
     /// Unites peer intervals of the iterator using the given closure
     ///
-    /// Operates a [union] on peers, that is to say, we operate the union on every pair of intervals.
+    /// Operates a [union] on peers, that is to say, we operate the union on
+    /// every pair of intervals.
     ///
     /// Uses [`Unitable`] under the hood.
     ///

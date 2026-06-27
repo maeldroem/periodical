@@ -7,53 +7,76 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
-//! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-//! # };
+//! # use std::error::Error;
+//! # use jiff::Zoned;
+//! # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 //! # use periodical::intervals::meta::BoundInclusivity;
-//! # use periodical::iter::intervals::bounds::AbsoluteBoundsIteratorDispatcher;
+//! # use periodical::iter::intervals::bounds::AbsBoundsIteratorDispatcher;
 //! # use periodical::iter::intervals::layered_bounds_set_ops::{
-//! #     LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher,
+//! #     LayeredAbsBoundsSymmetricDifferenceIteratorDispatcher,
 //! # };
 //! # use periodical::iter::intervals::layered_bounds::{
-//! #     LayeredAbsoluteBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound,
+//! #     LayeredAbsBounds, LayeredBoundsState, LayeredBoundsStateChangeAtAbsBound,
 //! # };
 //! let first_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 13:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
 //! let second_layer_intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 07:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 18:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -65,94 +88,126 @@
 //!         .abs_symmetric_difference_layered()
 //!         .collect::<Vec<_>>(),
 //!     vec![
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 07:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 07:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
+//!             AbsFiniteBoundPos::new_with_incl(
+//!                 "2025-01-01 08:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             )),
+//!             )
+//!             .to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new_with_incl(
+//!                 "2025-01-01 11:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!             )
+//!             .to_start_bound(),
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 12:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 13:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_start_bound(),
+//!             AbsFiniteBoundPos::new_with_incl(
+//!                 "2025-01-01 14:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             )),
+//!             )
+//!             .to_end_bound(),
 //!         ),
-//!         AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!         AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new_with_incl(
+//!                 "2025-01-01 16:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
 //!                 BoundInclusivity::Exclusive
-//!             )),
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 18:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!             )
+//!             .to_start_bound(),
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 18:00:00[Europe/Oslo]"
+//!                     .parse::<Zoned>()?
+//!                     .timestamp(),
+//!             )
+//!             .to_end_bound(),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::FusedIterator;
 
-use crate::intervals::absolute::AbsoluteBounds;
-use crate::intervals::relative::RelativeBounds;
+use crate::intervals::absolute::AbsBoundPair;
+use crate::intervals::relative::RelBoundPair;
 use crate::iter::intervals::layered_bounds::{
-    LayeredBoundsState, LayeredBoundsStateChangeAtAbsoluteBound, LayeredBoundsStateChangeAtRelativeBound,
+    LayeredBoundsState,
+    LayeredBoundsStateChangeAtAbsBound,
+    LayeredBoundsStateChangeAtRelBound,
 };
 
 /// Symmetric difference iterator
-/// for [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds)
+/// for [`LayeredAbsBounds`](crate::iter::intervals::layered_bounds::LayeredAbsBounds)
 #[derive(Debug, Clone, Hash)]
-pub struct LayeredAbsoluteBoundsSymmetricDifference<I> {
+pub struct LayeredAbsBoundsSymmetricDifference<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredAbsoluteBoundsSymmetricDifference<I>
+impl<I> LayeredAbsBoundsSymmetricDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsBound>,
 {
-    /// Creates a new [`LayeredAbsoluteBoundsSymmetricDifference`]
+    /// Creates a new [`LayeredAbsBoundsSymmetricDifference`]
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsoluteBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtAbsBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [old state](LayeredBoundsStateChangeAtAbsoluteBound::old_state),
+    /// as its [old state](LayeredBoundsStateChangeAtAbsBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtAbsoluteBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtAbsBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
-    /// [`LayeredAbsoluteBounds`](crate::iter::intervals::layered_bounds::LayeredAbsoluteBounds).
-    pub fn new(iter: I) -> LayeredAbsoluteBoundsSymmetricDifference<I> {
-        LayeredAbsoluteBoundsSymmetricDifference { iter, exhausted: false }
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
+    /// [`LayeredAbsBounds`](crate::iter::intervals::layered_bounds::LayeredAbsBounds).
+    pub fn new(iter: I) -> LayeredAbsBoundsSymmetricDifference<I> {
+        LayeredAbsBoundsSymmetricDifference {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
-impl<I> Iterator for LayeredAbsoluteBoundsSymmetricDifference<I>
+impl<I> Iterator for LayeredAbsBoundsSymmetricDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsBound>,
 {
-    type Item = AbsoluteBounds;
+    type Item = AbsBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -179,13 +234,13 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "The input requirements guarantee that the given iterator \
-                        cannot end on an active state such as `FirstLayer` or `SecondLayer`"
+                        "The input requirements guarantee that the given iterator cannot end on an active state such \
+                         as `FirstLayer` or `SecondLayer`"
                     );
                 };
 
-                // State can transition from FirstLayer to SecondLayer, but in a symmetric difference,
-                // those should be united
+                // State can transition from FirstLayer to SecondLayer, but in a symmetric
+                // difference, those should be united
                 if matches!(
                     next.new_state(),
                     LayeredBoundsState::FirstLayer | LayeredBoundsState::SecondLayer
@@ -195,14 +250,14 @@ where
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "We can infer the guarantee that the state change following one that transitions \
-                        to `FirstLayer` or `SecondLayer` must contain an end to the old state, \
-                        given that the input requirements guarantee that the given iterator cannot end \
-                        on an active state such as `FirstLayer` or `SecondLayer`"
+                        "We can infer the guarantee that the state change following one that transitions to \
+                         `FirstLayer` or `SecondLayer` must contain an end to the old state, given that the input \
+                         requirements guarantee that the given iterator cannot end on an active state such as \
+                         `FirstLayer` or `SecondLayer`"
                     );
                 };
 
-                return Some(AbsoluteBounds::new(start, end));
+                return Some(AbsBoundPair::new(start, end));
             }
         }
     }
@@ -212,70 +267,76 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredAbsoluteBoundsSymmetricDifference<I> where
-    I: Iterator<Item = LayeredBoundsStateChangeAtAbsoluteBound>
+impl<I> FusedIterator for LayeredAbsBoundsSymmetricDifference<I> where
+    I: Iterator<Item = LayeredBoundsStateChangeAtAbsBound>
 {
 }
 
-/// Iterator dispatcher trait for [`LayeredAbsoluteBoundsSymmetricDifference`]
-pub trait LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher
+/// Iterator dispatcher trait for [`LayeredAbsBoundsSymmetricDifference`]
+pub trait LayeredAbsBoundsSymmetricDifferenceIteratorDispatcher
 where
-    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized,
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtAbsBound> + Sized,
 {
     /// Operates a [symmetric difference]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff) for more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
-    fn abs_symmetric_difference_layered(self) -> LayeredAbsoluteBoundsSymmetricDifference<Self::IntoIter> {
-        LayeredAbsoluteBoundsSymmetricDifference::new(self.into_iter())
+    fn abs_symmetric_difference_layered(self) -> LayeredAbsBoundsSymmetricDifference<Self::IntoIter> {
+        LayeredAbsBoundsSymmetricDifference::new(self.into_iter())
     }
 }
 
-impl<I> LayeredAbsoluteBoundsSymmetricDifferenceIteratorDispatcher for I where
-    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsoluteBound> + Sized
+impl<I> LayeredAbsBoundsSymmetricDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtAbsBound> + Sized
 {
 }
 
 /// Symmetric difference iterator
-/// for [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds)
+/// for [`LayeredRelBounds`](crate::iter::intervals::layered_bounds::LayeredRelBounds)
 #[derive(Debug, Clone, Hash)]
-pub struct LayeredRelativeBoundsSymmetricDifference<I> {
+pub struct LayeredRelBoundsSymmetricDifference<I> {
     iter: I,
     exhausted: bool,
 }
 
-impl<I> LayeredRelativeBoundsSymmetricDifference<I>
+impl<I> LayeredRelBoundsSymmetricDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelBound>,
 {
-    /// Creates a new [`LayeredRelativeBoundsSymmetricDifference`]
+    /// Creates a new [`LayeredRelBoundsSymmetricDifference`]
     ///
     /// # Input requirements
     ///
-    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelativeBound)**
+    /// 1. The iterator **must return continuous [state changes](LayeredBoundsStateChangeAtRelBound)**
     /// 2. The state changes **must be in chronological order**
     ///
-    /// For more precision about requirement 1, _continuous state changes_ means that the first state change
+    /// For more precision about requirement 1, _continuous state changes_ means
+    /// that the first state change
     /// must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [old state](LayeredBoundsStateChangeAtRelativeBound::old_state),
+    /// as its [old state](LayeredBoundsStateChangeAtRelBound::old_state),
     /// the last change must have [`NoLayers`](LayeredBoundsState::NoLayers)
-    /// as its [new state](LayeredBoundsStateChangeAtRelativeBound::new_state), and all state changes must follow each
-    /// other, i.e. if one change transitions from state A to state B, the next change's old state must be the previous
-    /// change's new state: state B.
+    /// as its [new state](LayeredBoundsStateChangeAtRelBound::new_state),
+    /// and all state changes must follow each other, i.e. if one change
+    /// transitions from state A to state B, the next change's old state must be
+    /// the previous change's new state: state B.
     ///
-    /// All requirements are automatically guaranteed if the state changes are obtained from
-    /// [`LayeredRelativeBounds`](crate::iter::intervals::layered_bounds::LayeredRelativeBounds).
-    pub fn new(iter: I) -> LayeredRelativeBoundsSymmetricDifference<I> {
-        LayeredRelativeBoundsSymmetricDifference { iter, exhausted: false }
+    /// All requirements are automatically guaranteed if the state changes are
+    /// obtained from
+    /// [`LayeredRelBounds`](crate::iter::intervals::layered_bounds::LayeredRelBounds).
+    pub fn new(iter: I) -> LayeredRelBoundsSymmetricDifference<I> {
+        LayeredRelBoundsSymmetricDifference {
+            iter,
+            exhausted: false,
+        }
     }
 }
 
-impl<I> Iterator for LayeredRelativeBoundsSymmetricDifference<I>
+impl<I> Iterator for LayeredRelBoundsSymmetricDifference<I>
 where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>,
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelBound>,
 {
-    type Item = RelativeBounds;
+    type Item = RelBoundPair;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.exhausted {
@@ -302,13 +363,13 @@ where
             loop {
                 let Some(next) = self.iter.next() else {
                     unreachable!(
-                        "The input requirements guarantee that the given iterator \
-                        cannot end on an active state such as `FirstLayer` or `SecondLayer`"
+                        "The input requirements guarantee that the given iterator cannot end on an active state such \
+                         as `FirstLayer` or `SecondLayer`"
                     );
                 };
 
-                // State can transition from FirstLayer to SecondLayer, but in a symmetric difference,
-                // those should be united
+                // State can transition from FirstLayer to SecondLayer, but in a symmetric
+                // difference, those should be united
                 if matches!(
                     next.new_state(),
                     LayeredBoundsState::FirstLayer | LayeredBoundsState::SecondLayer
@@ -318,14 +379,14 @@ where
 
                 let Some(end) = next.old_state_end() else {
                     unreachable!(
-                        "We can infer the guarantee that the state change following one that transitions \
-                        to `FirstLayer` or `SecondLayer` must contain an end to the old state, \
-                        given that the input requirements guarantee that the given iterator cannot end \
-                        on an active state such as `FirstLayer` or `SecondLayer`"
+                        "We can infer the guarantee that the state change following one that transitions to \
+                         `FirstLayer` or `SecondLayer` must contain an end to the old state, given that the input \
+                         requirements guarantee that the given iterator cannot end on an active state such as \
+                         `FirstLayer` or `SecondLayer`"
                     );
                 };
 
-                return Some(RelativeBounds::new(start, end));
+                return Some(RelBoundPair::new(start, end));
             }
         }
     }
@@ -335,27 +396,27 @@ where
     }
 }
 
-impl<I> FusedIterator for LayeredRelativeBoundsSymmetricDifference<I> where
-    I: Iterator<Item = LayeredBoundsStateChangeAtRelativeBound>
+impl<I> FusedIterator for LayeredRelBoundsSymmetricDifference<I> where
+    I: Iterator<Item = LayeredBoundsStateChangeAtRelBound>
 {
 }
 
-/// Iterator dispatcher trait for [`LayeredRelativeBoundsSymmetricDifference`]
-pub trait LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher
+/// Iterator dispatcher trait for [`LayeredRelBoundsSymmetricDifference`]
+pub trait LayeredRelBoundsSymmetricDifferenceIteratorDispatcher
 where
-    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized,
+    Self: IntoIterator<Item = LayeredBoundsStateChangeAtRelBound> + Sized,
 {
     /// Operates a [symmetric difference]
     ///
-    /// See [module documentation](crate::iter::intervals::layered_bounds_set_ops::sym_diff) for more information.
+    /// See [module documentation](self) for more information.
     ///
     /// [intersection]: https://en.wikipedia.org/w/index.php?title=Symmetric_difference&oldid=1311741596
-    fn rel_symmetric_difference_layered(self) -> LayeredRelativeBoundsSymmetricDifference<Self::IntoIter> {
-        LayeredRelativeBoundsSymmetricDifference::new(self.into_iter())
+    fn rel_symmetric_difference_layered(self) -> LayeredRelBoundsSymmetricDifference<Self::IntoIter> {
+        LayeredRelBoundsSymmetricDifference::new(self.into_iter())
     }
 }
 
-impl<I> LayeredRelativeBoundsSymmetricDifferenceIteratorDispatcher for I where
-    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelativeBound> + Sized
+impl<I> LayeredRelBoundsSymmetricDifferenceIteratorDispatcher for I where
+    I: IntoIterator<Item = LayeredBoundsStateChangeAtRelBound> + Sized
 {
 }

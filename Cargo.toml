@@ -1,34 +1,30 @@
 [package]
 name = "periodical"
-version = "0.2.0"
-authors = ["Mældrøm <maeldroem@proton.me>"]
+version = "0.3.0"
 edition = "2024"
-rust-version = "1.87.0"
+rust-version = "1.88.0"
 description = "Management of all kinds of time intervals, use it to manage schedules, find overlaps, and more!"
 documentation = "https://docs.rs/periodical"
 repository = "https://github.com/maeldroem/periodical"
 license = "BSD-3-Clause"
-keywords = ["time", "interval", "ranges"]
+keywords = ["interval", "ranges", "time"]
 categories = ["date-and-time"]
-
-[lints.clippy]
-complexity = "warn"
-perf = "warn"
-style = "warn"
-pedantic = "warn"
 
 [workspace]
 resolver = "3"
-members = ["fuzz"]
-
-[workspace.dependencies]
-chrono = "0.4.42"
-
-[features]
-serde = ["dep:serde", "chrono/serde"]
-arbitrary = ["dep:arbitrary", "chrono/arbitrary"]
+members = ["fuzz", "xtask"]
 
 [dependencies]
-arbitrary = { version = "1.4.2", optional = true, features = ["derive"] }
-chrono = "0.4.42"
-serde = { version = "1.0.225", optional = true, features = ["derive"] }
+arbitrary = { version = "1.4.2", features = ["derive"], optional = true }
+jiff = "0.2.29"
+serde = { version = "1.0.228", features = ["derive"], optional = true }
+
+[features]
+arbitrary = ["dep:arbitrary"]
+serde = ["dep:serde", "jiff/serde"]
+
+[lints.clippy]
+complexity = "warn"
+pedantic = "warn"
+perf = "warn"
+style = "warn"

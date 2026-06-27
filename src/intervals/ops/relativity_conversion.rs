@@ -1,535 +1,478 @@
 //! Relativity conversion
 //!
 //! Conversion from absolute to relative is defined by [`ToRelative`].
-//! Its opposite, conversion from relative to absolute, is defined by [`ToAbsolute`].
+//! Its opposite, conversion from relative to absolute, is defined by
+//! [`ToAbsolute`].
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteInterval, AbsoluteStartBound,
-    BoundedAbsoluteInterval, EmptiableAbsoluteBounds, HalfBoundedAbsoluteInterval, HasAbsoluteBounds,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsFiniteBoundPos,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
 };
-use crate::intervals::meta::HasBoundInclusivity;
+use crate::intervals::meta::{HasBoundInclusivity, HasOpeningDirection};
 use crate::intervals::relative::{
-    BoundedRelativeInterval, EmptiableRelativeBounds, HalfBoundedRelativeInterval, HasRelativeBounds, RelativeBounds,
-    RelativeEndBound, RelativeFiniteBound, RelativeInterval, RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelFiniteBoundPos,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
+macro_rules! to_absolute_impl_reflective {
+    ([$($implementor:ty),* $(,)?]) => {
+        $(
+            impl ToAbsolute for $implementor {
+                type AbsType = Self;
+
+                fn to_absolute(&self, _reference: Timestamp) -> Self::AbsType {
+                    self.clone()
+                }
+            }
+        )*
+    };
+}
+
+macro_rules! to_relative_impl_reflective {
+    ([$($implementor:ty),* $(,)?]) => {
+        $(
+            impl ToRelative for $implementor {
+                type RelType = Self;
+
+                fn to_relative(&self, _reference: Timestamp) -> Self::RelType {
+                    self.clone()
+                }
+            }
+        )*
+    };
+}
+
 /// Conversion into absolute
 ///
-/// This trait is reflexive: absolute structures should implement [`ToAbsolute`].
+/// This trait is reflexive: absolute structures should implement
+/// [`ToAbsolute`].
 ///
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Duration, Utc};
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use std::error::Error;
+/// # use jiff::{SignedDuration, Zoned};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
-/// # use periodical::intervals::relative::{
-/// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-/// # };
-/// let rel_interval = RelativeBounds::new(
-///     RelativeStartBound::Finite(RelativeFiniteBound::new(
-///         Duration::hours(8),
-///     )),
-///     RelativeEndBound::Finite(RelativeFiniteBound::new(
-///         Duration::hours(16),
-///     )),
+/// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+/// let rel_interval = RelBoundPair::new(
+///     RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+///     RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
-///     rel_interval.to_absolute("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
-///     AbsoluteBounds::new(
-///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
-///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-///         )),
+///     rel_interval.to_absolute(
+///         "2025-01-01 00:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp()
+///     ),
+///     AbsBoundPair::new(
+///         AbsFiniteBoundPos::new(
+///             "2025-01-01 08:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_start_bound(),
+///         AbsFiniteBoundPos::new(
+///             "2025-01-01 16:00:00[Europe/Oslo]"
+///                 .parse::<Zoned>()?
+///                 .timestamp(),
+///         )
+///         .to_end_bound(),
 ///     ),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait ToAbsolute {
-    type AbsoluteType;
+    type AbsType;
 
     /// Converts into absolute
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::{SignedDuration, Zoned};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::relativity_conversion::ToAbsolute;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let rel_interval = RelativeBounds::new(
-    ///     RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///         Duration::hours(8),
-    ///     )),
-    ///     RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///         Duration::hours(16),
-    ///     )),
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// let rel_interval = RelBoundPair::new(
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(8)).to_start_bound(),
+    ///     RelFiniteBoundPos::new(SignedDuration::from_hours(16)).to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     rel_interval.to_absolute("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     rel_interval.to_absolute(
+    ///         "2025-01-01 00:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp()
+    ///     ),
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new(
+    ///             "2025-01-01 08:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_start_bound(),
+    ///         AbsFiniteBoundPos::new(
+    ///             "2025-01-01 16:00:00[Europe/Oslo]"
+    ///                 .parse::<Zoned>()?
+    ///                 .timestamp(),
+    ///         )
+    ///         .to_end_bound(),
     ///     ),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType;
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType;
 }
 
-impl ToAbsolute for UnboundedInterval {
-    type AbsoluteType = UnboundedInterval;
+to_absolute_impl_reflective!([
+    UnboundedInterval,
+    EmptyInterval,
+    AbsFiniteBoundPos,
+    AbsStartBound,
+    AbsEndBound,
+    AbsBoundPair,
+    EmptiableAbsBoundPair,
+    BoundedAbsInterval,
+    HalfBoundedAbsInterval,
+    AbsInterval,
+    EmptiableAbsInterval,
+]);
 
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        *self
+impl ToAbsolute for RelFiniteBoundPos {
+    type AbsType = AbsFiniteBoundPos;
+
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
+        AbsFiniteBoundPos::new_with_incl(reference + self.offset(), self.inclusivity())
     }
 }
 
-impl ToAbsolute for EmptyInterval {
-    type AbsoluteType = EmptyInterval;
+impl ToAbsolute for RelStartBound {
+    type AbsType = AbsStartBound;
 
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        *self
-    }
-}
-
-impl ToAbsolute for AbsoluteFiniteBound {
-    type AbsoluteType = Self;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        *self
-    }
-}
-
-impl ToAbsolute for AbsoluteStartBound {
-    type AbsoluteType = AbsoluteStartBound;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        *self
-    }
-}
-
-impl ToAbsolute for AbsoluteEndBound {
-    type AbsoluteType = AbsoluteEndBound;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        *self
-    }
-}
-
-impl ToAbsolute for AbsoluteBounds {
-    type AbsoluteType = AbsoluteBounds;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
-    }
-}
-
-impl ToAbsolute for EmptiableAbsoluteBounds {
-    type AbsoluteType = Self;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
-    }
-}
-
-impl ToAbsolute for BoundedAbsoluteInterval {
-    type AbsoluteType = BoundedAbsoluteInterval;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
-    }
-}
-
-impl ToAbsolute for HalfBoundedAbsoluteInterval {
-    type AbsoluteType = HalfBoundedAbsoluteInterval;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
-    }
-}
-
-impl ToAbsolute for AbsoluteInterval {
-    type AbsoluteType = AbsoluteInterval;
-
-    fn to_absolute(&self, _reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        self.clone()
-    }
-}
-
-impl ToAbsolute for RelativeFiniteBound {
-    type AbsoluteType = AbsoluteFiniteBound;
-
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        AbsoluteFiniteBound::new_with_inclusivity(reference_time + self.offset(), self.inclusivity())
-    }
-}
-
-impl ToAbsolute for RelativeStartBound {
-    type AbsoluteType = AbsoluteStartBound;
-
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
         match self {
-            RelativeStartBound::InfinitePast => AbsoluteStartBound::InfinitePast,
-            RelativeStartBound::Finite(relative_finite) => {
-                AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    reference_time + relative_finite.offset(),
-                    relative_finite.inclusivity(),
-                ))
-            },
+            RelStartBound::InfinitePast => AbsStartBound::InfinitePast,
+            RelStartBound::Finite(relative_finite) => AbsFiniteBoundPos::new_with_incl(
+                reference + relative_finite.pos().offset(),
+                relative_finite.pos().inclusivity(),
+            )
+            .to_start_bound(),
         }
     }
 }
 
-impl ToAbsolute for RelativeEndBound {
-    type AbsoluteType = AbsoluteEndBound;
+impl ToAbsolute for RelEndBound {
+    type AbsType = AbsEndBound;
 
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
         match self {
-            RelativeEndBound::InfiniteFuture => AbsoluteEndBound::InfiniteFuture,
-            RelativeEndBound::Finite(relative_finite) => {
-                AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-                    reference_time + relative_finite.offset(),
-                    relative_finite.inclusivity(),
-                ))
-            },
+            RelEndBound::InfiniteFuture => AbsEndBound::InfiniteFuture,
+            RelEndBound::Finite(relative_finite) => AbsFiniteBoundPos::new_with_incl(
+                reference + relative_finite.pos().offset(),
+                relative_finite.pos().inclusivity(),
+            )
+            .to_end_bound(),
         }
     }
 }
 
-impl ToAbsolute for RelativeBounds {
-    type AbsoluteType = AbsoluteBounds;
+impl ToAbsolute for RelBoundPair {
+    type AbsType = AbsBoundPair;
 
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        AbsoluteBounds::new(
-            self.rel_start().to_absolute(reference_time),
-            self.rel_end().to_absolute(reference_time),
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
+        AbsBoundPair::new(
+            self.rel_start().to_absolute(reference),
+            self.rel_end().to_absolute(reference),
         )
     }
 }
 
-impl ToAbsolute for EmptiableRelativeBounds {
-    type AbsoluteType = EmptiableAbsoluteBounds;
+impl ToAbsolute for EmptiableRelBoundPair {
+    type AbsType = EmptiableAbsBoundPair;
 
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
         match self {
-            Self::Empty => EmptiableAbsoluteBounds::Empty,
-            Self::Bound(abs_bounds) => EmptiableAbsoluteBounds::Bound(abs_bounds.to_absolute(reference_time)),
+            Self::Empty => EmptiableAbsBoundPair::Empty,
+            Self::Bound(abs_bound_pair) => EmptiableAbsBoundPair::Bound(abs_bound_pair.to_absolute(reference)),
         }
     }
 }
 
-impl ToAbsolute for BoundedRelativeInterval {
-    type AbsoluteType = BoundedAbsoluteInterval;
+impl ToAbsolute for BoundedRelInterval {
+    type AbsType = BoundedAbsInterval;
 
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        BoundedAbsoluteInterval::unchecked_new_with_inclusivity(
-            reference_time + self.offset(),
-            self.from_inclusivity(),
-            reference_time + self.offset() + self.length(),
-            self.to_inclusivity(),
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
+        BoundedAbsInterval::unchecked_from_times_incl(
+            reference + self.start_offset(),
+            self.start_inclusivity(),
+            reference + self.end_offset(),
+            self.end_inclusivity(),
         )
     }
 }
 
-impl ToAbsolute for HalfBoundedRelativeInterval {
-    type AbsoluteType = HalfBoundedAbsoluteInterval;
+impl ToAbsolute for HalfBoundedRelInterval {
+    type AbsType = HalfBoundedAbsInterval;
 
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
-        HalfBoundedAbsoluteInterval::new_with_inclusivity(
-            reference_time + self.reference_offset(),
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
+        HalfBoundedAbsInterval::from_time_incl(
+            reference + self.reference_offset(),
             self.reference_inclusivity(),
             self.opening_direction(),
         )
     }
 }
 
-impl ToAbsolute for RelativeInterval {
-    type AbsoluteType = AbsoluteInterval;
+impl ToAbsolute for RelInterval {
+    type AbsType = AbsInterval;
 
-    fn to_absolute(&self, reference_time: DateTime<Utc>) -> Self::AbsoluteType {
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
         match self {
-            Self::Bounded(bounded) => AbsoluteInterval::Bounded(bounded.to_absolute(reference_time)),
-            Self::HalfBounded(half_bounded) => AbsoluteInterval::HalfBounded(half_bounded.to_absolute(reference_time)),
-            Self::Unbounded(unbounded) => AbsoluteInterval::Unbounded(unbounded.to_absolute(reference_time)),
-            Self::Empty(empty) => AbsoluteInterval::Empty(empty.to_absolute(reference_time)),
+            Self::Bounded(bounded) => AbsInterval::Bounded(bounded.to_absolute(reference)),
+            Self::HalfBounded(half_bounded) => AbsInterval::HalfBounded(half_bounded.to_absolute(reference)),
+            Self::Unbounded(unbounded) => AbsInterval::Unbounded(unbounded.to_absolute(reference)),
+        }
+    }
+}
+
+impl ToAbsolute for EmptiableRelInterval {
+    type AbsType = EmptiableAbsInterval;
+
+    fn to_absolute(&self, reference: Timestamp) -> Self::AbsType {
+        match self {
+            Self::Bound(interval) => EmptiableAbsInterval::Bound(interval.to_absolute(reference)),
+            Self::Empty(empty) => EmptiableAbsInterval::Empty(empty.to_absolute(reference)),
         }
     }
 }
 
 /// Conversion into relative
 ///
-/// This trait is reflexive: relative structures should implement [`ToRelative`].
+/// This trait is reflexive: relative structures should implement
+/// [`ToRelative`].
 ///
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Duration, Utc};
-/// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-/// # };
+/// # use std::error::Error;
+/// # use jiff::{SignedDuration, Zoned};
+/// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
 /// # use periodical::intervals::ops::relativity_conversion::ToRelative;
-/// # use periodical::intervals::relative::{
-/// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-/// # };
-/// let abs_interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+/// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+/// let abs_interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new(
+///         "2025-01-01 08:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_start_bound(),
+///     AbsFiniteBoundPos::new(
+///         "2025-01-01 16:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp(),
+///     )
+///     .to_end_bound(),
 /// );
 ///
 /// assert_eq!(
-///     abs_interval.to_relative("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
-///     RelativeBounds::new(
-///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-///             Duration::hours(8),
-///         )),
-///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-///             Duration::hours(16),
-///         )),
+///     abs_interval.to_relative(
+///         "2025-01-01 00:00:00[Europe/Oslo]"
+///             .parse::<Zoned>()?
+///             .timestamp()
+///     ),
+///     RelBoundPair::new(
+///         RelFiniteBoundPos::new(SignedDuration::from_hours(8),).to_start_bound(),
+///         RelFiniteBoundPos::new(SignedDuration::from_hours(16),).to_end_bound(),
 ///     ),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait ToRelative {
-    type RelativeType;
+    type RelType;
 
     /// Converts into relative
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Duration, Utc};
-    /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
-    /// # };
+    /// # use std::error::Error;
+    /// # use jiff::{SignedDuration, Zoned};
+    /// # use periodical::intervals::absolute::{AbsBoundPair, AbsFiniteBoundPos};
     /// # use periodical::intervals::ops::relativity_conversion::ToRelative;
-    /// # use periodical::intervals::relative::{
-    /// #     RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
-    /// # };
-    /// let abs_interval = AbsoluteBounds::new(
-    ///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
-    ///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///     )),
+    /// # use periodical::intervals::relative::{RelBoundPair, RelFiniteBoundPos};
+    /// let abs_interval = AbsBoundPair::new(
+    ///     AbsFiniteBoundPos::new(
+    ///         "2025-01-01 08:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_start_bound(),
+    ///     AbsFiniteBoundPos::new(
+    ///         "2025-01-01 16:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp(),
+    ///     )
+    ///     .to_end_bound(),
     /// );
     ///
     /// assert_eq!(
-    ///     abs_interval.to_relative("2025-01-01 00:00:00Z".parse::<DateTime<Utc>>()?),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(8),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(16),
-    ///         )),
+    ///     abs_interval.to_relative(
+    ///         "2025-01-01 00:00:00[Europe/Oslo]"
+    ///             .parse::<Zoned>()?
+    ///             .timestamp()
+    ///     ),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(8),).to_start_bound(),
+    ///         RelFiniteBoundPos::new(SignedDuration::from_hours(16),).to_end_bound(),
     ///     ),
     /// );
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType;
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType;
 }
 
-impl ToRelative for UnboundedInterval {
-    type RelativeType = UnboundedInterval;
+to_relative_impl_reflective!([
+    UnboundedInterval,
+    EmptyInterval,
+    RelFiniteBoundPos,
+    RelStartBound,
+    RelEndBound,
+    RelBoundPair,
+    EmptiableRelBoundPair,
+    BoundedRelInterval,
+    HalfBoundedRelInterval,
+    RelInterval,
+    EmptiableRelInterval,
+]);
 
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        *self
+impl ToRelative for AbsFiniteBoundPos {
+    type RelType = RelFiniteBoundPos;
+
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
+        RelFiniteBoundPos::new_with_incl(self.time().duration_since(reference), self.inclusivity())
     }
 }
 
-impl ToRelative for EmptyInterval {
-    type RelativeType = EmptyInterval;
+impl ToRelative for AbsStartBound {
+    type RelType = RelStartBound;
 
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        *self
-    }
-}
-
-impl ToRelative for AbsoluteFiniteBound {
-    type RelativeType = RelativeFiniteBound;
-
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        RelativeFiniteBound::new_with_inclusivity(self.time() - reference_time, self.inclusivity())
-    }
-}
-
-impl ToRelative for AbsoluteStartBound {
-    type RelativeType = RelativeStartBound;
-
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
         match self {
-            AbsoluteStartBound::InfinitePast => RelativeStartBound::InfinitePast,
-            AbsoluteStartBound::Finite(absolute_finite) => {
-                RelativeStartBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    absolute_finite.time() - reference_time,
-                    absolute_finite.inclusivity(),
-                ))
-            },
+            AbsStartBound::InfinitePast => RelStartBound::InfinitePast,
+            AbsStartBound::Finite(absolute_finite) => RelFiniteBoundPos::new_with_incl(
+                absolute_finite.pos().time().duration_since(reference),
+                absolute_finite.pos().inclusivity(),
+            )
+            .to_start_bound(),
         }
     }
 }
 
-impl ToRelative for AbsoluteEndBound {
-    type RelativeType = RelativeEndBound;
+impl ToRelative for AbsEndBound {
+    type RelType = RelEndBound;
 
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
         match self {
-            AbsoluteEndBound::InfiniteFuture => RelativeEndBound::InfiniteFuture,
-            AbsoluteEndBound::Finite(absolute_finite) => {
-                RelativeEndBound::Finite(RelativeFiniteBound::new_with_inclusivity(
-                    absolute_finite.time() - reference_time,
-                    absolute_finite.inclusivity(),
-                ))
-            },
+            AbsEndBound::InfiniteFuture => RelEndBound::InfiniteFuture,
+            AbsEndBound::Finite(absolute_finite) => RelFiniteBoundPos::new_with_incl(
+                absolute_finite.pos().time().duration_since(reference),
+                absolute_finite.pos().inclusivity(),
+            )
+            .to_end_bound(),
         }
     }
 }
 
-impl ToRelative for AbsoluteBounds {
-    type RelativeType = RelativeBounds;
+impl ToRelative for AbsBoundPair {
+    type RelType = RelBoundPair;
 
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        RelativeBounds::new(
-            self.abs_start().to_relative(reference_time),
-            self.abs_end().to_relative(reference_time),
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
+        RelBoundPair::new(
+            self.abs_start().to_relative(reference),
+            self.abs_end().to_relative(reference),
         )
     }
 }
 
-impl ToRelative for EmptiableAbsoluteBounds {
-    type RelativeType = EmptiableRelativeBounds;
+impl ToRelative for EmptiableAbsBoundPair {
+    type RelType = EmptiableRelBoundPair;
 
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
         match self {
-            Self::Empty => EmptiableRelativeBounds::Empty,
-            Self::Bound(abs_bounds) => EmptiableRelativeBounds::Bound(abs_bounds.to_relative(reference_time)),
+            Self::Empty => EmptiableRelBoundPair::Empty,
+            Self::Bound(abs_bound_pair) => EmptiableRelBoundPair::Bound(abs_bound_pair.to_relative(reference)),
         }
     }
 }
 
-impl ToRelative for BoundedAbsoluteInterval {
-    type RelativeType = BoundedRelativeInterval;
+impl ToRelative for BoundedAbsInterval {
+    type RelType = BoundedRelInterval;
 
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        BoundedRelativeInterval::new_with_inclusivity(
-            self.from_time() - reference_time,
-            self.from_inclusivity(),
-            self.to_time() - self.from_time(),
-            self.to_inclusivity(),
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
+        BoundedRelInterval::from_offsets_incl(
+            self.start_time().duration_since(reference),
+            self.start_inclusivity(),
+            self.end_time().duration_since(reference),
+            self.end_inclusivity(),
         )
     }
 }
 
-impl ToRelative for HalfBoundedAbsoluteInterval {
-    type RelativeType = HalfBoundedRelativeInterval;
+impl ToRelative for HalfBoundedAbsInterval {
+    type RelType = HalfBoundedRelInterval;
 
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
-        HalfBoundedRelativeInterval::new_with_inclusivity(
-            self.reference_time() - reference_time,
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
+        HalfBoundedRelInterval::from_offset_incl(
+            self.reference_time().duration_since(reference),
             self.reference_inclusivity(),
             self.opening_direction(),
         )
     }
 }
 
-impl ToRelative for AbsoluteInterval {
-    type RelativeType = RelativeInterval;
+impl ToRelative for AbsInterval {
+    type RelType = RelInterval;
 
-    fn to_relative(&self, reference_time: DateTime<Utc>) -> Self::RelativeType {
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
         match self {
-            Self::Bounded(bounded) => RelativeInterval::Bounded(bounded.to_relative(reference_time)),
-            Self::HalfBounded(half_bounded) => RelativeInterval::HalfBounded(half_bounded.to_relative(reference_time)),
-            Self::Unbounded(unbounded) => RelativeInterval::Unbounded(unbounded.to_relative(reference_time)),
-            Self::Empty(empty) => RelativeInterval::Empty(empty.to_relative(reference_time)),
+            Self::Bounded(bounded) => RelInterval::Bounded(bounded.to_relative(reference)),
+            Self::HalfBounded(half_bounded) => RelInterval::HalfBounded(half_bounded.to_relative(reference)),
+            Self::Unbounded(unbounded) => RelInterval::Unbounded(unbounded.to_relative(reference)),
         }
     }
 }
 
-impl ToRelative for RelativeFiniteBound {
-    type RelativeType = Self;
+impl ToRelative for EmptiableAbsInterval {
+    type RelType = EmptiableRelInterval;
 
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        *self
-    }
-}
-
-impl ToRelative for RelativeStartBound {
-    type RelativeType = RelativeStartBound;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        *self
-    }
-}
-
-impl ToRelative for RelativeEndBound {
-    type RelativeType = RelativeEndBound;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        *self
-    }
-}
-
-impl ToRelative for RelativeBounds {
-    type RelativeType = RelativeBounds;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
-    }
-}
-
-impl ToRelative for EmptiableRelativeBounds {
-    type RelativeType = Self;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
-    }
-}
-
-impl ToRelative for BoundedRelativeInterval {
-    type RelativeType = BoundedRelativeInterval;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
-    }
-}
-
-impl ToRelative for HalfBoundedRelativeInterval {
-    type RelativeType = HalfBoundedRelativeInterval;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
-    }
-}
-
-impl ToRelative for RelativeInterval {
-    type RelativeType = RelativeInterval;
-
-    fn to_relative(&self, _reference_time: DateTime<Utc>) -> Self::RelativeType {
-        self.clone()
+    fn to_relative(&self, reference: Timestamp) -> Self::RelType {
+        match self {
+            Self::Bound(interval) => EmptiableRelInterval::Bound(interval.to_relative(reference)),
+            Self::Empty(empty) => EmptiableRelInterval::Empty(empty.to_relative(reference)),
+        }
     }
 }

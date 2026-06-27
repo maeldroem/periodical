@@ -3,32 +3,45 @@
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
+//! # use std::error::Error;
+//! # use jiff::Zoned;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::set_ops::diff::PeerDifferenceIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsEndBound::InfiniteFuture,
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::InfiniteFuture,
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 10:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsEndBound::InfiniteFuture,
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 14:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -36,54 +49,75 @@
 //!     intervals.peer_difference().collect::<Vec<_>>(),
 //!     vec![
 //!         (
-//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!                 )),
-//!                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new(
+//!                     "2025-01-01 08:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_start_bound(),
+//!                 AbsFiniteBoundPos::new_with_incl(
+//!                     "2025-01-01 10:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!             )),
+//!                 )
+//!                 .to_end_bound(),
+//!             )
+//!             .to_emptiable(),
 //!             None,
 //!         ),
 //!         (
-//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!                     "2025-01-01 10:00:00Z".parse::<DateTime<Utc>>()?,
-//!                 )),
-//!                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new(
+//!                     "2025-01-01 10:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
+//!                 )
+//!                 .to_start_bound(),
+//!                 AbsFiniteBoundPos::new_with_incl(
+//!                     "2025-01-01 12:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!             )),
-//!             Some(EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 14:00:00Z".parse::<DateTime<Utc>>()?,
-//!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!                 AbsoluteEndBound::InfiniteFuture,
-//!             ))),
+//!                 )
+//!                 .to_end_bound(),
+//!             )
+//!             .to_emptiable(),
+//!             Some(
+//!                 AbsBoundPair::new(
+//!                     AbsFiniteBoundPos::new_with_incl(
+//!                         "2025-01-01 14:00:00[Europe/Oslo]"
+//!                             .parse::<Zoned>()?
+//!                             .timestamp(),
+//!                         BoundInclusivity::Exclusive,
+//!                     )
+//!                     .to_start_bound(),
+//!                     AbsEndBound::InfiniteFuture,
+//!                 )
+//!                 .to_emptiable()
+//!             ),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
 use std::iter::{FusedIterator, Peekable};
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Differentiable;
 use crate::ops::DifferenceResult;
 
 /// Peer difference iterator for intervals using predefined rules
 ///
-/// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-/// using the intervals in the same order of as difference's operands: the first element of the pair is the _removed_,
+/// Operates a [difference] on peers, that is to say, we operate the difference
+/// on every pair of intervals, using the intervals in the same order of as
+/// difference's operands: the first element of the pair is the _removed_,
 /// the second element of the pair is the _remover_.
 ///
 /// Uses [`Differentiable`] under the hood.
 ///
-/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 #[derive(Debug, Clone, Hash)]
 pub struct PeerDifference<I> {
     iter: I,
@@ -126,7 +160,7 @@ where
             return None;
         };
 
-        match current.differentiate(peeked) {
+        match current.diff(peeked) {
             DifferenceResult::Single(shrunk) => Some((shrunk, None)),
             DifferenceResult::Split(split_first_part, split_second_part) => {
                 Some((split_first_part, Some(split_second_part)))
@@ -144,8 +178,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerDifference
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerDifference
 
 impl<'a, I, T, U> FusedIterator for PeerDifference<Peekable<I>>
 where
@@ -161,15 +195,17 @@ where
     Self::IntoIter: Iterator<Item = &'a T>,
     T: 'a + Differentiable<Output = U> + Into<U> + Clone,
 {
-    /// Differentiates peer intervals of the iterator using the default overlap rules
+    /// Differentiates peer intervals of the iterator using the default overlap
+    /// rules
     ///
-    /// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-    /// using the intervals in the same order of as difference's operands: the first element of the pair is
+    /// Operates a [difference] on peers, that is to say, we operate the
+    /// difference on every pair of intervals, using the intervals in the
+    /// same order of as difference's operands: the first element of the pair is
     /// the _removed_, the second element of the pair is the _remover_.
     ///
     /// Uses [`Differentiable`] under the hood.
     ///
-    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
     fn peer_difference(self) -> PeerDifference<Peekable<Self::IntoIter>> {
         PeerDifference::new(self.into_iter())
     }
@@ -185,13 +221,14 @@ where
 
 /// Peer difference iterator for intervals using the given closure
 ///
-/// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-/// using the intervals in the same order of as difference's operands: the first element of the pair is the _removed_,
+/// Operates a [difference] on peers, that is to say, we operate the difference
+/// on every pair of intervals, using the intervals in the same order of as
+/// difference's operands: the first element of the pair is the _removed_,
 /// the second element of the pair is the _remover_.
 ///
 /// Uses [`Differentiable`] under the hood.
 ///
-/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+/// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
 #[derive(Debug, Clone)]
 pub struct PeerDifferenceWith<I, F> {
     iter: I,
@@ -254,8 +291,8 @@ where
     }
 }
 
-// TODO: If a reverse Peekable becomes standard or when we'll import a crate that does that,
-// implement DoubleEndedIterator for PeerDifferenceWith
+// TODO: If a reverse Peekable becomes standard or when we'll import a crate
+// that does that, implement DoubleEndedIterator for PeerDifferenceWith
 
 impl<'a, I, T, U, F> FusedIterator for PeerDifferenceWith<Peekable<I>, F>
 where
@@ -275,13 +312,14 @@ where
 {
     /// Differentiates peer intervals of the iterator using the given closure
     ///
-    /// Operates a [difference] on peers, that is to say, we operate the difference on every pair of intervals,
-    /// using the intervals in the same order of as difference's operands: the first element of the pair is
+    /// Operates a [difference] on peers, that is to say, we operate the
+    /// difference on every pair of intervals, using the intervals in the
+    /// same order of as difference's operands: the first element of the pair is
     /// the _removed_, the second element of the pair is the _remover_.
     ///
     /// Uses [`Differentiable`] under the hood.
     ///
-    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Relative_complement
+    /// [difference]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427#Rel_complement
     fn peer_difference_with(self, f: F) -> PeerDifferenceWith<Peekable<Self::IntoIter>, F> {
         PeerDifferenceWith::new(self.into_iter(), f)
     }

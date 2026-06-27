@@ -2,8 +2,12 @@
 
 This file defines the rules of Rust code formatting to follow in this repository.
 
-To format your code, use `cargo fmt`. This command uses the rules set by the `rustfmt.toml` file. If you are unsure
-of how one rule works or what it defines, check out [configurations for rustfmt](https://github.com/rust-lang/rustfmt/blob/master/Configurations.md).
+To format your code, use `cargo +nightly fmt`. This command uses the rules set by the `rustfmt.toml` file.
+If you are unsure of how one rule works or what it defines,
+check out [configurations for rustfmt](https://rust-lang.github.io/rustfmt).
+
+The reason the cargo command uses the nightly toolchain is that a lot of very useful formatting rules are
+unfortunately still not stabilized. To install the nightly toolchain, run `rustup toolchain install nightly`.
 
 More specific rules about how to write the code itself are defined by [Clippy](https://doc.rust-lang.org/stable/clippy/index.html), which you can run by using `cargo clippy`. Its configuration is located in the `Cargo.toml` file. If you
 are unsure of how one rule works or what it defines, check out [the interactive list of clippy lints](https://rust-lang.github.io/rust-clippy/master/index.html).
@@ -32,7 +36,14 @@ For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCod
 Under `imports`, check `Rust-analyzer > Imports > Granularity: Enforce` and set
 `Rust-analyzer > Imports > Granularity: Group` to `module`.
 
-### 120-characters line/ruler
+### 120-characters line width limit
+
+While 120 characters may seem like a lot, most IDEs, if fullscreen, even with a code minimap or explorer open,
+are able to fit 120 characters into view, even on screens with some scaling.
+
+This line width limit should be enforced only for source code and comments. Code examples within code documentation
+must not exceed 100 characters per line, as those examples are often displayed in smaller windows/embeds,
+and we want to avoid readers having to use horizontal scrolling.
 
 For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCodium](https://vscodium.com/), go to
 `Settings` (`Ctrl+,` / gear in the bottom left), and in the `Text Editor` section, no subsection, find `Rulers`, then
@@ -42,16 +53,18 @@ In this file, change the `editor.rulers` property to the following:
 
 ```json
     "editor.rulers": [
+        100,
         120
     ],
 ```
+
+(The 100 characters ruler is optional)
 
 ### Newline
 
 For [VSCode](https://code.visualstudio.com/) and its derivatives, such as [VSCodium](https://vscodium.com/), go to
 `Settings` (`Ctrl+,` / gear in the bottom left), and in the `Text Editor` section, `Files` subsection,
 find `Eol`, and set it to `\n`, then find `Insert Final Newline` and check it.
-
 
 ## Additional rules
 
@@ -76,13 +89,13 @@ can be transformed simply by adding type aliases:
 
 ```rs
 // Acronym
-type SVLTNTTS = SomeVeryLongTypeNameThatTakesSpace;
+type Svltntts = SomeVeryLongTypeNameThatTakesSpace;
 // Or abbreviation
 type LongType = SomeVeryLongTypeNameThatTakesSpace;
 
 match something {
-    SVLTNTTS::A => {},
-    SVLTNTTS::B => {},
+    Svltntts::A => {},
+    Svltntts::B => {},
     LongType::C => {},
     LongType::D => {},
 }
@@ -102,7 +115,7 @@ let mng = ...;
 
 ### Follow Rust API Guidelines
 
-See [the Rust API Guidelines Checklist](https://rust-lang.github.io/api-guidelines/checklist.html)
+See [the Rust API Guidelines Checklist](https://rust-lang.github.io/api-guidelines/checklist.html).
 
 ### File structure
 
@@ -270,3 +283,104 @@ mod shiny;
 #[cfg(test)]
 mod shiny_tests;
 ```
+
+### Unit tests should be granular
+
+The number of unit tests for a given module can rapidly grow, leading to unit tests being ordered arbitrarily.
+
+In order to avoid that, we recommend that your unit tests should be modularized in relevant smaller units.
+For example, if we want to test such a trait:
+
+```rs
+trait MyTrait {
+    fn foo() {…}
+
+    fn bar() {…}
+}
+```
+
+that is implemented on `Abc` and `Xyz`, then ideally the test suite should be split in a similar manner to:
+
+```rs
+// MyTrait test suite
+
+use your_things::*;
+
+mod foo {
+    use super::*;
+
+    mod abc {
+        use super::*;
+    }
+
+    mod xyz {
+        use super::*;
+    }
+}
+
+mod bar {
+    mod abc {
+        use super::*;
+    }
+
+    mod xyz {
+        use super::*;
+    }
+}
+```
+
+### Unit tests should not repeat tested item's name
+
+If the aforementioned rule is followed, instead of naming your test `my_trait_foo_abc_scenario_one`, it will be
+possible to identify it through the modules it is in.
+
+In this case, `my_trait_foo_abc_scenario_one` will be in a file called `my_trait_tests.rs`, within the `abc` module
+inside of the `foo` module. Then we rename the test unit to `scenario_one`
+
+When the tests are run, you will see that it will be identified as `my_trait_tests::foo::abc::scenario_one`
+instead of `my_trait_tests::my_trait_foo_abc_scenario_one`.
+
+This allows for running test suites more granularly when testing behaviors:
+running `cargo test my_trait_tests::foo::abc` instead of `cargo test my_trait_tests::my_trait_foo_abc_scenario_one`,
+which can be subject to matching unwanted tests (as the `cargo test` argument is matched as a substring, not prefix).
+
+Overall it also improves readability (no repeated information) and programmers can fold relevant modules that
+they are not touching instead of having to filter all test units.
+
+### Strictest binary operation output
+
+A binary operation should always result in the strictest type possible.
+For example, `u8 + u16` should result in `u16`, even if `u64` could contain the result, it is looser than needed.
+
+This rule ensures that types remain strict and that no options for further processing are dismissed because
+of a binary operation.
+
+Sometimes two types can seem of same strictness, for example with `u8 + i8`.
+In this case, you should document how you should choose between the two in codebase-specific documentation.
+
+### No binary operation generic impl
+
+A binary operation should in general avoid implementing itself on foreign types, as it can create confusion.
+
+This can also happen with unary operations, but since it involves a single type, the solution is much easier
+to implement than for an operation that involves a combination of types and their relation to each other.
+
+### No binary operation over-compatibility impl
+
+A binary operation should avoid accepting operands of wildly different types.
+For example, `u8` and `i8` are too different to implement a single interpretation of a given binary operation.
+
+This rule ensures that the user converts one of the operands into a type that makes the binary operation
+less ambiguous.
+
+## Additional rules specific to `periodical`
+
+### Disambiguation for the _Strictest binary operation output_ rule
+
+Between a bound pair and an interval, an interval is considered stricter.
+
+### Extra information on the _No binary operation over-compatibility impl_ rule
+
+Bound pairs should only be associated to other bound pairs.
+Intervals should only be associated to other intervals.
+Dedicated interval types should only be associated to other dedicated interval types.

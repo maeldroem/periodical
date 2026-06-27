@@ -1,9 +1,12 @@
 //! Interval metadata
 //!
-//! Contains information about intervals such as [`Relativity`], [`Openness`], [`OpeningDirection`], and more.
+//! Contains information about intervals such as [`Relativity`], [`Openness`],
+//! [`OpeningDirection`], and more.
 
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::Bound;
+use std::time::Duration as StdDuration;
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -14,12 +17,15 @@ use serde::{Deserialize, Serialize};
 ///
 /// All intervals implement this trait.
 ///
-/// This trait is used for restricting parameters to intervals when the parameter itself is not important, but want
-/// to avoid implementing the method on non-interval types.
+/// This trait is used for restricting parameters to intervals when the
+/// parameter itself is not important, but want to avoid implementing the method
+/// on non-interval types.
 ///
-/// For example, extending an [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
-/// with any other interval will produce an [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
-/// anyways, but we don't want to allow calls like `unbounded_interval.extend(3)`,
+/// For example, extending an
+/// [`UnboundedInterval`](crate::intervals::special::UnboundedInterval) with any
+/// other interval will produce an
+/// [`UnboundedInterval`](crate::intervals::special::UnboundedInterval) anyways,
+/// but we don't want to allow calls like `unbounded_interval.extend(3)`,
 /// so this trait is used to restrict this parameter to interval types only.
 pub trait Interval {}
 
@@ -32,7 +38,8 @@ pub trait Interval {}
 pub enum Openness {
     /// Defined start and end bounds
     Bounded,
-    /// One of the bounds is known, but the interval continues to infinity in one direction
+    /// One of the bounds is known, but the interval continues to infinity in
+    /// one direction
     HalfBounded,
     /// Covers the entire time
     Unbounded,
@@ -55,7 +62,8 @@ impl Display for Openness {
 
 /// Possession of [`Openness`]
 ///
-/// This trait should be implemented by all intervals supporting the concept of [`Openness`].
+/// This trait should be implemented by all intervals supporting the concept of
+/// [`Openness`].
 pub trait HasOpenness {
     /// Returns the [`Openness`] of the interval
     #[must_use]
@@ -71,26 +79,28 @@ pub trait HasOpenness {
 pub enum Relativity {
     /// Interval lives in absolute time
     ///
-    /// This means that it uses [`DateTime`](chrono::DateTime)s, which are technically relative
-    /// on the [Unix epoch](https://en.wikipedia.org/w/index.php?title=Unix_time&oldid=1308795653) but that
-    /// we qualify as _absolute time_.
+    /// This means that it uses an absolute [`Zoned`](jiff::Zoned).
     Absolute,
     /// Interval lives in relative time
     ///
-    /// This means that it uses [`Duration`](chrono::Duration)s, also known as offsets.
+    /// This means that it uses [`SignedDuration`](jiff::SignedDuration)s, also
+    /// known as offsets.
     ///
-    /// For example, if you compare and absolute interval to a point in time, e.g. this day compared to this year's
-    /// 1st of January at midnight, you will end up with a relative interval.
+    /// For example, if you compare and absolute interval to a point in time,
+    /// e.g. this day compared to this year's 1st of January at midnight,
+    /// you will end up with a relative interval.
     Relative,
     /// Interval isn't bound to relativity
     ///
-    /// This means the interval uses a concept rather than representing itself through a time frame.
+    /// This means the interval uses a concept rather than representing itself
+    /// through a time frame.
     ///
-    /// It is used by intervals such as [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
+    /// It is used by intervals such as
+    /// [`UnboundedInterval`](crate::intervals::special::UnboundedInterval)
     /// and [`EmptyInterval`](crate::intervals::special::EmptyInterval).
     ///
-    /// The variant is called "Any" as those special intervals can be interpreted in both absolute and relative
-    /// time frames.
+    /// The variant is called "Any" as those special intervals can be
+    /// interpreted in both absolute and relative time frames.
     Any,
 }
 
@@ -106,7 +116,8 @@ impl Display for Relativity {
 
 /// Possession of [`Relativity`]
 ///
-/// This trait should be implemented by all interval supporting the concept of [`Relativity`].
+/// This trait should be implemented by all interval supporting the concept of
+/// [`Relativity`].
 pub trait HasRelativity {
     /// Returns the [`Relativity`] of the interval
     #[must_use]
@@ -124,6 +135,17 @@ pub enum OpeningDirection {
     ToFuture,
     /// Infinitely towards past
     ToPast,
+}
+
+impl OpeningDirection {
+    /// Returns the opposite [`OpeningDirection`]
+    #[must_use]
+    pub fn opposite(&self) -> Self {
+        match self {
+            Self::ToFuture => OpeningDirection::ToPast,
+            Self::ToPast => OpeningDirection::ToFuture,
+        }
+    }
 }
 
 impl Display for OpeningDirection {
@@ -146,6 +168,11 @@ impl From<bool> for OpeningDirection {
             OpeningDirection::ToPast
         }
     }
+}
+
+pub trait HasOpeningDirection {
+    #[must_use]
+    fn opening_direction(&self) -> OpeningDirection;
 }
 
 /// Infinitesimal duration variation of an interval
@@ -217,49 +244,55 @@ impl Epsilon {
         matches!(self, Self::End | Self::Both)
     }
 
-    /// Interprets the epsilon as a specific duration using different duration interpretations per bound
+    /// Interprets the epsilon as a specific duration using different duration
+    /// interpretations per bound
     ///
     /// # Errors
     ///
     /// If `start_epsilon_duration` + `end_epsilon_duration` overflows,
-    /// the method returns [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    /// the method returns [`EpsilonInterpretationDurationOverflowError`].
+    ///
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::meta::{Epsilon, EpsilonInterpretationDurationError};
-    /// let start_epsilon_duration = chrono::Duration::seconds(1);
-    /// let end_epsilon_duration = chrono::Duration::seconds(2);
+    /// # use periodical::intervals::meta::Epsilon;
+    /// let start_epsilon_duration = std::time::Duration::from_secs(1);
+    /// let end_epsilon_duration = std::time::Duration::from_secs(2);
     ///
     /// assert_eq!(
-    ///     Epsilon::None.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
-    ///     Ok(chrono::Duration::zero()),
+    ///     Epsilon::None
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Ok(std::time::Duration::ZERO),
     /// );
     /// assert_eq!(
-    ///     Epsilon::Start.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::Start
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(start_epsilon_duration),
     /// );
     /// assert_eq!(
-    ///     Epsilon::End.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::End
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(end_epsilon_duration),
     /// );
     /// assert_eq!(
-    ///     Epsilon::Both.interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
+    ///     Epsilon::Both
+    ///         .interpret_as_duration_bound_specific(start_epsilon_duration, end_epsilon_duration),
     ///     Ok(start_epsilon_duration + end_epsilon_duration)
     /// );
     /// ```
     pub fn interpret_as_duration_bound_specific(
         &self,
-        start_epsilon_duration: chrono::Duration,
-        end_epsilon_duration: chrono::Duration,
-    ) -> Result<chrono::Duration, EpsilonInterpretationDurationError> {
+        start_epsilon_duration: StdDuration,
+        end_epsilon_duration: StdDuration,
+    ) -> Result<StdDuration, EpsilonInterpretationDurationOverflowError> {
         match self {
-            Self::None => Ok(chrono::Duration::zero()),
+            Self::None => Ok(StdDuration::ZERO),
             Self::Start => Ok(start_epsilon_duration),
             Self::End => Ok(end_epsilon_duration),
             Self::Both => start_epsilon_duration
-                .checked_add(&end_epsilon_duration)
-                .ok_or(EpsilonInterpretationDurationError::DurationOverflow),
+                .checked_add(end_epsilon_duration)
+                .ok_or(EpsilonInterpretationDurationOverflowError),
         }
     }
 
@@ -268,17 +301,18 @@ impl Epsilon {
     /// # Errors
     ///
     /// If `epsilon_duration * 2` overflows,
-    /// the method returns [`DurationOverflow`](EpsilonInterpretationDurationError::DurationOverflow).
+    /// the method returns [`EpsilonInterpretationDurationOverflowError`].
+    ///
     ///
     /// # Examples
     ///
     /// ```
-    /// # use periodical::intervals::meta::{Epsilon, EpsilonInterpretationDurationError};
-    /// let epsilon_duration = chrono::Duration::seconds(1);
+    /// # use periodical::intervals::meta::Epsilon;
+    /// let epsilon_duration = std::time::Duration::from_secs(1);
     ///
     /// assert_eq!(
     ///     Epsilon::None.interpret_as_duration(epsilon_duration),
-    ///     Ok(chrono::Duration::zero()),
+    ///     Ok(std::time::Duration::ZERO),
     /// );
     /// assert_eq!(
     ///     Epsilon::Start.interpret_as_duration(epsilon_duration),
@@ -295,8 +329,8 @@ impl Epsilon {
     /// ```
     pub fn interpret_as_duration(
         &self,
-        epsilon_duration: chrono::Duration,
-    ) -> Result<chrono::Duration, EpsilonInterpretationDurationError> {
+        epsilon_duration: StdDuration,
+    ) -> Result<StdDuration, EpsilonInterpretationDurationOverflowError> {
         self.interpret_as_duration_bound_specific(epsilon_duration, epsilon_duration)
     }
 }
@@ -314,8 +348,9 @@ impl Display for Epsilon {
 
 /// Converts `(BoundInclusivity, BoundInclusivity)` into [`Epsilon`]
 ///
-/// The tuple elements represent the start bound inclusivity and end bound inclusivity, respectively.
-/// Exclusive bounds, [`BoundInclusivity::Exclusive`], create an epsilon.
+/// The tuple elements represent the start bound inclusivity and end bound
+/// inclusivity, respectively. Exclusive bounds,
+/// [`BoundInclusivity::Exclusive`], create an epsilon.
 impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
     fn from((start_inclusivity, end_inclusivity): (BoundInclusivity, BoundInclusivity)) -> Self {
         match (start_inclusivity, end_inclusivity) {
@@ -327,51 +362,31 @@ impl From<(BoundInclusivity, BoundInclusivity)> for Epsilon {
     }
 }
 
-/// Converts `(bool, bool)` into [`Epsilon`]
-///
-/// The first tuple element represents whether the start bound has an epsilon,
-/// the second tuple element represents whether the end bound has an epsilon.
-impl From<(bool, bool)> for Epsilon {
-    fn from((start_has_epsilon, end_has_epsilon): (bool, bool)) -> Self {
-        match (start_has_epsilon, end_has_epsilon) {
-            (false, false) => Epsilon::None,
-            (true, false) => Epsilon::Start,
-            (false, true) => Epsilon::End,
-            (true, true) => Epsilon::Both,
-        }
-    }
-}
-
-/// Errors that can occur when [`Epsilon`] is interpreted as a duration
+/// Duration interpretation overflowed when [`Epsilon`] tried to be interpreted as a duration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EpsilonInterpretationDurationError {
-    /// Duration interpretation overflowed
-    DurationOverflow,
-}
+pub struct EpsilonInterpretationDurationOverflowError;
 
-impl Display for EpsilonInterpretationDurationError {
+impl Display for EpsilonInterpretationDurationOverflowError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::DurationOverflow => write!(f, "Epsilon interpretation made `chrono::Duration` overflow"),
-        }
+        write!(f, "Epsilon interpretation made the duration overflow")
     }
 }
 
-impl Error for EpsilonInterpretationDurationError {}
+impl Error for EpsilonInterpretationDurationOverflowError {}
 
 /// Interval duration
 ///
-/// Supports `chrono`'s [`Duration`](chrono::Duration) for finite durations and supports
-/// representation for infinite durations.
-///
-/// [`Finite`](Duration::Finite) supports infinitesimal duration variations, also known as [`Epsilon`]s,
-/// created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
+/// Represents the duration of a single interval. It can either be
+/// [`Infinite`](Duration::Infinite), or [`Finite`](Duration::Finite), in which
+/// case the duration is stored as a standard [`Duration`](StdDuration)
+/// and an [`Epsilon`], which serves to represent infinitesimal duration
+/// variations created by the use of [exclusive bounds](BoundInclusivity::Exclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Duration {
     /// Finite duration
-    Finite(chrono::Duration, Epsilon),
+    Finite(StdDuration, Epsilon),
     /// Infinite duration
     Infinite,
 }
@@ -383,7 +398,7 @@ impl Duration {
     ///
     /// ```
     /// # use periodical::intervals::meta::{Duration, Epsilon};
-    /// assert!(Duration::Finite(chrono::Duration::hours(1), Epsilon::None).is_finite());
+    /// assert!(Duration::Finite(std::time::Duration::from_hours(1), Epsilon::None).is_finite());
     /// ```
     #[must_use]
     pub fn is_finite(&self) -> bool {
@@ -392,119 +407,114 @@ impl Duration {
 
     /// Returns the content of the [`Finite`](Duration::Finite) variant
     ///
-    /// Consumes `self` and puts the content of the [`Finite`](Duration::Finite) variant
-    /// in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self` and puts the content of the [`Finite`](Duration::Finite)
+    /// variant in an [`Option`]. If instead `self` is another variant, the
+    /// method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use periodical::intervals::meta::{Duration, Epsilon};
     /// assert_eq!(
-    ///     Duration::Finite(chrono::Duration::hours(2), Epsilon::End).finite(),
-    ///     Some((chrono::Duration::hours(2), Epsilon::End)),
+    ///     Duration::Finite(std::time::Duration::from_hours(2), Epsilon::End).finite(),
+    ///     Some((std::time::Duration::from_hours(2), Epsilon::End)),
     /// );
     /// assert_eq!(Duration::Infinite.finite(), None);
     /// ```
     #[must_use]
-    pub fn finite(self) -> Option<(chrono::Duration, Epsilon)> {
+    pub fn finite(self) -> Option<(StdDuration, Epsilon)> {
         match self {
             Self::Finite(duration, epsilon) => Some((duration, epsilon)),
             Self::Infinite => None,
         }
     }
 
-    /// Returns the content of the [`Finite`](Duration::Finite) variant and subtracts interpreted epsilon duration
-    /// from it
+    /// Returns the content of the [`Finite`](Duration::Finite) variant and
+    /// subtracts interpreted epsilon duration from it
     ///
-    /// Consumes `self`, then uses the content of the [`Finite`](Duration::Finite) variant to compute the final
-    /// interpreted duration, using [`Epsilon::interpret_as_duration`] under the hood,
-    /// and puts the result in an [`Option`]. If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self`, then uses the content of the
+    /// [`Finite`](Duration::Finite) variant to compute the final
+    /// interpreted duration, using [`Epsilon::interpret_as_duration`] under the
+    /// hood, and puts the result in an [`Option`]. If instead `self` is
+    /// another variant, the method returns [`None`].
     ///
-    /// If [`Epsilon::interpret_as_duration`] returns an [`Err`], then the method returns [`None`].
+    /// If [`Epsilon::interpret_as_duration`] returns an [`Err`], then the
+    /// method returns [`None`].
     ///
-    /// If the duration is small or if the interpreted [`Epsilon`]\(s) are larger than the duration, resulting
-    /// in a negative duration, the duration defaults to [an empty duration](chrono::Duration::zero).
+    /// If the duration is small or if the interpreted [`Epsilon`]\(s) are
+    /// larger than the duration, resulting in a negative duration, the
+    /// duration defaults to [an empty duration](StdDuration::ZERO).
     ///
     /// # Examples
     ///
     /// ```
     /// # use periodical::intervals::meta::{Duration, Epsilon};
-    /// let epsilon_duration = chrono::Duration::seconds(1);
-    /// let large_epsilon_duration = chrono::Duration::hours(2);
+    /// let epsilon_duration = std::time::Duration::from_secs(1);
+    /// let large_epsilon_duration = std::time::Duration::from_hours(2);
     ///
     /// assert_eq!(
-    ///     Duration::Finite(chrono::Duration::hours(1), Epsilon::End)
-    ///     .finite_interpret_epsilon(epsilon_duration),
-    ///     Some(chrono::Duration::minutes(59) + chrono::Duration::seconds(59)),
+    ///     Duration::Finite(std::time::Duration::from_hours(1), Epsilon::End)
+    ///         .finite_interpret_epsilon(epsilon_duration),
+    ///     Some(std::time::Duration::from_mins(59) + std::time::Duration::from_secs(59)),
     /// );
     /// assert_eq!(
     ///     Duration::Infinite.finite_interpret_epsilon(epsilon_duration),
     ///     None,
     /// );
     /// assert_eq!(
-    ///     Duration::Finite(chrono::Duration::hours(1), Epsilon::Start)
-    ///     .finite_interpret_epsilon(large_epsilon_duration),
-    ///     Some(chrono::Duration::zero()),
+    ///     Duration::Finite(std::time::Duration::from_hours(1), Epsilon::Start)
+    ///         .finite_interpret_epsilon(large_epsilon_duration),
+    ///     Some(std::time::Duration::ZERO),
     /// );
     /// ```
     #[must_use]
-    pub fn finite_interpret_epsilon(self, epsilon_duration: chrono::Duration) -> Option<chrono::Duration> {
+    pub fn finite_interpret_epsilon(self, epsilon_duration: StdDuration) -> Option<StdDuration> {
         let (duration, epsilon) = self.finite()?;
-        let Ok(interpreted_epsilon) = epsilon.interpret_as_duration(epsilon_duration) else {
-            return None;
-        };
+        let interpreted_epsilon = epsilon.interpret_as_duration(epsilon_duration).ok()?;
 
-        duration
-            .checked_sub(&interpreted_epsilon)
-            .map(|dur| dur.max(chrono::Duration::zero()))
+        Some(duration.checked_sub(interpreted_epsilon).unwrap_or(StdDuration::ZERO))
     }
 
-    /// Returns the [`chrono::Duration`] of the [`Finite`](Duration::Finite) variant and strips the epsilon duration
+    /// Returns the [`std::time::Duration`] of the [`Finite`](Duration::Finite)
+    /// variant and strips the epsilon duration
     ///
-    /// Consumes `self`, then simply returns the [`chrono::Duration`] stored in the [`Finite`](Duration::Finite)
-    /// variant, without using the stored [`Epsilon`]. Puts the result in an [`Option`].
-    /// If instead `self` is another variant, the method returns [`None`].
+    /// Consumes `self`, then simply returns the [`std::time::Duration`] stored
+    /// in the [`Finite`](Duration::Finite) variant, without using the
+    /// stored [`Epsilon`]. Puts the result in an [`Option`]. If instead
+    /// `self` is another variant, the method returns [`None`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use periodical::intervals::meta::{Duration, Epsilon};
     /// assert_eq!(
-    ///     Duration::Finite(chrono::Duration::hours(2), Epsilon::Both).finite_strip_epsilon(),
-    ///     Some(chrono::Duration::hours(2)),
+    ///     Duration::Finite(std::time::Duration::from_hours(2), Epsilon::Both).finite_strip_epsilon(),
+    ///     Some(std::time::Duration::from_hours(2)),
     /// );
     /// assert_eq!(Duration::Infinite.finite_strip_epsilon(), None);
     /// ```
     #[must_use]
-    pub fn finite_strip_epsilon(self) -> Option<chrono::Duration> {
+    pub fn finite_strip_epsilon(self) -> Option<StdDuration> {
         Some(self.finite()?.0)
     }
 }
 
-impl Display for Duration {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Finite(duration, epsilon) => write!(f, "Finite duration: {duration} ({epsilon})"),
-            Self::Infinite => write!(f, "Infinite duration"),
-        }
-    }
-}
-
-impl From<chrono::Duration> for Duration {
-    fn from(duration: chrono::Duration) -> Self {
+impl From<StdDuration> for Duration {
+    fn from(duration: StdDuration) -> Self {
         Duration::Finite(duration, Epsilon::default())
     }
 }
 
-impl From<(chrono::Duration, Epsilon)> for Duration {
-    fn from((duration, epsilon): (chrono::Duration, Epsilon)) -> Self {
+impl From<(StdDuration, Epsilon)> for Duration {
+    fn from((duration, epsilon): (StdDuration, Epsilon)) -> Self {
         Duration::Finite(duration, epsilon)
     }
 }
 
 /// Possession of [`Duration`]
 ///
-/// This trait should be implements by all intervals supporting the concept of [`Duration`].
+/// This trait should be implements by all intervals supporting the concept of
+/// [`Duration`].
 pub trait HasDuration {
     /// Returns the [`Duration`] of the interval
     fn duration(&self) -> Duration;
@@ -520,9 +530,10 @@ pub enum BoundInclusivity {
     Inclusive,
     /// Excludes the point described by the bound
     ///
-    /// An exclusive bound inclusivity means that virtually anything except the described point given by the bound
-    /// is included.
-    /// Of course, in the context of an interval it also possesses a dimension of _direction_.
+    /// An exclusive bound inclusivity means that virtually anything except the
+    /// described point given by the bound is included.
+    /// Of course, in the context of an interval it also possesses a dimension
+    /// of _direction_.
     ///
     /// Learn more about the directionality of bound inclusivity
     /// in the [documentation of the `intervals` module](crate::intervals).
@@ -536,6 +547,26 @@ impl BoundInclusivity {
         match self {
             BoundInclusivity::Inclusive => BoundInclusivity::Exclusive,
             BoundInclusivity::Exclusive => BoundInclusivity::Inclusive,
+        }
+    }
+
+    /// Creates a [`Bound`] from [`BoundInclusivity`] and a given value
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::ops::Bound;
+    /// # use periodical::intervals::meta::BoundInclusivity;
+    /// assert_eq!(
+    ///     BoundInclusivity::Exclusive.to_range_bound_with(5),
+    ///     Bound::Excluded(5),
+    /// );
+    /// ```
+    #[must_use]
+    pub fn to_range_bound_with<T>(self, value: T) -> Bound<T> {
+        match self {
+            Self::Inclusive => Bound::Included(value),
+            Self::Exclusive => Bound::Excluded(value),
         }
     }
 }
@@ -564,7 +595,8 @@ impl From<bool> for BoundInclusivity {
 
 /// Possession of [`BoundInclusivity`]
 ///
-/// This trait should be implemented by all interval bounds supporting the concept of [`BoundInclusivity`].
+/// This trait should be implemented by all interval bounds supporting the
+/// concept of [`BoundInclusivity`].
 pub trait HasBoundInclusivity {
     /// Returns the [`BoundInclusivity`] of the bound
     #[must_use]
@@ -572,7 +604,234 @@ pub trait HasBoundInclusivity {
 }
 
 /// Capacity of an interval to be empty
-pub trait Emptiable {
+pub trait IsEmpty {
     /// Returns whether the interval is empty
     fn is_empty(&self) -> bool;
+}
+
+/// Bound extremality — start or end
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BoundExtremality {
+    Start,
+    End,
+}
+
+impl BoundExtremality {
+    /// Returns the opposite bound extremality
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use periodical::intervals::meta::BoundExtremality;
+    /// assert_eq!(BoundExtremality::Start.opposite(), BoundExtremality::End);
+    /// assert_eq!(BoundExtremality::End.opposite(), BoundExtremality::Start);
+    /// ```
+    #[must_use]
+    pub fn opposite(self) -> Self {
+        match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+        }
+    }
+}
+
+/// Capacity of a bound to have an associated extreme (start/end)
+pub trait HasBoundExtremality {
+    /// Returns the associated [`BoundExtremality`]
+    #[must_use]
+    fn bound_extremality(&self) -> BoundExtremality;
+}
+
+/// Type of interval
+///
+/// Represents the different kinds of intervals that exist, not only
+/// the openness of a given interval.
+///
+/// This type is particularly useful as an identifier.
+///
+/// If you need to associate a [`Relativity`] to it, see [`IntervalTypeWithRel`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IntervalType {
+    /// An [empty interval](crate::intervals::special::EmptyInterval)
+    Empty,
+    /// A bounded interval
+    Bounded,
+    /// A half-bounded interval with its [opening direction](OpeningDirection)
+    HalfBounded(OpeningDirection),
+    /// An [unbounded interval](crate::intervals::special::UnboundedInterval)
+    Unbounded,
+}
+
+impl IntervalType {
+    /// Attempts to associate the interval type with the given [`Relativity`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntervalTypeWithRelTryFromIntervalTypeAndRel`] if the given [`Relativity`]
+    /// is not associable with the [`IntervalType`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use periodical::intervals::meta::{IntervalType, IntervalTypeWithRel, Relativity};
+    /// assert_eq!(
+    ///     IntervalType::Bounded.try_with_rel(Relativity::Absolute)?,
+    ///     IntervalTypeWithRel::AbsBounded,
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn try_with_rel(
+        self,
+        relativity: Relativity,
+    ) -> Result<IntervalTypeWithRel, IntervalTypeWithRelTryFromIntervalTypeAndRel> {
+        IntervalTypeWithRel::try_from((self, relativity))
+    }
+}
+
+impl IsEmpty for IntervalType {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
+impl HasOpenness for IntervalType {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Empty => Openness::Empty,
+            Self::Bounded => Openness::Bounded,
+            Self::HalfBounded(_) => Openness::HalfBounded,
+            Self::Unbounded => Openness::Unbounded,
+        }
+    }
+}
+
+impl From<IntervalTypeWithRel> for IntervalType {
+    fn from(value: IntervalTypeWithRel) -> Self {
+        match value {
+            IntervalTypeWithRel::Empty => Self::Empty,
+            IntervalTypeWithRel::AbsBounded | IntervalTypeWithRel::RelBounded => Self::Bounded,
+            IntervalTypeWithRel::AbsHalfBounded(opening_direction)
+            | IntervalTypeWithRel::RelHalfBounded(opening_direction) => Self::HalfBounded(opening_direction),
+            IntervalTypeWithRel::Unbounded => Self::Unbounded,
+        }
+    }
+}
+
+/// Capacity of an interval to have an associated [`IntervalType`]
+pub trait HasIntervalType {
+    /// Returns the corresponding [`IntervalType`] of the interval type
+    #[must_use]
+    fn interval_type(&self) -> IntervalType;
+}
+
+/// Type of interval with relativity included
+///
+/// Represents the different kinds of intervals that exist, similarly to [`IntervalType`],
+/// but with their respective [`Relativity`] included.
+///
+/// This type is particularly useful as an identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IntervalTypeWithRel {
+    /// An [empty interval](crate::intervals::special::EmptyInterval)
+    Empty,
+    /// A [bounded absolute interval](crate::intervals::absolute::BoundedAbsInterval)
+    AbsBounded,
+    /// A [bounded relative interval](crate::intervals::relative::BoundedRelInterval)
+    RelBounded,
+    /// A [half-bounded absolute interval](crate::intervals::absolute::HalfBoundedAbsInterval)
+    /// with its [opening direction](OpeningDirection)
+    AbsHalfBounded(OpeningDirection),
+    /// A [half-bounded relative interval](crate::intervals::relative::HalfBoundedRelInterval)
+    /// with its [opening direction](OpeningDirection)
+    RelHalfBounded(OpeningDirection),
+    /// An [unbounded interval](crate::intervals::special::UnboundedInterval)
+    Unbounded,
+}
+
+impl IsEmpty for IntervalTypeWithRel {
+    fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
+impl HasRelativity for IntervalTypeWithRel {
+    fn relativity(&self) -> Relativity {
+        match self {
+            Self::Empty | Self::Unbounded => Relativity::Any,
+            Self::AbsBounded | Self::AbsHalfBounded(_) => Relativity::Absolute,
+            Self::RelBounded | Self::RelHalfBounded(_) => Relativity::Relative,
+        }
+    }
+}
+
+impl HasOpenness for IntervalTypeWithRel {
+    fn openness(&self) -> Openness {
+        match self {
+            Self::Empty => Openness::Empty,
+            Self::AbsBounded | Self::RelBounded => Openness::Bounded,
+            Self::AbsHalfBounded(_) | Self::RelHalfBounded(_) => Openness::HalfBounded,
+            Self::Unbounded => Openness::Unbounded,
+        }
+    }
+}
+
+impl HasIntervalType for IntervalTypeWithRel {
+    fn interval_type(&self) -> IntervalType {
+        match self {
+            Self::Empty => IntervalType::Empty,
+            Self::AbsBounded | Self::RelBounded => IntervalType::Bounded,
+            Self::AbsHalfBounded(opening_direction) | Self::RelHalfBounded(opening_direction) => {
+                IntervalType::HalfBounded(*opening_direction)
+            },
+            Self::Unbounded => IntervalType::Unbounded,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct IntervalTypeWithRelTryFromIntervalTypeAndRel;
+
+impl Display for IntervalTypeWithRelTryFromIntervalTypeAndRel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "An error occurred when trying to convert `(IntervalType, Relativity)` into `IntervalTypeWithRel`"
+        )
+    }
+}
+
+impl Error for IntervalTypeWithRelTryFromIntervalTypeAndRel {}
+
+impl TryFrom<(IntervalType, Relativity)> for IntervalTypeWithRel {
+    type Error = IntervalTypeWithRelTryFromIntervalTypeAndRel;
+
+    fn try_from(interval_type_and_rel: (IntervalType, Relativity)) -> Result<Self, Self::Error> {
+        match interval_type_and_rel {
+            (IntervalType::Empty, Relativity::Any) => Ok(Self::Empty),
+            (IntervalType::Bounded, Relativity::Absolute) => Ok(Self::AbsBounded),
+            (IntervalType::Bounded, Relativity::Relative) => Ok(Self::RelBounded),
+            (IntervalType::HalfBounded(opening_direction), Relativity::Absolute) => {
+                Ok(Self::AbsHalfBounded(opening_direction))
+            },
+            (IntervalType::HalfBounded(opening_direction), Relativity::Relative) => {
+                Ok(Self::RelHalfBounded(opening_direction))
+            },
+            (IntervalType::Unbounded, Relativity::Any) => Ok(Self::Unbounded),
+            _ => Err(IntervalTypeWithRelTryFromIntervalTypeAndRel),
+        }
+    }
+}
+
+/// Capacity of an interval to have an associated [`IntervalTypeWithRel`]
+pub trait HasIntervalTypeWithRel: HasIntervalType {
+    /// Returns the corresponding [`IntervalTypeWithRel`] of the interval type
+    #[must_use]
+    fn interval_type_with_rel(&self) -> IntervalTypeWithRel;
+}
+
+impl<T: HasIntervalTypeWithRel> HasIntervalType for T {
+    fn interval_type(&self) -> IntervalType {
+        self.interval_type_with_rel().interval_type()
+    }
 }

@@ -1,320 +1,279 @@
+use super::bound_containment::*;
 use crate::intervals::meta::BoundInclusivity;
 use crate::intervals::ops::bound_overlap_ambiguity::BoundOverlapAmbiguity;
-
-use super::bound_containment::*;
 
 #[test]
 fn strip_bound_position() {
     assert_eq!(
-        BoundContainmentPosition::OutsideBefore.strip(),
-        DisambiguatedBoundContainmentPosition::OutsideBefore
+        BoundContainmentPos::OutsideBefore.strip(),
+        DisambiguatedBoundContainmentPos::OutsideBefore
     );
     assert_eq!(
-        BoundContainmentPosition::OutsideAfter.strip(),
-        DisambiguatedBoundContainmentPosition::OutsideAfter
+        BoundContainmentPos::OutsideAfter.strip(),
+        DisambiguatedBoundContainmentPos::OutsideAfter
     );
     assert_eq!(
-        BoundContainmentPosition::Outside.strip(),
-        DisambiguatedBoundContainmentPosition::Outside
+        BoundContainmentPos::Outside.strip(),
+        DisambiguatedBoundContainmentPos::Outside
     );
     assert_eq!(
-        BoundContainmentPosition::OnStart(None).strip(),
-        DisambiguatedBoundContainmentPosition::OnStart
+        BoundContainmentPos::OnStart(None).strip(),
+        DisambiguatedBoundContainmentPos::OnStart
     );
     assert_eq!(
-        BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+        BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive
         )))
         .strip(),
-        DisambiguatedBoundContainmentPosition::OnStart,
+        DisambiguatedBoundContainmentPos::OnStart,
     );
     assert_eq!(
-        BoundContainmentPosition::OnEnd(None).strip(),
-        DisambiguatedBoundContainmentPosition::OnEnd
+        BoundContainmentPos::OnEnd(None).strip(),
+        DisambiguatedBoundContainmentPos::OnEnd
     );
     assert_eq!(
-        BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+        BoundContainmentPos::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive
         )))
         .strip(),
-        DisambiguatedBoundContainmentPosition::OnEnd,
+        DisambiguatedBoundContainmentPos::OnEnd,
     );
     assert_eq!(
-        BoundContainmentPosition::Equal.strip(),
-        DisambiguatedBoundContainmentPosition::Equal
+        BoundContainmentPos::Equal.strip(),
+        DisambiguatedBoundContainmentPos::Equal
     );
     assert_eq!(
-        BoundContainmentPosition::Inside.strip(),
-        DisambiguatedBoundContainmentPosition::Inside
+        BoundContainmentPos::Inside.strip(),
+        DisambiguatedBoundContainmentPos::Inside
     );
 }
 
 #[test]
 fn disambiguate_position_on_start_no_ambiguity() {
     assert_eq!(
-        BoundContainmentPosition::OnStart(None).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::OnStart,
+        BoundContainmentPos::OnStart(None).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        DisambiguatedBoundContainmentPos::OnStart,
     );
 }
 
 #[test]
 fn disambiguate_position_on_start_bound_before() {
     assert_eq!(
-        BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Exclusive,
-            BoundInclusivity::Inclusive
+        BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::OutsideBefore,
+        DisambiguatedBoundContainmentPos::OutsideBefore,
     );
 }
 
 #[test]
 fn disambiguate_position_on_start_bound_equal() {
     assert_eq!(
-        BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+        BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive
         )),)
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::OnStart,
+        DisambiguatedBoundContainmentPos::OnStart,
     );
 }
 
 #[test]
 fn disambiguate_position_on_start_bound_after() {
     assert_eq!(
-        BoundContainmentPosition::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Inclusive,
-            BoundInclusivity::Exclusive
+        BoundContainmentPos::OnStart(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive
         )),)
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::Inside,
+        DisambiguatedBoundContainmentPos::Inside,
     );
 }
 
 #[test]
 fn disambiguate_position_on_end_no_ambiguity() {
     assert_eq!(
-        BoundContainmentPosition::OnEnd(None).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::OnEnd,
+        BoundContainmentPos::OnEnd(None).disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
+        DisambiguatedBoundContainmentPos::OnEnd,
     );
 }
 
 #[test]
 fn disambiguate_position_on_end_bound_before() {
     assert_eq!(
-        BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Exclusive,
-            BoundInclusivity::Inclusive
+        BoundContainmentPos::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Inclusive,
+            BoundInclusivity::Exclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::Inside,
+        DisambiguatedBoundContainmentPos::Inside,
     );
 }
 
 #[test]
 fn disambiguate_position_on_end_bound_equal() {
     assert_eq!(
-        BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+        BoundContainmentPos::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
             BoundInclusivity::Inclusive,
             BoundInclusivity::Inclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::OnEnd,
+        DisambiguatedBoundContainmentPos::OnEnd,
     );
 }
 
 #[test]
 fn disambiguate_position_on_end_bound_after() {
     assert_eq!(
-        BoundContainmentPosition::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
-            BoundInclusivity::Inclusive,
-            BoundInclusivity::Exclusive
+        BoundContainmentPos::OnEnd(Some(BoundOverlapAmbiguity::BothStarts(
+            BoundInclusivity::Exclusive,
+            BoundInclusivity::Inclusive
         )))
         .disambiguate_using_rule_set(BoundContainmentRuleSet::Strict),
-        DisambiguatedBoundContainmentPosition::OutsideAfter,
+        DisambiguatedBoundContainmentPos::OutsideAfter,
     );
 }
 
 #[test]
 fn counts_as_contained_allow_on_start_from_true_on_start() {
-    assert!(
-        BoundContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(BoundContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_allow_on_start_from_true_on_end() {
-    assert!(BoundContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnEnd));
+    assert!(BoundContainmentRule::AllowOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_allow_on_start_from_false_on_start() {
-    assert!(
-        BoundContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(BoundContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_allow_on_start_from_false_on_end() {
-    assert!(
-        !BoundContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnEnd)
-    );
+    assert!(!BoundContainmentRule::AllowOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_allow_on_end_from_true_on_start() {
-    assert!(BoundContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnStart));
+    assert!(BoundContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_allow_on_end_from_true_on_end() {
-    assert!(BoundContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnEnd));
+    assert!(BoundContainmentRule::AllowOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_allow_on_end_from_false_on_start() {
-    assert!(
-        !BoundContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(!BoundContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_allow_on_end_from_false_on_end() {
-    assert!(BoundContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnEnd));
+    assert!(BoundContainmentRule::AllowOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_allow_on_bounds_from_true_on_start() {
-    assert!(
-        BoundContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(BoundContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_allow_on_bounds_from_true_on_end() {
-    assert!(
-        BoundContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnEnd)
-    );
+    assert!(BoundContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_allow_on_bounds_from_true_outside() {
-    assert!(
-        BoundContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPosition::Outside)
-    );
+    assert!(BoundContainmentRule::AllowOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPos::Outside));
 }
 
 #[test]
 fn counts_as_contained_allow_on_bounds_from_false_on_start() {
-    assert!(
-        BoundContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(BoundContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_allow_on_bounds_from_false_on_end() {
-    assert!(
-        BoundContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnEnd)
-    );
+    assert!(BoundContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_allow_on_bounds_from_false_outside() {
-    assert!(
-        !BoundContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPosition::Outside)
-    );
+    assert!(!BoundContainmentRule::AllowOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPos::Outside));
 }
 
 #[test]
 fn counts_as_contained_deny_on_start_from_true_on_start() {
-    assert!(
-        !BoundContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(!BoundContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_deny_on_start_from_true_on_end() {
-    assert!(BoundContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnEnd));
+    assert!(BoundContainmentRule::DenyOnStart.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_deny_on_start_from_false_on_start() {
-    assert!(
-        !BoundContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(!BoundContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_deny_on_start_from_false_on_end() {
-    assert!(
-        !BoundContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnEnd)
-    );
+    assert!(!BoundContainmentRule::DenyOnStart.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_deny_on_end_from_true_on_start() {
-    assert!(BoundContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnStart));
+    assert!(BoundContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_deny_on_end_from_true_on_end() {
-    assert!(!BoundContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnEnd));
+    assert!(!BoundContainmentRule::DenyOnEnd.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_deny_on_end_from_false_on_start() {
-    assert!(
-        !BoundContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(!BoundContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_deny_on_end_from_false_on_end() {
-    assert!(!BoundContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnEnd));
+    assert!(!BoundContainmentRule::DenyOnEnd.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_deny_on_bounds_from_true_on_start() {
-    assert!(
-        !BoundContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(!BoundContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_deny_on_bounds_from_true_on_end() {
-    assert!(
-        !BoundContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPosition::OnEnd)
-    );
+    assert!(!BoundContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_deny_on_bounds_from_true_outside() {
-    assert!(
-        BoundContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPosition::Outside)
-    );
+    assert!(BoundContainmentRule::DenyOnBounds.counts_as_contained(true, DisambiguatedBoundContainmentPos::Outside));
 }
 
 #[test]
 fn counts_as_contained_deny_on_bounds_from_false_on_start() {
-    assert!(
-        !BoundContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnStart)
-    );
+    assert!(!BoundContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnStart));
 }
 
 #[test]
 fn counts_as_contained_deny_on_bounds_from_false_on_end() {
-    assert!(
-        !BoundContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPosition::OnEnd)
-    );
+    assert!(!BoundContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPos::OnEnd));
 }
 
 #[test]
 fn counts_as_contained_deny_on_bounds_from_false_outside() {
-    assert!(
-        !BoundContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPosition::Outside)
-    );
+    assert!(!BoundContainmentRule::DenyOnBounds.counts_as_contained(false, DisambiguatedBoundContainmentPos::Outside));
 }

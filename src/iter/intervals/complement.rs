@@ -1,35 +1,50 @@
 //! Complement iterator
 //!
-//! Iterator that returns the [`ComplementResult`] of every interval from the interval.
+//! Iterator that returns the [`ComplementResult`] of every interval from the
+//! interval.
 //!
-//! The iterator uses [`Complementable`] to get the complements of the intervals.
+//! The iterator uses [`Complementable`] to get the complements of the
+//! intervals.
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
+//! # use std::error::Error;
+//! # use jiff::Zoned;
 //! # use periodical::ops::ComplementResult;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::iter::intervals::complement::ComplementIteratorDispatcher;
 //! let intervals = [
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 08:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 11:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
-//!     AbsoluteBounds::new(
-//!         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
-//!         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!         )),
+//!     AbsBoundPair::new(
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 12:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_start_bound(),
+//!         AbsFiniteBoundPos::new(
+//!             "2025-01-01 16:00:00[Europe/Oslo]"
+//!                 .parse::<Zoned>()?
+//!                 .timestamp(),
+//!         )
+//!         .to_end_bound(),
 //!     ),
 //! ];
 //!
@@ -37,43 +52,59 @@
 //!     intervals.complement().collect::<Vec<_>>(),
 //!     vec![
 //!         ComplementResult::Split(
-//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::InfinitePast,
-//!                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//!             AbsBoundPair::new(
+//!                 AbsStartBound::InfinitePast,
+//!                 AbsFiniteBoundPos::new_with_incl(
+//!                     "2025-01-01 08:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!             )),
-//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 )
+//!                 .to_end_bound(),
+//!             )
+//!             .to_emptiable(),
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new_with_incl(
+//!                     "2025-01-01 11:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!                 AbsoluteEndBound::InfiniteFuture,
-//!             )),
+//!                 )
+//!                 .to_start_bound(),
+//!                 AbsEndBound::InfiniteFuture,
+//!             )
+//!             .to_emptiable(),
 //!         ),
 //!         ComplementResult::Split(
-//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::InfinitePast,
-//!                 AbsoluteEndBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 12:00:00Z".parse::<DateTime<Utc>>()?,
+//!             AbsBoundPair::new(
+//!                 AbsStartBound::InfinitePast,
+//!                 AbsFiniteBoundPos::new_with_incl(
+//!                     "2025-01-01 12:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!             )),
-//!             EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!                 AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                     "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!                 )
+//!                 .to_end_bound(),
+//!             )
+//!             .to_emptiable(),
+//!             AbsBoundPair::new(
+//!                 AbsFiniteBoundPos::new_with_incl(
+//!                     "2025-01-01 16:00:00[Europe/Oslo]"
+//!                         .parse::<Zoned>()?
+//!                         .timestamp(),
 //!                     BoundInclusivity::Exclusive,
-//!                 )),
-//!                 AbsoluteEndBound::InfiniteFuture,
-//!             )),
+//!                 )
+//!                 .to_start_bound(),
+//!                 AbsEndBound::InfiniteFuture,
+//!             )
+//!             .to_emptiable(),
 //!         ),
 //!     ],
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
 
-use crate::intervals::prelude::*;
+use crate::intervals::ops::Complementable;
 use crate::ops::ComplementResult;
 
 /// Dispatcher trait for the [`ComplementIter`] iterator
@@ -107,7 +138,9 @@ where
     I::Item: Complementable,
 {
     pub fn new(iter: I) -> Self {
-        ComplementIter { iter }
+        ComplementIter {
+            iter,
+        }
     }
 }
 

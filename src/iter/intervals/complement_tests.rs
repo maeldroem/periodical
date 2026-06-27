@@ -1,40 +1,47 @@
-use chrono::Utc;
+use std::error::Error;
 
-use crate::intervals::absolute::{AbsoluteInterval, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
+use jiff::Zoned;
+
+use super::complement::*;
+use crate::intervals::absolute::{
+    AbsInterval,
+    BoundedAbsInterval,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+};
 use crate::intervals::meta::{BoundInclusivity, OpeningDirection};
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 use crate::ops::ComplementResult;
-use crate::test_utils::date;
-
-use super::complement::*;
 
 #[test]
-fn create_complement_iter() {
+fn create() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
+        AbsInterval::Bounded(BoundedAbsInterval::from_times(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
-        AbsoluteInterval::Unbounded(UnboundedInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 5),
+        AbsInterval::Unbounded(UnboundedInterval),
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+            "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )),
     ];
 
     intervals.complement();
+
+    Ok(())
 }
 
 #[test]
-fn complement_iter_run() {
+fn run() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
+        AbsInterval::Bounded(BoundedAbsInterval::from_times(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
-        AbsoluteInterval::Unbounded(UnboundedInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 5),
+        AbsInterval::Unbounded(UnboundedInterval),
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+            "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )),
     ];
@@ -43,39 +50,44 @@ fn complement_iter_run() {
         intervals.complement().collect::<Vec<_>>(),
         vec![
             ComplementResult::Split(
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )),
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
+                ))
+                .to_emptiable(),
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
-                )),
+                ))
+                .to_emptiable(),
             ),
-            ComplementResult::Single(AbsoluteInterval::Empty(EmptyInterval)),
-            ComplementResult::Single(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 5),
+            ComplementResult::Single(EmptiableAbsInterval::Empty(EmptyInterval)),
+            ComplementResult::Single(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
+                    "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )
-            ),),
+                ))
+                .to_emptiable()
+            ),
         ],
     );
+
+    Ok(())
 }
 
 #[test]
-fn complement_iter_run_reverse() {
+fn run_reverse() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
+        AbsInterval::Bounded(BoundedAbsInterval::from_times(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
         )),
-        AbsoluteInterval::Unbounded(UnboundedInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 5),
+        AbsInterval::Unbounded(UnboundedInterval),
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+            "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToFuture,
         )),
     ];
@@ -83,26 +95,31 @@ fn complement_iter_run_reverse() {
     assert_eq!(
         intervals.complement().rev().collect::<Vec<_>>(),
         vec![
-            ComplementResult::Single(AbsoluteInterval::HalfBounded(
-                HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 5),
+            ComplementResult::Single(
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
+                    "2025-01-05 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )
-            ),),
-            ComplementResult::Single(AbsoluteInterval::Empty(EmptyInterval)),
+                ))
+                .to_emptiable()
+            ),
+            ComplementResult::Single(EmptiableAbsInterval::Empty(EmptyInterval)),
             ComplementResult::Split(
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 1),
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
+                    "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToPast,
-                )),
-                AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new_with_inclusivity(
-                    date(&Utc, 2025, 1, 2),
+                ))
+                .to_emptiable(),
+                AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time_incl(
+                    "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                     BoundInclusivity::Exclusive,
                     OpeningDirection::ToFuture,
-                )),
+                ))
+                .to_emptiable(),
             ),
         ],
     );
+
+    Ok(())
 }

@@ -1,26 +1,27 @@
 //! Bound positioning within a collection of intervals
 //!
-//! This module contains [`BoundPosition`], which allows for tracking bounds across a collection of intervals.
-//! This is used by iterators in this crate, but can also be used in other places to share a bound position.
+//! This module contains [`BoundPosition`], which allows for tracking bounds
+//! across a collection of intervals. This is used by iterators in this crate,
+//! but can also be used in other places to share a bound position.
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::intervals::absolute::{AbsoluteBound, HasAbsoluteBounds};
-use crate::intervals::relative::{HasRelativeBounds, RelativeBound};
+use crate::intervals::absolute::{AbsBound, HasAbsBoundPair};
+use crate::intervals::relative::{HasRelBoundPair, RelBound};
 
 /// Type and index of the positioned bound
 ///
-/// This enumerator contains variants for describing the type of the positioned bound,
-/// and inside those variants we find a [`usize`] describing the index of the interval
-/// containing the positioned bound.
+/// This enumerator contains variants for describing the type of the positioned
+/// bound, and inside those variants we find a [`usize`] describing the index of
+/// the interval containing the positioned bound.
 ///
 /// <div class="warning">
 /// **Warning**
 ///
 /// This object could be subject to change in future versions,
-/// for example by switching to a structure containing a field for the bound type (Start/End),
-/// and a field for the interval index.
+/// for example by switching to a structure containing a field for the bound
+/// type (Start/End), and a field for the interval index.
 /// </div>
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -30,11 +31,10 @@ pub enum BoundPosition {
 }
 
 impl BoundPosition {
-    /// Minimum bound position
-    pub const MIN: Self = BoundPosition::Start(usize::MIN);
-
     /// Maximum bound position
     pub const MAX: Self = BoundPosition::End(usize::MAX);
+    /// Minimum bound position
+    pub const MIN: Self = BoundPosition::Start(usize::MIN);
 
     /// Returns the interval index
     #[must_use]
@@ -44,114 +44,101 @@ impl BoundPosition {
         }
     }
 
-    /// Returns the [`AbsoluteBound`] corresponding to the bound position
+    /// Returns the [`AbsBound`] corresponding to the bound position
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::{DateTime, Utc};
+    /// # use std::error::Error;
+    /// # use jiff::Timestamp;
     /// # use periodical::intervals::absolute::{
-    /// #     AbsoluteBound, AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound,
+    /// #     AbsBound, AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound,
     /// # };
     /// # use periodical::intervals::bound_position::BoundPosition;
     /// let abs_bounds = [
-    ///     AbsoluteBounds::new(AbsoluteStartBound::InfinitePast, AbsoluteEndBound::InfiniteFuture),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsBoundPair::new(AbsStartBound::InfinitePast, AbsEndBound::InfiniteFuture),
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new("2025-01-01 08:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 11:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     ),
-    ///     AbsoluteBounds::new(
-    ///         AbsoluteStartBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 13:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
-    ///         AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///             "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-    ///         )),
+    ///     AbsBoundPair::new(
+    ///         AbsFiniteBoundPos::new("2025-01-01 13:00:00Z".parse::<Timestamp>()?).to_start_bound(),
+    ///         AbsFiniteBoundPos::new("2025-01-01 16:00:00Z".parse::<Timestamp>()?).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let positioned_bound = BoundPosition::End(1).get_abs_bound(&abs_bounds);
-    /// let expected_bound = AbsoluteBound::End(AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-    ///     "2025-01-01 11:00:00Z".parse::<DateTime<Utc>>()?,
-    /// )));
+    /// let expected_bound = AbsFiniteBoundPos::new("2025-01-01 11:00:00Z".parse::<Timestamp>()?)
+    ///     .to_end_bound()
+    ///     .to_bound();
     ///
     /// assert_eq!(positioned_bound, Some(expected_bound));
-    /// # Ok::<(), chrono::format::ParseError>(())
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[must_use]
-    pub fn get_abs_bound<'j, I, J>(&self, abs_bounds: I) -> Option<AbsoluteBound>
+    pub fn get_abs_bound<'j, I, J>(&self, abs_bounds: I) -> Option<AbsBound>
     where
         I: IntoIterator<Item = &'j J>,
-        J: 'j + HasAbsoluteBounds,
+        J: 'j + HasAbsBoundPair,
     {
         match self {
             Self::Start(i) => abs_bounds
                 .into_iter()
                 .nth(*i)
-                .map(|bounds| AbsoluteBound::Start(bounds.abs_start())),
-            Self::End(i) => abs_bounds
-                .into_iter()
-                .nth(*i)
-                .map(|bounds| AbsoluteBound::End(bounds.abs_end())),
+                .map(|bounds| bounds.abs_start().to_bound()),
+            Self::End(i) => abs_bounds.into_iter().nth(*i).map(|bounds| bounds.abs_end().to_bound()),
         }
     }
 
-    /// Returns the [`RelativeBound`] corresponding to the bound position
+    /// Returns the [`RelBound`] corresponding to the bound position
     ///
     /// # Examples
     ///
     /// ```
-    /// # use chrono::Duration;
+    /// # use jiff::SignedDuration;
     /// # use periodical::intervals::relative::{
-    /// #     RelativeBound, RelativeBounds, RelativeEndBound, RelativeFiniteBound, RelativeStartBound,
+    /// #     RelBound, RelBoundPair, RelEndBound, RelFiniteBoundPos, RelStartBound,
     /// # };
     /// # use periodical::intervals::bound_position::BoundPosition;
     /// let rel_bounds = [
-    ///     RelativeBounds::new(RelativeStartBound::InfinitePast, RelativeEndBound::InfiniteFuture),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(8),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(11),
-    ///         )),
+    ///     RelBoundPair::new(RelStartBound::InfinitePast, RelEndBound::InfiniteFuture),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(
+    ///             SignedDuration::from_hours(8),
+    ///         ).to_start_bound(),
+    ///         RelFiniteBoundPos::new(
+    ///             SignedDuration::from_hours(11),
+    ///         ).to_end_bound(),
     ///     ),
-    ///     RelativeBounds::new(
-    ///         RelativeStartBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(13),
-    ///         )),
-    ///         RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///             Duration::hours(16),
-    ///         )),
+    ///     RelBoundPair::new(
+    ///         RelFiniteBoundPos::new(
+    ///             SignedDuration::from_hours(13),
+    ///         ).to_start_bound(),
+    ///         RelFiniteBoundPos::new(
+    ///             SignedDuration::from_hours(16),
+    ///         ).to_end_bound(),
     ///     ),
     /// ];
     ///
     /// let positioned_bound = BoundPosition::End(1).get_rel_bound(&rel_bounds);
-    /// let expected_bound = RelativeBound::End(RelativeEndBound::Finite(RelativeFiniteBound::new(
-    ///     Duration::hours(11),
-    /// )));
+    /// let expected_bound = RelFiniteBoundPos::new(
+    ///     SignedDuration::from_hours(11),
+    /// ).to_end_bound().to_bound();
     ///
     /// assert_eq!(positioned_bound, Some(expected_bound));
     /// ```
     #[must_use]
-    pub fn get_rel_bound<'j, I, J>(&self, rel_bounds: I) -> Option<RelativeBound>
+    pub fn get_rel_bound<'j, I, J>(&self, rel_bounds: I) -> Option<RelBound>
     where
         I: IntoIterator<Item = &'j J>,
-        J: 'j + HasRelativeBounds,
+        J: 'j + HasRelBoundPair,
     {
         match self {
             Self::Start(i) => rel_bounds
                 .into_iter()
                 .nth(*i)
-                .map(|bounds| RelativeBound::Start(bounds.rel_start())),
-            Self::End(i) => rel_bounds
-                .into_iter()
-                .nth(*i)
-                .map(|bounds| RelativeBound::End(bounds.rel_end())),
+                .map(|bounds| bounds.rel_start().to_bound()),
+            Self::End(i) => rel_bounds.into_iter().nth(*i).map(|bounds| bounds.rel_end().to_bound()),
         }
     }
 
@@ -168,7 +155,6 @@ impl BoundPosition {
     ///
     /// assert_eq!(bound_position, BoundPosition::Start(7));
     /// ```
-    ///
     pub fn add_interval_index(&mut self, count: usize) -> bool {
         match self {
             Self::Start(i) | Self::End(i) => {

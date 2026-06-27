@@ -1,62 +1,78 @@
 //! Complement of an interval
 //!
-//! Returns the [complementary] intervals of a given interval using [`ComplementResult`] to store the result.
+//! Returns the [complementary] intervals of a given interval using
+//! [`ComplementResult`] to store the result.
+//!
+//! [complementary]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427
 //!
 //! # Examples
 //!
 //! ```
-//! # use chrono::{DateTime, Utc};
+//! # use std::error::Error;
+//! # use jiff::Zoned;
 //! # use periodical::ops::ComplementResult;
 //! # use periodical::intervals::absolute::{
-//! #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+//! #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound, EmptiableAbsBoundPair
 //! # };
 //! # use periodical::intervals::meta::BoundInclusivity;
 //! # use periodical::intervals::ops::complement::Complementable;
-//! let interval = AbsoluteBounds::new(
-//!     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+//! let interval = AbsBoundPair::new(
+//!     AbsFiniteBoundPos::new_with_incl(
+//!         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!         BoundInclusivity::Exclusive,
-//!     )),
-//!     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-//!     )),
+//!     ).to_start_bound(),
+//!     AbsFiniteBoundPos::new(
+//!         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!     ).to_end_bound(),
 //! );
 //!
 //! assert_eq!(
 //!     interval.complement(),
 //!     ComplementResult::Split(
-//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!             AbsoluteStartBound::InfinitePast,
-//!             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-//!                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-//!             )),
+//!         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+//!             AbsStartBound::InfinitePast,
+//!             AbsFiniteBoundPos::new(
+//!                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+//!             ).to_end_bound(),
 //!         )),
-//!         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-//!             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-//!                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+//!         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+//!             AbsFiniteBoundPos::new_with_incl(
+//!                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 //!                 BoundInclusivity::Exclusive,
-//!             )),
-//!             AbsoluteEndBound::InfiniteFuture,
+//!             ).to_start_bound(),
+//!             AbsEndBound::InfiniteFuture,
 //!         )),
 //!     ),
 //! );
-//! # Ok::<(), chrono::format::ParseError>(())
+//! # Ok::<(), Box<dyn Error>>(())
 //! ```
-//!
-//! [complementary]: https://en.wikipedia.org/w/index.php?title=Complement_(set_theory)&oldid=1272128427
-
-use super::prelude::*;
 
 use crate::intervals::absolute::{
-    AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
-    HalfBoundedAbsoluteInterval, HasEmptiableAbsoluteBounds,
+    AbsBoundPair,
+    AbsEndBound,
+    AbsInterval,
+    AbsStartBound,
+    BoundedAbsInterval,
+    EmptiableAbsBoundPair,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+    HasAbsBoundPair,
+    HasEmptiableAbsBoundPair,
 };
+use crate::intervals::meta::{HasOpeningDirection, OpeningDirection};
 use crate::intervals::relative::{
-    EmptiableRelativeBounds, HalfBoundedRelativeInterval, RelativeBounds, RelativeEndBound, RelativeFiniteBound,
-    RelativeStartBound,
+    BoundedRelInterval,
+    EmptiableRelBoundPair,
+    EmptiableRelInterval,
+    HalfBoundedRelInterval,
+    HasEmptiableRelBoundPair,
+    HasRelBoundPair,
+    RelBoundPair,
+    RelEndBound,
+    RelInterval,
+    RelStartBound,
 };
 use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::intervals::{AbsoluteInterval, BoundedAbsoluteInterval, BoundedRelativeInterval, RelativeInterval};
 use crate::ops::ComplementResult;
 
 /// Capacity to get the complementary intervals
@@ -64,129 +80,146 @@ use crate::ops::ComplementResult;
 /// # Examples
 ///
 /// ```
-/// # use chrono::{DateTime, Utc};
+/// # use std::error::Error;
+/// # use jiff::Zoned;
 /// # use periodical::ops::ComplementResult;
 /// # use periodical::intervals::absolute::{
-/// #     AbsoluteBounds, AbsoluteEndBound, AbsoluteFiniteBound, AbsoluteStartBound, EmptiableAbsoluteBounds,
+/// #     AbsBoundPair, AbsEndBound, AbsFiniteBoundPos, AbsStartBound, EmptiableAbsBoundPair,
 /// # };
 /// # use periodical::intervals::meta::BoundInclusivity;
 /// # use periodical::intervals::ops::complement::Complementable;
-/// let interval = AbsoluteBounds::new(
-///     AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///         "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
+/// let interval = AbsBoundPair::new(
+///     AbsFiniteBoundPos::new_with_incl(
+///         "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///         BoundInclusivity::Exclusive,
-///     )),
-///     AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///         "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
-///     )),
+///     ).to_start_bound(),
+///     AbsFiniteBoundPos::new(
+///         "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///     ).to_end_bound(),
 /// );
 ///
 /// assert_eq!(
 ///     interval.complement(),
 ///     ComplementResult::Split(
-///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-///             AbsoluteStartBound::InfinitePast,
-///             AbsoluteEndBound::Finite(AbsoluteFiniteBound::new(
-///                 "2025-01-01 08:00:00Z".parse::<DateTime<Utc>>()?,
-///             )),
+///         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+///             AbsStartBound::InfinitePast,
+///             AbsFiniteBoundPos::new(
+///                 "2025-01-01 08:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+///             ).to_end_bound(),
 ///         )),
-///         EmptiableAbsoluteBounds::Bound(AbsoluteBounds::new(
-///             AbsoluteStartBound::Finite(AbsoluteFiniteBound::new_with_inclusivity(
-///                 "2025-01-01 16:00:00Z".parse::<DateTime<Utc>>()?,
+///         EmptiableAbsBoundPair::Bound(AbsBoundPair::new(
+///             AbsFiniteBoundPos::new_with_incl(
+///                 "2025-01-01 16:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
 ///                 BoundInclusivity::Exclusive,
-///             )),
-///             AbsoluteEndBound::InfiniteFuture,
+///             ).to_start_bound(),
+///             AbsEndBound::InfiniteFuture,
 ///         )),
 ///     ),
 /// );
-/// # Ok::<(), chrono::format::ParseError>(())
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 pub trait Complementable {
     /// Output type
     type Output;
 
-    /// Returns the complementary intervals of `self`
+    /// Returns the complementary interval(s) of `self`
     #[must_use]
     fn complement(&self) -> ComplementResult<Self::Output>;
 }
 
-impl Complementable for AbsoluteBounds {
-    type Output = EmptiableAbsoluteBounds;
+impl Complementable for AbsBoundPair {
+    type Output = EmptiableAbsBoundPair;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_abs_bounds(self)
+        complement_abs_bound_pair(self)
     }
 }
 
-impl Complementable for EmptiableAbsoluteBounds {
+impl Complementable for EmptiableAbsBoundPair {
     type Output = Self;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_abs_bounds(self)
+        complement_emptiable_abs_bound_pair(self)
     }
 }
 
-impl Complementable for AbsoluteInterval {
+impl Complementable for AbsInterval {
+    type Output = EmptiableAbsInterval;
+
+    fn complement(&self) -> ComplementResult<Self::Output> {
+        complement_abs_bound_pair(&self.abs_bound_pair()).map(Self::Output::from)
+    }
+}
+
+impl Complementable for EmptiableAbsInterval {
     type Output = Self;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_abs_bounds(&self.emptiable_abs_bounds()).map(AbsoluteInterval::from)
+        complement_emptiable_abs_bound_pair(&self.emptiable_abs_bound_pair()).map(Self::Output::from)
     }
 }
 
-impl Complementable for BoundedAbsoluteInterval {
-    type Output = AbsoluteInterval;
+impl Complementable for BoundedAbsInterval {
+    type Output = HalfBoundedAbsInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_abs_bounds(&self.emptiable_abs_bounds()).map(AbsoluteInterval::from)
+        complement_bounded_abs_interval(self)
     }
 }
 
-impl Complementable for HalfBoundedAbsoluteInterval {
-    type Output = AbsoluteInterval;
+impl Complementable for HalfBoundedAbsInterval {
+    type Output = HalfBoundedAbsInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_abs_bounds(&self.emptiable_abs_bounds()).map(AbsoluteInterval::from)
+        complement_half_bounded_abs_interval(self)
     }
 }
 
-impl Complementable for RelativeBounds {
-    type Output = EmptiableRelativeBounds;
+impl Complementable for RelBoundPair {
+    type Output = EmptiableRelBoundPair;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_rel_bounds(self)
+        complement_rel_bound_pair(self)
     }
 }
 
-impl Complementable for EmptiableRelativeBounds {
+impl Complementable for EmptiableRelBoundPair {
     type Output = Self;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_rel_bounds(self)
+        complement_emptiable_rel_bound_pair(self)
     }
 }
 
-impl Complementable for RelativeInterval {
+impl Complementable for RelInterval {
+    type Output = EmptiableRelInterval;
+
+    fn complement(&self) -> ComplementResult<Self::Output> {
+        complement_rel_bound_pair(&self.rel_bound_pair()).map(Self::Output::from)
+    }
+}
+
+impl Complementable for EmptiableRelInterval {
     type Output = Self;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_rel_bounds(&self.emptiable_rel_bounds()).map(RelativeInterval::from)
+        complement_emptiable_rel_bound_pair(&self.emptiable_rel_bound_pair()).map(Self::Output::from)
     }
 }
 
-impl Complementable for BoundedRelativeInterval {
-    type Output = RelativeInterval;
+impl Complementable for BoundedRelInterval {
+    type Output = HalfBoundedRelInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_rel_bounds(&self.emptiable_rel_bounds()).map(RelativeInterval::from)
+        complement_bounded_rel_interval(self)
     }
 }
 
-impl Complementable for HalfBoundedRelativeInterval {
-    type Output = RelativeInterval;
+impl Complementable for HalfBoundedRelInterval {
+    type Output = HalfBoundedRelInterval;
 
     fn complement(&self) -> ComplementResult<Self::Output> {
-        complement_emptiable_rel_bounds(&self.emptiable_rel_bounds()).map(RelativeInterval::from)
+        complement_half_bounded_rel_interval(self)
     }
 }
 
@@ -206,124 +239,132 @@ impl Complementable for EmptyInterval {
     }
 }
 
-/// Returns the complementary intervals of an [`AbsoluteBounds`]
+/// Returns the complementary intervals of an [`AbsBoundPair`]
 ///
 /// See [`Complementable`] for more info.
 #[must_use]
-pub fn complement_abs_bounds(bounds: &AbsoluteBounds) -> ComplementResult<EmptiableAbsoluteBounds> {
-    type Sb = AbsoluteStartBound;
-    type Eb = AbsoluteEndBound;
+pub fn complement_abs_bound_pair(bounds: &AbsBoundPair) -> ComplementResult<EmptiableAbsBoundPair> {
+    type Sb = AbsStartBound;
+    type Eb = AbsEndBound;
 
     match (bounds.abs_start(), bounds.abs_end()) {
-        (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_abs_bounds()),
-        (Sb::InfinitePast, Eb::Finite(finite)) => {
-            ComplementResult::Single(EmptiableAbsoluteBounds::from(AbsoluteBounds::new(
-                AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                    finite.time(),
-                    finite.inclusivity().opposite(),
-                )),
-                AbsoluteEndBound::InfiniteFuture,
-            )))
-        },
-        (Sb::Finite(finite), Eb::InfiniteFuture) => {
-            ComplementResult::Single(EmptiableAbsoluteBounds::from(AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                    finite.time(),
-                    finite.inclusivity().opposite(),
-                )),
-            )))
-        },
+        (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_abs_bound_pair()),
+        (Sb::InfinitePast, Eb::Finite(finite_end)) => ComplementResult::Single(
+            AbsBoundPair::new(finite_end.opposite().to_start_bound(), AbsEndBound::InfiniteFuture).to_emptiable(),
+        ),
+        (Sb::Finite(finite_start), Eb::InfiniteFuture) => ComplementResult::Single(
+            AbsBoundPair::new(AbsStartBound::InfinitePast, finite_start.opposite().to_end_bound()).to_emptiable(),
+        ),
         (Sb::Finite(finite_start), Eb::Finite(finite_end)) => ComplementResult::Split(
-            EmptiableAbsoluteBounds::from(AbsoluteBounds::new(
-                AbsoluteStartBound::InfinitePast,
-                AbsoluteEndBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                    finite_start.time(),
-                    finite_start.inclusivity().opposite(),
-                )),
-            )),
-            EmptiableAbsoluteBounds::from(AbsoluteBounds::new(
-                AbsoluteStartBound::from(AbsoluteFiniteBound::new_with_inclusivity(
-                    finite_end.time(),
-                    finite_end.inclusivity().opposite(),
-                )),
-                AbsoluteEndBound::InfiniteFuture,
-            )),
+            AbsBoundPair::new(AbsStartBound::InfinitePast, finite_start.opposite().to_end_bound()).to_emptiable(),
+            AbsBoundPair::new(finite_end.opposite().to_start_bound(), AbsEndBound::InfiniteFuture).to_emptiable(),
         ),
     }
 }
 
-/// Returns the complementary intervals of an [`EmptiableAbsoluteBounds`]
+/// Returns the complementary intervals of an [`EmptiableAbsBoundPair`]
 ///
 /// See [`Complementable`] for more info.
 #[must_use]
-pub fn complement_emptiable_abs_bounds(
-    emptiable_bounds: &EmptiableAbsoluteBounds,
-) -> ComplementResult<EmptiableAbsoluteBounds> {
-    let EmptiableAbsoluteBounds::Bound(bounds) = emptiable_bounds else {
-        return ComplementResult::Single(UnboundedInterval.emptiable_abs_bounds());
+pub fn complement_emptiable_abs_bound_pair(
+    emptiable_bounds: &EmptiableAbsBoundPair,
+) -> ComplementResult<EmptiableAbsBoundPair> {
+    let EmptiableAbsBoundPair::Bound(bounds) = emptiable_bounds else {
+        return ComplementResult::Single(UnboundedInterval.emptiable_abs_bound_pair());
     };
 
-    complement_abs_bounds(bounds)
+    complement_abs_bound_pair(bounds)
 }
 
-/// Returns the complementary intervals of a [`RelativeBounds`]
+#[must_use]
+pub fn complement_bounded_abs_interval(interval: &BoundedAbsInterval) -> ComplementResult<HalfBoundedAbsInterval> {
+    let until_start = HalfBoundedAbsInterval::from_time_incl(
+        interval.start_time(),
+        interval.start_inclusivity().opposite(),
+        OpeningDirection::ToPast,
+    );
+
+    let since_end = HalfBoundedAbsInterval::from_time_incl(
+        interval.end_time(),
+        interval.end_inclusivity().opposite(),
+        OpeningDirection::ToFuture,
+    );
+
+    ComplementResult::Split(until_start, since_end)
+}
+
+#[must_use]
+pub fn complement_half_bounded_abs_interval(
+    interval: &HalfBoundedAbsInterval,
+) -> ComplementResult<HalfBoundedAbsInterval> {
+    ComplementResult::Single(HalfBoundedAbsInterval::from_time_incl(
+        interval.reference_time(),
+        interval.reference_inclusivity().opposite(),
+        interval.opening_direction().opposite(),
+    ))
+}
+
+/// Returns the complementary intervals of a [`RelBoundPair`]
 ///
 /// See [`Complementable`] for more info.
 #[must_use]
-pub fn complement_rel_bounds(bounds: &RelativeBounds) -> ComplementResult<EmptiableRelativeBounds> {
-    type Sb = RelativeStartBound;
-    type Eb = RelativeEndBound;
+pub fn complement_rel_bound_pair(bounds: &RelBoundPair) -> ComplementResult<EmptiableRelBoundPair> {
+    type Sb = RelStartBound;
+    type Eb = RelEndBound;
 
     match (bounds.rel_start(), bounds.rel_end()) {
-        (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_rel_bounds()),
-        (Sb::InfinitePast, Eb::Finite(finite)) => {
-            ComplementResult::Single(EmptiableRelativeBounds::from(RelativeBounds::new(
-                RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                    finite.offset(),
-                    finite.inclusivity().opposite(),
-                )),
-                RelativeEndBound::InfiniteFuture,
-            )))
-        },
-        (Sb::Finite(finite), Eb::InfiniteFuture) => {
-            ComplementResult::Single(EmptiableRelativeBounds::from(RelativeBounds::new(
-                RelativeStartBound::InfinitePast,
-                RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                    finite.offset(),
-                    finite.inclusivity().opposite(),
-                )),
-            )))
-        },
+        (Sb::InfinitePast, Eb::InfiniteFuture) => ComplementResult::Single(EmptyInterval.emptiable_rel_bound_pair()),
+        (Sb::InfinitePast, Eb::Finite(finite_end)) => ComplementResult::Single(
+            RelBoundPair::new(finite_end.opposite().to_start_bound(), RelEndBound::InfiniteFuture).to_emptiable(),
+        ),
+        (Sb::Finite(finite_start), Eb::InfiniteFuture) => ComplementResult::Single(
+            RelBoundPair::new(RelStartBound::InfinitePast, finite_start.opposite().to_end_bound()).to_emptiable(),
+        ),
         (Sb::Finite(finite_start), Eb::Finite(finite_end)) => ComplementResult::Split(
-            EmptiableRelativeBounds::from(RelativeBounds::new(
-                RelativeStartBound::InfinitePast,
-                RelativeEndBound::from(RelativeFiniteBound::new_with_inclusivity(
-                    finite_start.offset(),
-                    finite_start.inclusivity().opposite(),
-                )),
-            )),
-            EmptiableRelativeBounds::from(RelativeBounds::new(
-                RelativeStartBound::from(RelativeFiniteBound::new_with_inclusivity(
-                    finite_end.offset(),
-                    finite_end.inclusivity().opposite(),
-                )),
-                RelativeEndBound::InfiniteFuture,
-            )),
+            RelBoundPair::new(RelStartBound::InfinitePast, finite_start.opposite().to_end_bound()).to_emptiable(),
+            RelBoundPair::new(finite_end.opposite().to_start_bound(), RelEndBound::InfiniteFuture).to_emptiable(),
         ),
     }
 }
 
-/// Returns the complementary intervals of an [`EmptiableRelativeBounds`]
+/// Returns the complementary intervals of an [`EmptiableRelBoundPair`]
 ///
 /// See [`Complementable`] for more info.
 #[must_use]
-pub fn complement_emptiable_rel_bounds(
-    emptiable_bounds: &EmptiableRelativeBounds,
-) -> ComplementResult<EmptiableRelativeBounds> {
-    let EmptiableRelativeBounds::Bound(bounds) = emptiable_bounds else {
-        return ComplementResult::Single(UnboundedInterval.emptiable_rel_bounds());
+pub fn complement_emptiable_rel_bound_pair(
+    emptiable_bounds: &EmptiableRelBoundPair,
+) -> ComplementResult<EmptiableRelBoundPair> {
+    let EmptiableRelBoundPair::Bound(bounds) = emptiable_bounds else {
+        return ComplementResult::Single(UnboundedInterval.emptiable_rel_bound_pair());
     };
 
-    complement_rel_bounds(bounds)
+    complement_rel_bound_pair(bounds)
+}
+
+#[must_use]
+pub fn complement_bounded_rel_interval(interval: &BoundedRelInterval) -> ComplementResult<HalfBoundedRelInterval> {
+    let until_start = HalfBoundedRelInterval::from_offset_incl(
+        interval.start_offset(),
+        interval.start_inclusivity().opposite(),
+        OpeningDirection::ToPast,
+    );
+
+    let since_end = HalfBoundedRelInterval::from_offset_incl(
+        interval.end_offset(),
+        interval.end_inclusivity().opposite(),
+        OpeningDirection::ToFuture,
+    );
+
+    ComplementResult::Split(until_start, since_end)
+}
+
+#[must_use]
+pub fn complement_half_bounded_rel_interval(
+    interval: &HalfBoundedRelInterval,
+) -> ComplementResult<HalfBoundedRelInterval> {
+    ComplementResult::Single(HalfBoundedRelInterval::from_offset_incl(
+        interval.reference_offset(),
+        interval.reference_inclusivity().opposite(),
+        interval.opening_direction().opposite(),
+    ))
 }

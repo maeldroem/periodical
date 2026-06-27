@@ -1,92 +1,113 @@
-use chrono::Utc;
+use std::error::Error;
 
-use crate::intervals::absolute::{AbsoluteInterval, BoundedAbsoluteInterval, HalfBoundedAbsoluteInterval};
-use crate::intervals::meta::OpeningDirection;
-use crate::intervals::special::{EmptyInterval, UnboundedInterval};
-use crate::test_utils::date;
+use jiff::Zoned;
 
 use super::remove_empty::*;
+use crate::intervals::absolute::{
+    AbsInterval,
+    BoundedAbsInterval,
+    EmptiableAbsInterval,
+    HalfBoundedAbsInterval,
+};
+use crate::intervals::meta::OpeningDirection;
+use crate::intervals::special::{EmptyInterval, UnboundedInterval};
 
 #[test]
-fn create_remove_empty_intervals_iter() {
+fn create() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Unbounded(UnboundedInterval),
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
-        )),
-        AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
+        AbsInterval::Unbounded(UnboundedInterval).to_emptiable(),
+        AbsInterval::Bounded(BoundedAbsInterval::from_times(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+        ))
+        .to_emptiable(),
+        EmptiableAbsInterval::Empty(EmptyInterval),
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )),
+        ))
+        .to_emptiable(),
     ];
 
     intervals.remove_empty_intervals();
+
+    Ok(())
 }
 
 #[test]
-fn remove_empty_intervals_iter_run() {
+fn run() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Unbounded(UnboundedInterval),
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
-        )),
-        AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
+        AbsInterval::Unbounded(UnboundedInterval).to_emptiable(),
+        AbsInterval::Bounded(BoundedAbsInterval::from_times(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+        ))
+        .to_emptiable(),
+        EmptiableAbsInterval::Empty(EmptyInterval),
+        EmptiableAbsInterval::Empty(EmptyInterval),
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )),
-        AbsoluteInterval::Empty(EmptyInterval),
+        ))
+        .to_emptiable(),
+        EmptiableAbsInterval::Empty(EmptyInterval),
     ];
 
     assert_eq!(
         intervals.remove_empty_intervals().collect::<Vec<_>>(),
         vec![
-            AbsoluteInterval::Unbounded(UnboundedInterval),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-                date(&Utc, 2025, 1, 1),
-                date(&Utc, 2025, 1, 2)
-            )),
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-                date(&Utc, 2025, 1, 1),
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable(),
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            ))
+            .to_emptiable(),
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
-            )),
+            ))
+            .to_emptiable(),
         ],
     );
+
+    Ok(())
 }
 
 #[test]
-fn remove_empty_intervals_iter_run_reverse() {
+fn run_reverse() -> Result<(), Box<dyn Error>> {
     let intervals = [
-        AbsoluteInterval::Unbounded(UnboundedInterval),
-        AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
-            date(&Utc, 2025, 1, 2),
-        )),
-        AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::Empty(EmptyInterval),
-        AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-            date(&Utc, 2025, 1, 1),
+        AbsInterval::Unbounded(UnboundedInterval).to_emptiable(),
+        AbsInterval::Bounded(BoundedAbsInterval::from_times(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+            "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+        ))
+        .to_emptiable(),
+        EmptiableAbsInterval::Empty(EmptyInterval),
+        EmptiableAbsInterval::Empty(EmptyInterval),
+        AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+            "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
             OpeningDirection::ToPast,
-        )),
-        AbsoluteInterval::Empty(EmptyInterval),
+        ))
+        .to_emptiable(),
+        EmptiableAbsInterval::Empty(EmptyInterval),
     ];
 
     assert_eq!(
         intervals.remove_empty_intervals().rev().collect::<Vec<_>>(),
         vec![
-            AbsoluteInterval::HalfBounded(HalfBoundedAbsoluteInterval::new(
-                date(&Utc, 2025, 1, 1),
+            AbsInterval::HalfBounded(HalfBoundedAbsInterval::from_time(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
                 OpeningDirection::ToPast
-            )),
-            AbsoluteInterval::Bounded(BoundedAbsoluteInterval::new(
-                date(&Utc, 2025, 1, 1),
-                date(&Utc, 2025, 1, 2)
-            )),
-            AbsoluteInterval::Unbounded(UnboundedInterval),
+            ))
+            .to_emptiable(),
+            AbsInterval::Bounded(BoundedAbsInterval::from_times(
+                "2025-01-01 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp(),
+                "2025-01-02 00:00:00[Europe/Oslo]".parse::<Zoned>()?.timestamp()
+            ))
+            .to_emptiable(),
+            AbsInterval::Unbounded(UnboundedInterval).to_emptiable(),
         ],
     );
+
+    Ok(())
 }

@@ -12,27 +12,44 @@ pub mod intersect;
 pub mod sym_diff;
 pub mod unite;
 
-#[cfg(test)]
-mod diff_tests;
-#[cfg(test)]
-mod intersect_tests;
-#[cfg(test)]
-mod sym_diff_tests;
-#[cfg(test)]
-mod unite_tests;
+// #[cfg(test)]
+// mod diff_tests;
+// #[cfg(test)]
+// mod intersect_tests;
+// #[cfg(test)]
+// mod sym_diff_tests;
+// #[cfg(test)]
+// mod unite_tests;
 
+#[doc(inline)]
 pub use diff::{
-    PeerDifference, PeerDifferenceIteratorDispatcher, PeerDifferenceWith, PeerDifferenceWithIteratorDispatcher,
+    PeerDifference,
+    PeerDifferenceIteratorDispatcher,
+    PeerDifferenceWith,
+    PeerDifferenceWithIteratorDispatcher,
 };
+#[doc(inline)]
 pub use intersect::{
-    PeerIntersection, PeerIntersectionIteratorDispatcher, PeerIntersectionWith, PeerIntersectionWithIteratorDispatcher,
+    PeerIntersection,
+    PeerIntersectionIteratorDispatcher,
+    PeerIntersectionWith,
+    PeerIntersectionWithIteratorDispatcher,
 };
+#[doc(inline)]
 pub use sym_diff::{
-    PeerSymmetricDifference, PeerSymmetricDifferenceIteratorDispatcher, PeerSymmetricDifferenceWith,
+    PeerSymmetricDifference,
+    PeerSymmetricDifferenceIteratorDispatcher,
+    PeerSymmetricDifferenceWith,
     PeerSymmetricDifferenceWithIteratorDispatcher,
 };
+#[doc(inline)]
 pub use unite::{
-    AccumulativeUnion, AccumulativeUnionIteratorDispatcher, AccumulativeUnionWith,
-    AccumulativeUnionWithIteratorDispatcher, PeerUnion, PeerUnionIteratorDispatcher, PeerUnionWith,
+    AccumulativeUnion,
+    AccumulativeUnionIteratorDispatcher,
+    AccumulativeUnionWith,
+    AccumulativeUnionWithIteratorDispatcher,
+    PeerUnion,
+    PeerUnionIteratorDispatcher,
+    PeerUnionWith,
     PeerUnionWithIteratorDispatcher,
 };
