@@ -154,7 +154,7 @@ fn xtask_coverage(test_name_pat: String, open: bool) -> Result<(), XtaskError> {
 
     // This is due to `grcov` compiling all profiling data that it finds instead of using a single instance's data
 
-    if fs::remove_dir_all(*PROFILING_DATA_FOLDER).is_err() {
+    if PROFILING_DATA_FOLDER.exists() && fs::remove_dir_all(*PROFILING_DATA_FOLDER).is_err() {
         return Err("Failed to delete profiling data".into());
     }
 
