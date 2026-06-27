@@ -276,8 +276,7 @@ pub enum BoundOverlapDisambiguationRuleSet {
 impl BoundOverlapDisambiguationRuleSet {
     /// Uses the rule set to disambiguate a [`BoundOverlapAmbiguity`]
     ///
-    /// Preferably use [`BoundOverlapAmbiguity::disambiguate_using_rule_set`]
-    /// instead.
+    /// Preferably use [`BoundOverlapAmbiguity::disambiguate`] instead.
     ///
     /// # Examples
     ///
