@@ -116,7 +116,7 @@ impl AbsBoundPair {
 
     /// Creates a new [`AbsBoundPair`]
     ///
-    /// Uses [`prepare_absolute_bound_pair_for_interval_creation`] under the
+    /// Uses [`prepare_abs_start_end_bounds_for_interval_creation`] under the
     /// hood for making sure the bounds respect the invariants.
     ///
     /// # Examples

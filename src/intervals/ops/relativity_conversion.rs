@@ -1,8 +1,8 @@
 //! Relativity conversion
 //!
-//! Conversion from absolute to relative is defined by [`ToRel`].
+//! Conversion from absolute to relative is defined by [`ToRelative`].
 //! Its opposite, conversion from relative to absolute, is defined by
-//! [`ToAbs`].
+//! [`ToAbsolute`].
 
 use jiff::Timestamp;
 
@@ -64,7 +64,7 @@ macro_rules! to_relative_impl_reflective {
 /// Conversion into absolute
 ///
 /// This trait is reflexive: absolute structures should implement
-/// [`ToAbs`].
+/// [`ToAbsolute`].
 ///
 /// # Examples
 ///
@@ -272,7 +272,7 @@ impl ToAbsolute for EmptiableRelInterval {
 /// Conversion into relative
 ///
 /// This trait is reflexive: relative structures should implement
-/// [`ToRel`].
+/// [`ToRelative`].
 ///
 /// # Examples
 ///

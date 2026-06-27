@@ -115,7 +115,7 @@ impl RelBoundPair {
 
     /// Creates a new [`RelBoundPair`]
     ///
-    /// Uses [`prepare_relative_bound_pair_for_interval_creation`] under the
+    /// Uses [`prepare_rel_start_end_bounds_for_interval_creation`] under the
     /// hood for making sure the bounds respect the invariants.
     ///
     /// # Examples

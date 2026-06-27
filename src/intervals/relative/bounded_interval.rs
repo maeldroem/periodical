@@ -1066,7 +1066,7 @@ impl BoundedRelInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`SameTimeDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameTimeDoublyInclusiveViolation)
+    /// Returns [`SameOffsetDoublyInclusiveViolation`](BoundedRelIntervalUpdateError::SameOffsetDoublyInclusiveViolation)
     /// if the given length is zero and the start and end bounds are not
     /// both [`Inclusive`](BoundInclusivity::Inclusive).
     ///
